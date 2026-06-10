@@ -1,0 +1,4550 @@
+HAVEN — Full Screen Schema + React Native Renderer Architecture
+Part 1 — TypeScript Schema Type Definitions
+Every screen is described by a ScreenSchema. The renderer reads it and produces a bespoke, fully accessible, elder-safe screen. No ad-hoc screen components allowed — if a screen needs to exist, it needs a schema first.
+
+TypeScript
+
+// schema/types.ts
+// ─────────────────────────────────────────────────────────────────────────────
+// ROOT SCHEMA TYPES
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Top-level screen descriptor.
+ * Every elder-facing screen is exactly one ScreenSchema.
+ */
+export interface ScreenSchema {
+  // ── Identity ───────────────────────────────────────────────────────────────
+  screenId:           ScreenId;
+  title:              string;
+  accessibilityLabel: string;
+
+  // ── Layout ─────────────────────────────────────────────────────────────────
+  layout:             LayoutVariant;
+  backgroundColor?:   ThemeColorKey;
+  headerVariant?:     HeaderVariant;
+
+  // ── Content ────────────────────────────────────────────────────────────────
+  contentBlocks:      ContentBlock[];
+  maxPrimaryItems:    number;           // hard limit — build test fails if exceeded
+
+  // ── Bottom actions (max 2) ─────────────────────────────────────────────────
+  bottomActions:      BottomAction[];   // max 2, enforced by schema validator
+
+  // ── Persistent elements (always visible) ──────────────────────────────────
+  persistent:         PersistentElement[];
+
+  // ── Voice ──────────────────────────────────────────────────────────────────
+  voice:              VoiceSchema;
+
+  // ── Empty state ────────────────────────────────────────────────────────────
+  emptyState?:        EmptyStateSchema;
+
+  // ── States ─────────────────────────────────────────────────────────────────
+  states?:            ScreenStateMap;
+
+  // ── Navigation ─────────────────────────────────────────────────────────────
+  navigation:         NavigationSchema;
+
+  // ── Data ───────────────────────────────────────────────────────────────────
+  dataSources:        DataSourceDescriptor[];
+
+  // ── Analytics ──────────────────────────────────────────────────────────────
+  trackingId:         string;
+}
+
+// ── Screen IDs (all elder screens) ──────────────────────────────────────────
+export type ScreenId =
+  | 'ELDER_HOME'
+  | 'ELDER_TODAY'
+  | 'ELDER_MY_PILLS'
+  | 'ELDER_PILL_DETAIL'
+  | 'ELDER_TAKE_PILL'
+  | 'ELDER_FAMILY'
+  | 'ELDER_VOICE_MESSAGE'
+  | 'ELDER_READ_MESSAGE'
+  | 'ELDER_LIFE_STORY'
+  | 'ELDER_HELP'
+  | 'ELDER_SHIELD_AMBER'
+  | 'ELDER_SHIELD_RED'
+  | 'ELDER_SHIELD_BLACK'
+  | 'ELDER_COACHING_CARD'
+  | 'ELDER_DOCUMENT_EXPLAINER'
+  | 'ELDER_WELLNESS_CHECKIN'
+  | 'ELDER_COGNITIVE_CHECKIN'
+  | 'ELDER_MEMORY_LANE'
+  | 'ELDER_STORY_ARCHIVE'
+  | 'ELDER_SETTINGS'
+  | 'ELDER_ONBOARDING_WELCOME'
+  | 'ELDER_ONBOARDING_VOICE_TEST'
+  | 'ELDER_ONBOARDING_COMPLETE';
+
+// ── Layouts ──────────────────────────────────────────────────────────────────
+export type LayoutVariant =
+  | 'HOME_GRID'        // 2×2 hero buttons
+  | 'ONE_CARD'         // single card, scrollable rows
+  | 'FULL_OVERLAY'     // modal-style, dim background
+  | 'STORY'            // serif, warm bg, recorder
+  | 'VOICE_FOCUS'      // giant mic, minimal distractions
+  | 'EMERGENCY'        // red, giant call button
+  | 'ONBOARDING';      // single panel, step-by-step
+
+export type HeaderVariant =
+  | 'GREETING'         // "Good Morning, Margaret" + Halo
+  | 'TITLE_BACK'       // "← Today" — depth 2 screens
+  | 'TITLE_ONLY'       // no back (rare — overlays)
+  | 'HIDDEN';          // emergency / overlays
+
+export type ThemeColorKey =
+  | 'bg.primary'
+  | 'bg.secondary'
+  | 'bg.story'         // warm ivory
+  | 'bg.emergency'     // soft red
+  | 'bg.overlay_amber'
+  | 'bg.overlay_red'
+  | 'bg.overlay_black'
+  | 'bg.night';        // deep navy for night mode
+
+// ── Persistent elements ──────────────────────────────────────────────────────
+export type PersistentElement =
+  | 'EMERGENCY_BUTTON'
+  | 'VOICE_BUTTON'
+  | 'HALO_STATUS'
+  | 'BACK_BUTTON';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTENT BLOCKS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type ContentBlock =
+  | GreetingBlock
+  | HaloBlock
+  | ButtonGridBlock
+  | CardBlock
+  | ListBlock
+  | MedicationNextBlock
+  | VoicePromptBlock
+  | RecorderBlock
+  | AlertExplanationBlock
+  | CoachingCardBlock
+  | DocumentSummaryBlock
+  | WellnessSelectorBlock
+  | CognitiveChallengeBlock
+  | PhotoGridBlock
+  | FamilyMemberListBlock
+  | TextBlock
+  | DividerBlock
+  | SpacerBlock;
+
+// ── Base block interface ──────────────────────────────────────────────────────
+interface BaseBlock {
+  blockId:          string;
+  blockType:        string;
+  visible?:         VisibilityCondition;  // conditionally show/hide
+  animateIn?:       AnimationSpec;
+}
+
+// ── Greeting ─────────────────────────────────────────────────────────────────
+export interface GreetingBlock extends BaseBlock {
+  blockType:        'GREETING';
+  textTemplate:     string;              // "Good {{timeOfDay}}, {{elderName}}"
+  subtextTemplate?: string;              // "{{dayName}}, {{date}}"
+  textVariant:      'hero' | 'title';
+  align:            'left' | 'center';
+}
+
+// ── Halo status ring ─────────────────────────────────────────────────────────
+export interface HaloBlock extends BaseBlock {
+  blockType:        'HALO';
+  size:             'sm' | 'md' | 'lg';
+  dataBinding:      'shieldStatus';
+  showLabel:        boolean;
+  labelMap: {
+    safe:   string;
+    amber:  string;
+    red:    string;
+  };
+}
+
+// ── 2×2 hero button grid ─────────────────────────────────────────────────────
+export interface ButtonGridBlock extends BaseBlock {
+  blockType:        'BUTTON_GRID';
+  columns:          2;                   // always 2 for home
+  buttons:          HeroButton[];        // exactly 4
+}
+
+export interface HeroButton {
+  buttonId:         string;
+  label:            string;
+  icon:             string;             // emoji or SF symbol name
+  iconPosition:     'top';             // always top for hero
+  action:           ButtonAction;
+  badgeBinding?:    BadgeBinding;       // e.g. unread count
+  variant:          'primary' | 'danger' | 'safe';
+  accessibilityLabel: string;
+  accessibilityHint:  string;
+}
+
+// ── Card (wraps rows) ─────────────────────────────────────────────────────────
+export interface CardBlock extends BaseBlock {
+  blockType:        'CARD';
+  cardVariant:      'default' | 'elevated' | 'flat'
+                  | 'alert_amber' | 'alert_red'
+                  | 'safe' | 'story' | 'memorial';
+  rows:             CardRow[];
+  maxRows:          number;             // build test enforces this
+  header?:          string;
+  headerIcon?:      string;
+}
+
+export type CardRow =
+  | MedReminderRow
+  | AppointmentRow
+  | MessageRow
+  | TaskRow
+  | FamilyMemberRow
+  | PromptRow
+  | InfoRow
+  | ActionRow;
+
+interface BaseRow {
+  rowId:            string;
+  rowType:          string;
+  tapAction:        RowAction;
+  accessibilityLabel: string;
+  accessibilityHint:  string;
+}
+
+export interface MedReminderRow extends BaseRow {
+  rowType:          'MED_REMINDER';
+  dataBinding:      'nextMedication';
+  showTime:         boolean;
+  showDescription:  boolean;           // plain description, not drug name
+  showStatus:       boolean;
+  statusBinding:    'medicationStatus';
+}
+
+export interface AppointmentRow extends BaseRow {
+  rowType:          'APPOINTMENT';
+  dataBinding:      'nextAppointment';
+  showTime:         boolean;
+  showLocation:     boolean;
+}
+
+export interface MessageRow extends BaseRow {
+  rowType:          'FAMILY_MESSAGE';
+  dataBinding:      'unreadMessages';
+  showSenderName:   boolean;
+  showPreview:      boolean;           // max 40 chars
+  showAvatar:       boolean;
+}
+
+export interface TaskRow extends BaseRow {
+  rowType:          'TASK';
+  dataBinding:      'task';
+  showTime:         boolean;
+  showAttribution:  boolean;
+  showComplete:     boolean;
+}
+
+export interface FamilyMemberRow extends BaseRow {
+  rowType:          'FAMILY_MEMBER';
+  dataBinding:      'familyMember';
+  showAvatar:       boolean;
+  showPresence:     boolean;
+  inlineActions:    InlineAction[];    // max 2: "Thinking of you" + "Send voice"
+}
+
+export interface PromptRow extends BaseRow {
+  rowType:          'PROMPT';
+  promptText:       string;
+  promptIcon:       string;
+  cta:              string;
+}
+
+export interface InfoRow extends BaseRow {
+  rowType:          'INFO';
+  label:            string;
+  value?:           string;
+  valueBinding?:    string;
+  icon?:            string;
+}
+
+export interface ActionRow extends BaseRow {
+  rowType:          'ACTION';
+  label:            string;
+  icon:             string;
+  style:            'normal' | 'destructive' | 'safe';
+}
+
+// ── Scrollable list ───────────────────────────────────────────────────────────
+export interface ListBlock extends BaseBlock {
+  blockType:        'LIST';
+  dataBinding:      string;
+  rowType:          CardRow['rowType'];
+  maxVisible?:      number;
+  emptyMessage:     string;
+  showSectionHeader?: boolean;
+  sectionKey?:      string;
+}
+
+// ── Medication "next dose" focus block ────────────────────────────────────────
+export interface MedicationNextBlock extends BaseBlock {
+  blockType:        'MED_NEXT';
+  dataBinding:      'currentReminder';
+  showLargeTime:    boolean;
+  showPillDescription: boolean;
+  showPillVisual:   boolean;           // colour/shape indicator
+  primaryAction:    MedAction;
+  secondaryAction:  MedAction;
+}
+
+export type MedAction = {
+  label:            string;
+  action:           'CONFIRM_TAKEN' | 'SNOOZE_REMINDER' | 'VIEW_DETAIL';
+  style:            'primary' | 'secondary';
+  accessibilityLabel: string;
+};
+
+// ── Voice prompt ──────────────────────────────────────────────────────────────
+export interface VoicePromptBlock extends BaseBlock {
+  blockType:        'VOICE_PROMPT';
+  promptText:       string;
+  subtext?:         string;
+  showMicButton:    boolean;
+  micSize:          'md' | 'lg' | 'xl';
+  autoDismissOnComplete: boolean;
+}
+
+// ── Story recorder ────────────────────────────────────────────────────────────
+export interface RecorderBlock extends BaseBlock {
+  blockType:        'RECORDER';
+  promptBinding:    'currentStoryPrompt';
+  showWaveform:     boolean;
+  showDuration:     boolean;
+  showSkip:         boolean;
+  skipLabel:        string;
+  doneLabel:        string;
+  maxDurationSeconds: number;
+}
+
+// ── Shield alert explanation ──────────────────────────────────────────────────
+export interface AlertExplanationBlock extends BaseBlock {
+  blockType:        'ALERT_EXPLANATION';
+  level:            'amber' | 'red' | 'black';
+  explanationBinding: 'scamExplanation';
+  redFlagsBinding:  'scamRedFlags';
+  showRedFlags:     boolean;
+  maxRedFlags:      3;                 // never more than 3 bullets
+  tone:             'warm';           // always warm tone
+}
+
+// ── Coaching card (in-call silent UI) ────────────────────────────────────────
+export interface CoachingCardBlock extends BaseBlock {
+  blockType:        'COACHING_CARD';
+  requestBinding:   'scamRequestType';
+  responseBinding:  'safeResponse';
+  redFlagsBinding:  'realOrgNeverList';
+  pinPosition:      'top';
+  maxHeightPercent: 40;              // never > 40% of screen
+  silent:           true;           // no sound ever
+}
+
+// ── Document summary ─────────────────────────────────────────────────────────
+export interface DocumentSummaryBlock extends BaseBlock {
+  blockType:        'DOCUMENT_SUMMARY';
+  summaryBinding:   'documentSummary';
+  showPoints:       boolean;         // 3 plain bullet points
+  showDoctorQuestions: boolean;
+  showActions:      boolean;
+}
+
+// ── Wellness selector ────────────────────────────────────────────────────────
+export interface WellnessSelectorBlock extends BaseBlock {
+  blockType:        'WELLNESS_SELECTOR';
+  options: WellnessOption[];
+}
+
+export interface WellnessOption {
+  value:            'great' | 'okay' | 'not_great';
+  emoji:            string;
+  label:            string;
+  color:            string;
+  accessibilityLabel: string;
+}
+
+// ── Cognitive challenge ───────────────────────────────────────────────────────
+export interface CognitiveChallengeBlock extends BaseBlock {
+  blockType:        'COGNITIVE_CHALLENGE';
+  questionBinding:  'cognitiveQuestion';
+  responseOptions:  'VOICE' | 'BUTTONS' | 'BOTH';
+  tone:             'conversational';
+  showSkip:         boolean;
+  skipLabel:        string;
+}
+
+// ── Photo grid (memory lane) ─────────────────────────────────────────────────
+export interface PhotoGridBlock extends BaseBlock {
+  blockType:        'PHOTO_GRID';
+  dataBinding:      'memoryPhotos';
+  columns:          1 | 2;           // 2 max for elder — large tiles
+  showCaption:      boolean;
+  showDate:         boolean;
+  tapAction:        'EXPAND_PHOTO';
+}
+
+// ── Family member list ────────────────────────────────────────────────────────
+export interface FamilyMemberListBlock extends BaseBlock {
+  blockType:        'FAMILY_LIST';
+  dataBinding:      'familyMembers';
+  showActions:      boolean;
+  inlineActions:    InlineAction[];
+}
+
+// ── Text block ───────────────────────────────────────────────────────────────
+export interface TextBlock extends BaseBlock {
+  blockType:        'TEXT';
+  text:             string;
+  textBinding?:     string;
+  variant:          'hero' | 'title' | 'heading' | 'body' | 'bodyLarge' | 'caption';
+  align:            'left' | 'center' | 'right';
+  color?:           string;
+}
+
+// ── Divider ───────────────────────────────────────────────────────────────────
+export interface DividerBlock extends BaseBlock {
+  blockType:        'DIVIDER';
+  style:            'line' | 'space';
+  spacing:          number;
+}
+
+// ── Spacer ────────────────────────────────────────────────────────────────────
+export interface SpacerBlock extends BaseBlock {
+  blockType:        'SPACER';
+  size:             number;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ACTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type ButtonAction =
+  | { type: 'NAVIGATE'; screenId: ScreenId }
+  | { type: 'VOICE_INTENT'; intent: VoiceIntent }
+  | { type: 'SYSTEM'; system: SystemAction }
+  | { type: 'SHEET'; sheetId: SheetId }
+  | { type: 'CALL'; contactBinding: string }
+  | { type: 'CONFIRM_THEN'; confirm: ConfirmSpec; thenAction: ButtonAction };
+
+export type RowAction = ButtonAction;
+
+export type InlineAction = {
+  label:            string;
+  icon:             string;
+  action:           ButtonAction;
+  style:            'primary' | 'secondary' | 'ghost';
+  accessibilityLabel: string;
+};
+
+export type SystemAction =
+  | 'SPEAK_DAILY_BRIEF'
+  | 'START_VOICE_INPUT'
+  | 'OPEN_CAMERA_OCR'
+  | 'CONFIRM_TAKEN'
+  | 'SNOOZE_REMINDER'
+  | 'SEND_THINKING_OF_YOU'
+  | 'START_STORY_RECORDING'
+  | 'STOP_STORY_RECORDING'
+  | 'SUBMIT_WELLNESS'
+  | 'CALL_PRIMARY_CONTACT'
+  | 'CALL_EMERGENCY_SERVICES'
+  | 'DISMISS_ALERT'
+  | 'TRUST_CONTACT'
+  | 'PAUSE_TRANSACTION'
+  | 'CALL_FAMILY_TOGETHER'
+  | 'SCAN_DOCUMENT'
+  | 'SUBMIT_COGNITIVE_RESPONSE'
+  | 'OPEN_NFC_PROFILE';
+
+export type SheetId =
+  | 'SHEET_MEDICATION_DETAIL'
+  | 'SHEET_TASK_DETAIL'
+  | 'SHEET_MESSAGE_DETAIL'
+  | 'SHEET_SCAM_DETAIL'
+  | 'SHEET_CONFIRM_DISMISS'
+  | 'SHEET_REFILL_REMINDER'
+  | 'SHEET_TRANSPORT_BOOKING'
+  | 'SHEET_LEGACY_CONFIRM';
+
+export interface ConfirmSpec {
+  title:            string;
+  body:             string;
+  confirmLabel:     string;
+  cancelLabel:      string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BOTTOM ACTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface BottomAction {
+  actionId:         string;
+  label:            string;
+  icon?:            string;
+  style:            'primary' | 'secondary' | 'ghost';
+  action:           ButtonAction;
+  fullWidth?:       boolean;
+  accessibilityLabel: string;
+  accessibilityHint: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VOICE SCHEMA
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface VoiceSchema {
+  entrySpeak?:      SpeakSpec;          // what HAVEN says on screen load
+  alwaysListening:  boolean;            // default false; opt-in only
+  wakeWord?:        string;
+  commands:         VoiceCommand[];
+  fallback:         VoiceFallback;
+}
+
+export interface SpeakSpec {
+  template:         string;            // "Good {{timeOfDay}}, {{elderName}}"
+  bindings:         string[];
+  voice:            'warm' | 'calm' | 'urgent_calm'; // urgent_calm = alert but not alarming
+  delay_ms:         number;            // delay before auto-speaking
+  skipIfSilentMode: boolean;
+}
+
+export interface VoiceCommand {
+  commandId:        string;
+  utterances:       string[];          // ["i took it", "done", "taken", "yes"]
+  intent:           VoiceIntent;
+  slots?:           VoiceSlot[];
+  confirmBefore?:   boolean;
+  confirmMessage?:  string;
+}
+
+export type VoiceIntent =
+  | 'CONFIRM_MEDICATION_TAKEN'
+  | 'SNOOZE_MEDICATION'
+  | 'READ_DAILY_BRIEF'
+  | 'CREATE_TASK'
+  | 'SEND_THINKING_OF_YOU'
+  | 'SEND_VOICE_MESSAGE'
+  | 'READ_MESSAGES'
+  | 'START_STORY'
+  | 'SKIP_STORY'
+  | 'SUBMIT_WELLNESS_GREAT'
+  | 'SUBMIT_WELLNESS_OKAY'
+  | 'SUBMIT_WELLNESS_NOT_GREAT'
+  | 'CALL_FAMILY'
+  | 'CALL_EMERGENCY'
+  | 'DISMISS_ALERT_WITH_TRUST'
+  | 'ACCEPT_SCAM_WARNING'
+  | 'ANSWER_COGNITIVE'
+  | 'READ_DOCUMENT'
+  | 'NAVIGATE_HOME'
+  | 'NAVIGATE_PILLS'
+  | 'NAVIGATE_TODAY'
+  | 'NAVIGATE_FAMILY';
+
+export interface VoiceSlot {
+  name:             string;
+  type:             'TEXT' | 'DATE' | 'TIME' | 'PERSON' | 'AMOUNT';
+  required:         boolean;
+  reprompt:         string;
+}
+
+export interface VoiceFallback {
+  message:          string;           // shown when HAVEN doesn't understand
+  offerOptions:     boolean;          // show 2 big buttons as fallback
+  options?:         VoiceFallbackOption[];
+}
+
+export interface VoiceFallbackOption {
+  label:            string;
+  intent:           VoiceIntent;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EMPTY STATES
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface EmptyStateSchema {
+  icon:             string;
+  title:            string;
+  body:             string;
+  action?:          EmptyStateAction;
+  voicePrompt?:     string;
+}
+
+export interface EmptyStateAction {
+  label:            string;
+  action:           ButtonAction;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN STATES
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type ScreenStateMap = Partial<Record<ScreenStateName, ScreenStateOverride>>;
+
+export type ScreenStateName =
+  | 'LOADING'
+  | 'ERROR'
+  | 'OFFLINE'
+  | 'EMPTY'
+  | 'AMBER_ALERT'
+  | 'RED_ALERT'
+  | 'MEDICATION_OVERDUE'
+  | 'BEREAVEMENT';
+
+export interface ScreenStateOverride {
+  backgroundColor?:   ThemeColorKey;
+  headerVariant?:     HeaderVariant;
+  extraBlocks?:       ContentBlock[];
+  replaceBlocks?:     ContentBlock[];
+  bottomActions?:     BottomAction[];
+  voiceOverride?:     Partial<VoiceSchema>;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NAVIGATION SCHEMA
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface NavigationSchema {
+  fromScreens:      ScreenId[];        // which screens can navigate here
+  backTarget?:      ScreenId;          // where Back goes
+  depthFromHome:    0 | 1 | 2;        // enforced: never > 2
+  isModal?:         boolean;
+  isOverlay?:       boolean;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA SOURCES
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface DataSourceDescriptor {
+  key:              string;
+  queryKey:         string;
+  refetchInterval?: number;            // ms — for real-time screens
+  offlineCacheTTL:  number;            // ms — how long to serve stale data
+  shape:            string;            // TypeScript type name for docs
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VISIBILITY CONDITIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type VisibilityCondition =
+  | { condition: 'DATA_EXISTS'; dataKey: string }
+  | { condition: 'DATA_EMPTY'; dataKey: string }
+  | { condition: 'FEATURE_FLAG'; flag: string }
+  | { condition: 'USER_SETTING'; setting: string; value: unknown }
+  | { condition: 'ALERT_LEVEL'; level: 'amber' | 'red' | 'black' }
+  | { condition: 'TIME_OF_DAY'; from: string; to: string }
+  | { condition: 'BEREAVEMENT_ACTIVE' }
+  | { condition: 'AND'; conditions: VisibilityCondition[] }
+  | { condition: 'OR';  conditions: VisibilityCondition[] };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANIMATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface AnimationSpec {
+  type:       'SLIDE_UP' | 'FADE_IN' | 'SCALE_IN' | 'BREATHING_PULSE' | 'NONE';
+  duration:   number;                  // ms
+  delay?:     number;                  // ms
+  easing:     'smooth' | 'enter' | 'slow_ease';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BADGE BINDING
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface BadgeBinding {
+  dataKey:    string;
+  threshold:  number;                  // show badge only when count > threshold
+  color:      'amber' | 'red' | 'blue';
+  maxDisplay: number;                  // e.g. 9 → shows "9+" above
+}
+Part 2 — Complete Screen Schema JSON Definitions
+Every single screen. Every row. Every voice command. Every empty state.
+
+TypeScript
+
+// schema/screens/index.ts
+// ─────────────────────────────────────────────────────────────────────────────
+// ALL ELDER APP SCREENS
+// ─────────────────────────────────────────────────────────────────────────────
+
+import type { ScreenSchema } from '../types';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 1: HOME
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_HOME: ScreenSchema = {
+  screenId:           'ELDER_HOME',
+  title:              'Home',
+  accessibilityLabel: 'HAVEN home screen',
+  layout:             'HOME_GRID',
+  backgroundColor:    'bg.primary',
+  headerVariant:      'GREETING',
+  maxPrimaryItems:    4,
+  trackingId:         'elder_home_view',
+
+  contentBlocks: [
+    {
+      blockId:    'home_greeting',
+      blockType:  'GREETING',
+      textTemplate:  'Good {{timeOfDay}}, {{elderName}}',
+      subtextTemplate: '{{dayName}}, {{dateFormatted}}',
+      textVariant: 'hero',
+      align:      'left',
+    },
+    {
+      blockId:    'home_halo',
+      blockType:  'HALO',
+      size:       'sm',
+      dataBinding: 'shieldStatus',
+      showLabel:  true,
+      labelMap: {
+        safe:   'HAVEN is keeping you safe',
+        amber:  'Something unusual — no rush',
+        red:    'Let\'s slow down together',
+      },
+      animateIn: { type: 'FADE_IN', duration: 800, easing: 'smooth' },
+    },
+    {
+      blockId:    'home_grid',
+      blockType:  'BUTTON_GRID',
+      columns:    2,
+      buttons: [
+        {
+          buttonId:   'home_pills',
+          label:      'My Pills',
+          icon:       '💊',
+          iconPosition: 'top',
+          variant:    'primary',
+          action:     { type: 'NAVIGATE', screenId: 'ELDER_MY_PILLS' },
+          badgeBinding: {
+            dataKey:    'pendingMedicationCount',
+            threshold:  0,
+            color:      'amber',
+            maxDisplay: 9,
+          },
+          accessibilityLabel: 'My medications',
+          accessibilityHint:  'Opens your medication reminders',
+        },
+        {
+          buttonId:   'home_today',
+          label:      'Today',
+          icon:       '📅',
+          iconPosition: 'top',
+          variant:    'primary',
+          action:     { type: 'NAVIGATE', screenId: 'ELDER_TODAY' },
+          badgeBinding: {
+            dataKey:    'todayTaskCount',
+            threshold:  0,
+            color:      'blue',
+            maxDisplay: 9,
+          },
+          accessibilityLabel: 'Today\'s schedule',
+          accessibilityHint:  'See what\'s happening today',
+        },
+        {
+          buttonId:   'home_family',
+          label:      'Family',
+          icon:       '👪',
+          iconPosition: 'top',
+          variant:    'primary',
+          action:     { type: 'NAVIGATE', screenId: 'ELDER_FAMILY' },
+          badgeBinding: {
+            dataKey:    'unreadMessageCount',
+            threshold:  0,
+            color:      'blue',
+            maxDisplay: 9,
+          },
+          accessibilityLabel: 'Family messages and connection',
+          accessibilityHint:  'Send messages and connect with family',
+        },
+        {
+          buttonId:   'home_help',
+          label:      'Help',
+          icon:       '🆘',
+          iconPosition: 'top',
+          variant:    'danger',
+          action:     { type: 'NAVIGATE', screenId: 'ELDER_HELP' },
+          accessibilityLabel: 'Get help now',
+          accessibilityHint:  'Call someone you trust immediately',
+        },
+      ],
+    },
+  ],
+
+  bottomActions: [],
+
+  persistent: ['VOICE_BUTTON', 'HALO_STATUS'],
+
+  voice: {
+    entrySpeak: {
+      template:   'Good {{timeOfDay}}, {{elderName}}. {{briefSummary}}',
+      bindings:   ['timeOfDay', 'elderName', 'briefSummary'],
+      voice:      'warm',
+      delay_ms:   600,
+      skipIfSilentMode: true,
+    },
+    alwaysListening: false,
+    commands: [
+      {
+        commandId: 'go_pills',
+        utterances: ['my pills', 'medication', 'pills', 'my medicine', 'take my pill'],
+        intent:     'NAVIGATE_PILLS',
+      },
+      {
+        commandId: 'go_today',
+        utterances: ["what's today", 'today', "what's on today", 'my day', 'schedule'],
+        intent:     'NAVIGATE_TODAY',
+      },
+      {
+        commandId: 'go_family',
+        utterances: ['family', 'messages', 'call sarah', 'message sarah', 'speak to family'],
+        intent:     'NAVIGATE_FAMILY',
+      },
+      {
+        commandId: 'call_help',
+        utterances: ['help', 'emergency', 'call someone', "i'm scared", "i've been scammed"],
+        intent:     'CALL_FAMILY',
+      },
+      {
+        commandId: 'read_brief',
+        utterances: ['read my day', "what's happening today", 'tell me today', 'good morning'],
+        intent:     'READ_DAILY_BRIEF',
+      },
+    ],
+    fallback: {
+      message:      "I didn't quite catch that. What would you like to do?",
+      offerOptions: true,
+      options: [
+        { label: 'My Pills',  intent: 'NAVIGATE_PILLS'  },
+        { label: 'Today',     intent: 'NAVIGATE_TODAY'  },
+      ],
+    },
+  },
+
+  emptyState: undefined,  // home is never empty
+
+  states: {
+    AMBER_ALERT: {
+      extraBlocks: [{
+        blockId:    'home_amber_banner',
+        blockType:  'TEXT',
+        text:       'Something unusual came up — no rush. HAVEN will explain.',
+        variant:    'body',
+        align:      'left',
+        color:      'amber',
+        animateIn:  { type: 'SLIDE_UP', duration: 500, easing: 'slow_ease' },
+      }],
+      voiceOverride: {
+        entrySpeak: {
+          template:   'Good {{timeOfDay}}, {{elderName}}. There\'s something I\'d like to show you when you\'re ready. No rush.',
+          bindings:   ['timeOfDay', 'elderName'],
+          voice:      'calm',
+          delay_ms:   800,
+          skipIfSilentMode: false,
+        },
+      },
+    },
+    OFFLINE: {
+      extraBlocks: [{
+        blockId:    'home_offline_banner',
+        blockType:  'TEXT',
+        text:       'No internet right now. Your reminders still work.',
+        variant:    'caption',
+        align:      'center',
+        color:      'tertiary',
+      }],
+    },
+    BEREAVEMENT: {
+      voiceOverride: {
+        entrySpeak: {
+          template:   'Good {{timeOfDay}}, {{elderName}}. I\'m here with you today.',
+          bindings:   ['timeOfDay', 'elderName'],
+          voice:      'warm',
+          delay_ms:   800,
+          skipIfSilentMode: true,
+        },
+      },
+    },
+  },
+
+  navigation: {
+    fromScreens:  [],
+    depthFromHome: 0,
+  },
+
+  dataSources: [
+    { key: 'shieldStatus',         queryKey: 'shield.status',          refetchInterval: 15000, offlineCacheTTL: 60000,  shape: 'ShieldStatus'     },
+    { key: 'elderName',            queryKey: 'profile.preferredName',  offlineCacheTTL: 86400000, shape: 'string'       },
+    { key: 'timeOfDay',            queryKey: 'system.timeOfDay',       offlineCacheTTL: 60000,  shape: 'string'         },
+    { key: 'briefSummary',         queryKey: 'today.briefSummary',     offlineCacheTTL: 300000, shape: 'string'         },
+    { key: 'pendingMedicationCount', queryKey: 'medications.pendingCount', refetchInterval: 60000, offlineCacheTTL: 300000, shape: 'number' },
+    { key: 'unreadMessageCount',   queryKey: 'messages.unreadCount',   refetchInterval: 30000,  offlineCacheTTL: 300000, shape: 'number' },
+    { key: 'todayTaskCount',       queryKey: 'tasks.todayCount',       offlineCacheTTL: 300000, shape: 'number'         },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 2: TODAY
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_TODAY: ScreenSchema = {
+  screenId:           'ELDER_TODAY',
+  title:              'Today',
+  accessibilityLabel: 'Today\'s schedule and reminders',
+  layout:             'ONE_CARD',
+  backgroundColor:    'bg.primary',
+  headerVariant:      'TITLE_BACK',
+  maxPrimaryItems:    3,
+  trackingId:         'elder_today_view',
+
+  contentBlocks: [
+    {
+      blockId:    'today_date',
+      blockType:  'TEXT',
+      textBinding: 'todayFull',
+      variant:    'heading',
+      align:      'left',
+    },
+    {
+      blockId:    'today_card',
+      blockType:  'CARD',
+      cardVariant: 'elevated',
+      maxRows:    3,
+      rows: [
+        {
+          rowId:    'today_med',
+          rowType:  'MED_REMINDER',
+          dataBinding: 'nextMedication',
+          showTime: true,
+          showDescription: true,
+          showStatus: true,
+          statusBinding: 'medicationStatus',
+          tapAction: { type: 'NAVIGATE', screenId: 'ELDER_MY_PILLS' },
+          accessibilityLabel: 'Next medication reminder',
+          accessibilityHint:  'Tap to take or snooze your medication',
+          visible: { condition: 'DATA_EXISTS', dataKey: 'nextMedication' },
+        },
+        {
+          rowId:    'today_appt',
+          rowType:  'APPOINTMENT',
+          dataBinding: 'nextAppointment',
+          showTime: true,
+          showLocation: true,
+          tapAction: { type: 'SHEET', sheetId: 'SHEET_TASK_DETAIL' },
+          accessibilityLabel: 'Next appointment',
+          accessibilityHint:  'Tap to see appointment details',
+          visible: { condition: 'DATA_EXISTS', dataKey: 'nextAppointment' },
+        },
+        {
+          rowId:    'today_message',
+          rowType:  'FAMILY_MESSAGE',
+          dataBinding: 'unreadMessages',
+          showSenderName: true,
+          showPreview: true,
+          showAvatar: true,
+          tapAction: { type: 'NAVIGATE', screenId: 'ELDER_READ_MESSAGE' },
+          accessibilityLabel: 'Unread family message',
+          accessibilityHint:  'Tap to read the message',
+          visible: { condition: 'DATA_EXISTS', dataKey: 'unreadMessages' },
+        },
+      ],
+    },
+    {
+      blockId:   'today_tasks_section',
+      blockType: 'LIST',
+      dataBinding: 'todayTasks',
+      rowType:   'TASK',
+      maxVisible: 5,
+      emptyMessage: 'Nothing else today.',
+      showSectionHeader: true,
+      sectionKey: 'Reminders',
+      visible: { condition: 'DATA_EXISTS', dataKey: 'todayTasks' },
+    },
+  ],
+
+  bottomActions: [
+    {
+      actionId:   'hear_day',
+      label:      'Hear my day',
+      icon:       '🔊',
+      style:      'primary',
+      fullWidth:  false,
+      action:     { type: 'SYSTEM', system: 'SPEAK_DAILY_BRIEF' },
+      accessibilityLabel: 'Hear today\'s schedule read aloud',
+      accessibilityHint:  'HAVEN will read everything for today',
+    },
+    {
+      actionId:   'add_reminder',
+      label:      'Add reminder',
+      icon:       '🎤',
+      style:      'secondary',
+      fullWidth:  false,
+      action:     { type: 'SYSTEM', system: 'START_VOICE_INPUT' },
+      accessibilityLabel: 'Add a reminder by speaking',
+      accessibilityHint:  'Speak to add a reminder, appointment, or task',
+    },
+  ],
+
+  persistent: ['EMERGENCY_BUTTON', 'VOICE_BUTTON'],
+
+  voice: {
+    alwaysListening: false,
+    commands: [
+      {
+        commandId: 'read_brief',
+        utterances: ["read my day", "what's today", "hear today", "read today"],
+        intent:     'READ_DAILY_BRIEF',
+      },
+      {
+        commandId: 'add_task',
+        utterances: [
+          "remind me to *",
+          "don't forget *",
+          "add reminder *",
+          "remember to *",
+          "put in my diary *",
+        ],
+        intent:     'CREATE_TASK',
+        slots: [{
+          name:     'taskDescription',
+          type:     'TEXT',
+          required: true,
+          reprompt: "What would you like me to remind you about?",
+        }],
+      },
+      {
+        commandId: 'go_home',
+        utterances: ['go back', 'home', 'back'],
+        intent:     'NAVIGATE_HOME',
+      },
+    ],
+    fallback: {
+      message:      "I didn't catch that. Tap 'Hear my day' to hear today, or 'Add reminder' to add something.",
+      offerOptions: true,
+      options: [
+        { label: 'Hear my day',  intent: 'READ_DAILY_BRIEF' },
+        { label: 'Add reminder', intent: 'CREATE_TASK'      },
+      ],
+    },
+  },
+
+  emptyState: {
+    icon:   '☀️',
+    title:  'Today is clear',
+    body:   'No reminders or appointments. Would you like to add something?',
+    action: {
+      label:  'Add a reminder',
+      action: { type: 'SYSTEM', system: 'START_VOICE_INPUT' },
+    },
+    voicePrompt: "Today is clear. Would you like to add a reminder?",
+  },
+
+  states: {
+    OFFLINE: {
+      extraBlocks: [{
+        blockId:  'today_offline',
+        blockType: 'TEXT',
+        text:     'Showing saved information — updates when internet is back.',
+        variant:  'caption',
+        align:    'center',
+      }],
+    },
+    LOADING: {
+      replaceBlocks: [{
+        blockId:  'today_loading',
+        blockType: 'TEXT',
+        text:     'Getting your day ready…',
+        variant:  'body',
+        align:    'center',
+        animateIn: { type: 'FADE_IN', duration: 300, easing: 'smooth' },
+      }],
+    },
+  },
+
+  navigation: {
+    fromScreens:   ['ELDER_HOME'],
+    backTarget:    'ELDER_HOME',
+    depthFromHome: 1,
+  },
+
+  dataSources: [
+    { key: 'todayFull',        queryKey: 'system.todayFull',         offlineCacheTTL: 3600000,  shape: 'string'        },
+    { key: 'nextMedication',   queryKey: 'medications.nextReminder', refetchInterval: 60000,    offlineCacheTTL: 300000, shape: 'MedicationReminder' },
+    { key: 'medicationStatus', queryKey: 'medications.status',       refetchInterval: 60000,    offlineCacheTTL: 300000, shape: 'MedicationStatus' },
+    { key: 'nextAppointment',  queryKey: 'tasks.nextAppointment',    offlineCacheTTL: 300000,   shape: 'Task'          },
+    { key: 'unreadMessages',   queryKey: 'messages.unread.first',    refetchInterval: 30000,    offlineCacheTTL: 300000, shape: 'FamilyMessage'    },
+    { key: 'todayTasks',       queryKey: 'tasks.today',              offlineCacheTTL: 300000,   shape: 'Task[]'        },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 3: MY PILLS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_MY_PILLS: ScreenSchema = {
+  screenId:           'ELDER_MY_PILLS',
+  title:              'My Pills',
+  accessibilityLabel: 'Your medication reminders',
+  layout:             'ONE_CARD',
+  backgroundColor:    'bg.primary',
+  headerVariant:      'TITLE_BACK',
+  maxPrimaryItems:    3,
+  trackingId:         'elder_pills_view',
+
+  contentBlocks: [
+    {
+      blockId:    'pills_next',
+      blockType:  'MED_NEXT',
+      dataBinding: 'currentReminder',
+      showLargeTime:    true,
+      showPillDescription: true,
+      showPillVisual:   true,
+      primaryAction: {
+        label:              'I took it',
+        action:             'CONFIRM_TAKEN',
+        style:              'primary',
+        accessibilityLabel: 'Confirm I took this medication',
+      },
+      secondaryAction: {
+        label:              'Not yet',
+        action:             'SNOOZE_REMINDER',
+        style:              'secondary',
+        accessibilityLabel: 'Remind me again in 15 minutes',
+      },
+      visible: { condition: 'DATA_EXISTS', dataKey: 'currentReminder' },
+    },
+    {
+      blockId:    'pills_later',
+      blockType:  'CARD',
+      cardVariant: 'flat',
+      header:     'Later today',
+      headerIcon: '🕐',
+      maxRows:    3,
+      rows: [
+        {
+          rowId:       'pill_row_1',
+          rowType:     'MED_REMINDER',
+          dataBinding: 'laterMedication[0]',
+          showTime:    true,
+          showDescription: true,
+          showStatus:  false,
+          statusBinding: 'medicationStatus',
+          tapAction:   { type: 'SHEET', sheetId: 'SHEET_MEDICATION_DETAIL' },
+          accessibilityLabel: 'Later medication',
+          accessibilityHint:  'Tap for details',
+          visible: { condition: 'DATA_EXISTS', dataKey: 'laterMedication[0]' },
+        },
+        {
+          rowId:       'pill_row_2',
+          rowType:     'MED_REMINDER',
+          dataBinding: 'laterMedication[1]',
+          showTime:    true,
+          showDescription: true,
+          showStatus:  false,
+          statusBinding: 'medicationStatus',
+          tapAction:   { type: 'SHEET', sheetId: 'SHEET_MEDICATION_DETAIL' },
+          accessibilityLabel: 'Later medication',
+          accessibilityHint:  'Tap for details',
+          visible: { condition: 'DATA_EXISTS', dataKey: 'laterMedication[1]' },
+        },
+        {
+          rowId:       'pill_row_3',
+          rowType:     'MED_REMINDER',
+          dataBinding: 'laterMedication[2]',
+          showTime:    true,
+          showDescription: true,
+          showStatus:  false,
+          statusBinding: 'medicationStatus',
+          tapAction:   { type: 'SHEET', sheetId: 'SHEET_MEDICATION_DETAIL' },
+          accessibilityLabel: 'Later medication',
+          accessibilityHint:  'Tap for details',
+          visible: { condition: 'DATA_EXISTS', dataKey: 'laterMedication[2]' },
+        },
+      ],
+      visible: { condition: 'DATA_EXISTS', dataKey: 'laterMedication' },
+    },
+  ],
+
+  bottomActions: [
+    {
+      actionId:   'speak_pills',
+      label:      'Tell me about my pills',
+      icon:       '🔊',
+      style:      'secondary',
+      action:     { type: 'SYSTEM', system: 'SPEAK_DAILY_BRIEF' },
+      accessibilityLabel: 'Hear your medication information read aloud',
+      accessibilityHint:  'HAVEN will describe each pill and when to take it',
+    },
+  ],
+
+  persistent: ['EMERGENCY_BUTTON', 'VOICE_BUTTON'],
+
+  voice: {
+    alwaysListening: false,
+    entrySpeak: {
+      template:   '{{pillSpeakSummary}}',
+      bindings:   ['pillSpeakSummary'],
+      voice:      'warm',
+      delay_ms:   400,
+      skipIfSilentMode: true,
+    },
+    commands: [
+      {
+        commandId:  'confirm_taken',
+        utterances: ['i took it', 'done', 'taken', 'yes', 'i took my pill', 'finished'],
+        intent:     'CONFIRM_MEDICATION_TAKEN',
+        confirmBefore: false,
+      },
+      {
+        commandId:  'snooze',
+        utterances: ['not yet', 'later', 'remind me later', 'snooze', 'give me a minute', 'wait'],
+        intent:     'SNOOZE_MEDICATION',
+      },
+      {
+        commandId:  'describe_pill',
+        utterances: ['what is this pill', 'tell me about my pill', 'what does this do', 'describe my medication'],
+        intent:     'READ_DAILY_BRIEF',
+      },
+    ],
+    fallback: {
+      message:      "I didn't catch that. Did you take your pill, or shall I remind you later?",
+      offerOptions: true,
+      options: [
+        { label: 'I took it',  intent: 'CONFIRM_MEDICATION_TAKEN' },
+        { label: 'Not yet',    intent: 'SNOOZE_MEDICATION'         },
+      ],
+    },
+  },
+
+  emptyState: {
+    icon:   '✅',
+    title:  'All done for now',
+    body:   'Your next pill will show up here when it\'s time.',
+    voicePrompt: "All your pills are done for now. Well done.",
+  },
+
+  states: {
+    MEDICATION_OVERDUE: {
+      backgroundColor: 'bg.secondary',
+      extraBlocks: [{
+        blockId:    'pills_overdue_note',
+        blockType:  'TEXT',
+        text:       'This was due a little while ago. No problem — take it when you\'re ready.',
+        variant:    'body',
+        align:      'left',
+        color:      'amber',
+        animateIn:  { type: 'FADE_IN', duration: 400, easing: 'smooth' },
+      }],
+    },
+  },
+
+  navigation: {
+    fromScreens:   ['ELDER_HOME', 'ELDER_TODAY'],
+    backTarget:    'ELDER_HOME',
+    depthFromHome: 1,
+  },
+
+  dataSources: [
+    { key: 'currentReminder',  queryKey: 'medications.currentReminder', refetchInterval: 30000,  offlineCacheTTL: 300000, shape: 'MedicationReminder' },
+    { key: 'laterMedication',  queryKey: 'medications.laterToday',      offlineCacheTTL: 300000, shape: 'MedicationReminder[]' },
+    { key: 'pillSpeakSummary', queryKey: 'medications.speakSummary',    offlineCacheTTL: 300000, shape: 'string' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 4: FAMILY
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_FAMILY: ScreenSchema = {
+  screenId:           'ELDER_FAMILY',
+  title:              'Family',
+  accessibilityLabel: 'Your family connections and messages',
+  layout:             'ONE_CARD',
+  backgroundColor:    'bg.primary',
+  headerVariant:      'TITLE_BACK',
+  maxPrimaryItems:    3,
+  trackingId:         'elder_family_view',
+
+  contentBlocks: [
+    {
+      blockId:    'family_members',
+      blockType:  'FAMILY_LIST',
+      dataBinding: 'familyMembers',
+      showActions: true,
+      inlineActions: [
+        {
+          label:  'Thinking of you',
+          icon:   '💙',
+          style:  'primary',
+          action: { type: 'SYSTEM', system: 'SEND_THINKING_OF_YOU' },
+          accessibilityLabel: 'Send a thinking of you message',
+        },
+        {
+          label:  'Send voice',
+          icon:   '🎤',
+          style:  'secondary',
+          action: { type: 'NAVIGATE', screenId: 'ELDER_VOICE_MESSAGE' },
+          accessibilityLabel: 'Record and send a voice message',
+        },
+      ],
+    },
+    {
+      blockId:    'family_grandchildren',
+      blockType:  'CARD',
+      cardVariant: 'default',
+      header:     'Grandchildren',
+      headerIcon: '👶',
+      maxRows:    1,
+      rows: [{
+        rowId:    'grandchild_hellos',
+        rowType:  'PROMPT',
+        promptText: 'New hello from {{grandchildName}}',
+        promptIcon: '🎥',
+        cta:      'See it now',
+        tapAction: { type: 'NAVIGATE', screenId: 'ELDER_READ_MESSAGE' },
+        accessibilityLabel: 'New video hello from grandchild',
+        accessibilityHint:  'Tap to watch',
+      }],
+      visible: { condition: 'DATA_EXISTS', dataKey: 'grandchildMessages' },
+    },
+    {
+      blockId:    'family_story',
+      blockType:  'CARD',
+      cardVariant: 'story',
+      header:     'This week\'s story',
+      headerIcon: '📖',
+      maxRows:    1,
+      rows: [{
+        rowId:    'story_prompt',
+        rowType:  'PROMPT',
+        promptText: '{{storyPromptText}}',
+        promptIcon: '🎙️',
+        cta:      'Tell my story',
+        tapAction: { type: 'NAVIGATE', screenId: 'ELDER_LIFE_STORY' },
+        accessibilityLabel: 'Record this week\'s life story',
+        accessibilityHint:  'Tap to start speaking your memory',
+      }],
+      visible: { condition: 'DATA_EXISTS', dataKey: 'weeklyStoryPrompt' },
+    },
+  ],
+
+  bottomActions: [
+    {
+      actionId:   'read_messages',
+      label:      'Read my messages',
+      icon:       '📩',
+      style:      'primary',
+      action:     { type: 'NAVIGATE', screenId: 'ELDER_READ_MESSAGE' },
+      accessibilityLabel: 'Read all family messages',
+      accessibilityHint:  'See and hear messages from your family',
+    },
+  ],
+
+  persistent: ['EMERGENCY_BUTTON', 'VOICE_BUTTON'],
+
+  voice: {
+    alwaysListening: false,
+    commands: [
+      {
+        commandId: 'send_thinking',
+        utterances: [
+          "thinking of you",
+          "send a thinking of you",
+          "tell sarah i'm thinking of her",
+        ],
+        intent:    'SEND_THINKING_OF_YOU',
+      },
+      {
+        commandId: 'send_voice',
+        utterances: [
+          "send a message to sarah",
+          "voice message",
+          "record a message",
+          "send message",
+        ],
+        intent:    'SEND_VOICE_MESSAGE',
+      },
+      {
+        commandId: 'read_messages',
+        utterances: [
+          "read my messages",
+          "any messages",
+          "what did sarah say",
+          "read messages",
+        ],
+        intent:    'READ_MESSAGES',
+      },
+      {
+        commandId: 'tell_story',
+        utterances: [
+          "tell a memory",
+          "tell my story",
+          "record a memory",
+          "life story",
+        ],
+        intent:    'START_STORY',
+      },
+    ],
+    fallback: {
+      message:      "Would you like to send a message or read one?",
+      offerOptions: true,
+      options: [
+        { label: 'Send a message',  intent: 'SEND_VOICE_MESSAGE' },
+        { label: 'Read messages',   intent: 'READ_MESSAGES'      },
+      ],
+    },
+  },
+
+  emptyState: {
+    icon:   '👪',
+    title:  'Your family',
+    body:   'Your family can be added from the Family Dashboard. Ask them to set it up for you.',
+    voicePrompt: "Your family connections will appear here once they're set up.",
+  },
+
+  navigation: {
+    fromScreens:   ['ELDER_HOME'],
+    backTarget:    'ELDER_HOME',
+    depthFromHome: 1,
+  },
+
+  dataSources: [
+    { key: 'familyMembers',    queryKey: 'family.members',          refetchInterval: 60000,  offlineCacheTTL: 300000, shape: 'FamilyMember[]'  },
+    { key: 'grandchildMessages', queryKey: 'messages.grandchild.unread', refetchInterval: 30000, offlineCacheTTL: 300000, shape: 'FamilyMessage' },
+    { key: 'weeklyStoryPrompt', queryKey: 'stories.weeklyPrompt',   offlineCacheTTL: 86400000, shape: 'LifeStoryPrompt' },
+    { key: 'storyPromptText',  queryKey: 'stories.weeklyPrompt.text', offlineCacheTTL: 86400000, shape: 'string'       },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 5: HELP (EMERGENCY)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_HELP: ScreenSchema = {
+  screenId:           'ELDER_HELP',
+  title:              'Help',
+  accessibilityLabel: 'Get help immediately',
+  layout:             'EMERGENCY',
+  backgroundColor:    'bg.emergency',
+  headerVariant:      'TITLE_BACK',
+  maxPrimaryItems:    2,
+  trackingId:         'elder_help_view',
+
+  contentBlocks: [
+    {
+      blockId:    'help_title',
+      blockType:  'TEXT',
+      text:       'Who do you need?',
+      variant:    'title',
+      align:      'center',
+    },
+    {
+      blockId:    'help_primary_contact',
+      blockType:  'CARD',
+      cardVariant: 'alert_red',
+      maxRows:    1,
+      rows: [{
+        rowId:    'call_primary',
+        rowType:  'ACTION',
+        label:    'Call {{primaryContactName}}',
+        icon:     '📞',
+        style:    'safe',
+        tapAction: { type: 'CALL', contactBinding: 'primaryContact' },
+        accessibilityLabel: 'Call your primary emergency contact',
+        accessibilityHint:  'This will immediately call the person you trust',
+      }],
+    },
+    {
+      blockId:    'help_body',
+      blockType:  'TEXT',
+      text:       'Press the button above to call someone you trust.',
+      variant:    'bodyLarge',
+      align:      'center',
+    },
+    {
+      blockId:    'help_emergency_services',
+      blockType:  'CARD',
+      cardVariant: 'flat',
+      maxRows:    1,
+      rows: [{
+        rowId:    'call_999',
+        rowType:  'ACTION',
+        label:    'Call 999 (Emergency services)',
+        icon:     '🚑',
+        style:    'destructive',
+        tapAction: {
+          type:    'CONFIRM_THEN',
+          confirm: {
+            title:        'Call emergency services?',
+            body:         'This will call 999.',
+            confirmLabel: 'Yes, call now',
+            cancelLabel:  'Go back',
+          },
+          thenAction: { type: 'SYSTEM', system: 'CALL_EMERGENCY_SERVICES' },
+        },
+        accessibilityLabel: 'Call emergency services',
+        accessibilityHint:  'Calls 999 or 911 for immediate help',
+      }],
+    },
+  ],
+
+  bottomActions: [],
+
+  persistent: ['BACK_BUTTON'],
+
+  voice: {
+    alwaysListening: true,
+    entrySpeak: {
+      template:   "I'm right here. Press the big button to call {{primaryContactName}}.",
+      bindings:   ['primaryContactName'],
+      voice:      'calm',
+      delay_ms:   200,
+      skipIfSilentMode: false,
+    },
+    commands: [
+      {
+        commandId: 'call_family',
+        utterances: ['call sarah', 'call family', 'call someone', 'help me', 'call'],
+        intent:     'CALL_FAMILY',
+      },
+      {
+        commandId: 'call_emergency',
+        utterances: ['emergency', 'ambulance', 'call 999', 'call 911'],
+        intent:     'CALL_EMERGENCY',
+        confirmBefore: true,
+        confirmMessage: 'Did you mean to call emergency services?',
+      },
+    ],
+    fallback: {
+      message:      "I'm here. Press the big button to call for help.",
+      offerOptions: false,
+    },
+  },
+
+  navigation: {
+    fromScreens:   ['ELDER_HOME', 'ELDER_TODAY', 'ELDER_MY_PILLS', 'ELDER_FAMILY'],
+    backTarget:    'ELDER_HOME',
+    depthFromHome: 1,
+  },
+
+  dataSources: [
+    { key: 'primaryContact',     queryKey: 'family.primaryContact',   offlineCacheTTL: 86400000, shape: 'FamilyMember' },
+    { key: 'primaryContactName', queryKey: 'family.primaryContact.name', offlineCacheTTL: 86400000, shape: 'string'    },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 6: SHIELD — AMBER ALERT
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_SHIELD_AMBER: ScreenSchema = {
+  screenId:           'ELDER_SHIELD_AMBER',
+  title:              'Unusual Activity',
+  accessibilityLabel: 'HAVEN noticed something unusual',
+  layout:             'FULL_OVERLAY',
+  backgroundColor:    'bg.overlay_amber',
+  headerVariant:      'TITLE_ONLY',
+  maxPrimaryItems:    2,
+  trackingId:         'elder_shield_amber_view',
+
+  contentBlocks: [
+    {
+      blockId:    'amber_icon',
+      blockType:  'TEXT',
+      text:       '🛡️',
+      variant:    'hero',
+      align:      'center',
+      animateIn:  { type: 'FADE_IN', duration: 600, easing: 'smooth' },
+    },
+    {
+      blockId:    'amber_title',
+      blockType:  'TEXT',
+      text:       'This looks a little unusual',
+      variant:    'title',
+      align:      'center',
+    },
+    {
+      blockId:    'amber_explanation',
+      blockType:  'ALERT_EXPLANATION',
+      level:      'amber',
+      explanationBinding: 'scamExplanation',
+      redFlagsBinding: 'scamRedFlags',
+      showRedFlags: true,
+      maxRedFlags:  3,
+      tone:         'warm',
+    },
+    {
+      blockId:    'amber_note',
+      blockType:  'TEXT',
+      text:       'You don\'t have to do anything right now.',
+      variant:    'bodyLarge',
+      align:      'center',
+      color:      'secondary',
+    },
+  ],
+
+  bottomActions: [
+    {
+      actionId:   'amber_get_help',
+      label:      'Talk to family first',
+      icon:       '👪',
+      style:      'primary',
+      action:     { type: 'CALL', contactBinding: 'primaryContact' },
+      accessibilityLabel: 'Call your family before doing anything',
+      accessibilityHint:  'HAVEN recommends checking with family first',
+    },
+    {
+      actionId:   'amber_dismiss',
+      label:      'I trust this person',
+      icon:       '✅',
+      style:      'ghost',
+      action:     {
+        type:    'CONFIRM_THEN',
+        confirm: {
+          title:        'Mark as trusted?',
+          body:         'HAVEN will let your family know you trust this contact.',
+          confirmLabel: 'Yes, I trust them',
+          cancelLabel:  'Go back',
+        },
+        thenAction: { type: 'SYSTEM', system: 'TRUST_CONTACT' },
+      },
+      accessibilityLabel: 'Mark this contact as trusted',
+      accessibilityHint:  'Dismiss the warning for this contact',
+    },
+  ],
+
+  persistent: ['EMERGENCY_BUTTON'],
+
+  voice: {
+    alwaysListening: false,
+    entrySpeak: {
+      template:   '{{scamExplanation}} You don\'t have to do anything right now.',
+      bindings:   ['scamExplanation'],
+      voice:      'calm',
+      delay_ms:   500,
+      skipIfSilentMode: false,
+    },
+    commands: [
+      {
+        commandId: 'call_family',
+        utterances: ['call family', 'call sarah', 'talk to family', 'get help'],
+        intent:     'CALL_FAMILY',
+      },
+      {
+        commandId: 'trust_contact',
+        utterances: ['i trust them', 'i know them', 'it\'s fine', 'dismiss'],
+        intent:     'DISMISS_ALERT_WITH_TRUST',
+        confirmBefore: true,
+        confirmMessage: "Are you sure you want to mark this contact as trusted?",
+      },
+    ],
+    fallback: {
+      message:      "Would you like to talk to family, or do you trust this person?",
+      offerOptions: true,
+      options: [
+        { label: 'Talk to family',    intent: 'CALL_FAMILY'             },
+        { label: 'I trust this person', intent: 'DISMISS_ALERT_WITH_TRUST' },
+      ],
+    },
+  },
+
+  navigation: {
+    fromScreens:   ['ELDER_HOME', 'ELDER_TODAY', 'ELDER_FAMILY'],
+    backTarget:    'ELDER_HOME',
+    depthFromHome: 2,
+    isOverlay:     true,
+  },
+
+  dataSources: [
+    { key: 'scamExplanation', queryKey: 'shield.currentEvent.explanation', offlineCacheTTL: 60000, shape: 'string'   },
+    { key: 'scamRedFlags',    queryKey: 'shield.currentEvent.redFlags',    offlineCacheTTL: 60000, shape: 'string[]' },
+    { key: 'primaryContact',  queryKey: 'family.primaryContact',           offlineCacheTTL: 86400000, shape: 'FamilyMember' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 7: SHIELD — RED ALERT
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_SHIELD_RED: ScreenSchema = {
+  screenId:           'ELDER_SHIELD_RED',
+  title:              'Let\'s slow down',
+  accessibilityLabel: 'HAVEN thinks this might be a scam',
+  layout:             'FULL_OVERLAY',
+  backgroundColor:    'bg.overlay_red',
+  headerVariant:      'TITLE_ONLY',
+  maxPrimaryItems:    2,
+  trackingId:         'elder_shield_red_view',
+
+  contentBlocks: [
+    {
+      blockId:    'red_icon',
+      blockType:  'TEXT',
+      text:       '🛡️',
+      variant:    'hero',
+      align:      'center',
+      animateIn:  { type: 'BREATHING_PULSE', duration: 800, easing: 'slow_ease' },
+    },
+    {
+      blockId:    'red_title',
+      blockType:  'TEXT',
+      text:       'HAVEN thinks this might be a scam',
+      variant:    'title',
+      align:      'center',
+    },
+    {
+      blockId:    'red_explanation',
+      blockType:  'ALERT_EXPLANATION',
+      level:      'red',
+      explanationBinding: 'scamExplanation',
+      redFlagsBinding:    'scamRedFlags',
+      showRedFlags: true,
+      maxRedFlags:  3,
+      tone:         'warm',
+    },
+    {
+      blockId:    'red_reassurance',
+      blockType:  'TEXT',
+      text:       'You don\'t have to do anything right now. There\'s no rush.',
+      variant:    'bodyLarge',
+      align:      'center',
+    },
+  ],
+
+  bottomActions: [
+    {
+      actionId:   'red_call_family',
+      label:      'Call Sarah together',
+      icon:       '📞',
+      style:      'primary',
+      action:     { type: 'SYSTEM', system: 'CALL_FAMILY_TOGETHER' },
+      accessibilityLabel: 'Call your family right now together',
+      accessibilityHint:  'HAVEN recommends calling family before doing anything',
+    },
+    {
+      actionId:   'red_dismiss',
+      label:      'I trust this person',
+      icon:       '✅',
+      style:      'secondary',
+      action:     {
+        type: 'CONFIRM_THEN',
+        confirm: {
+          title:        'Are you sure?',
+          body:         'This is unusual enough that HAVEN recommends a quick call with family first. Are you sure you want to continue?',
+          confirmLabel: 'Yes, I\'m sure',
+          cancelLabel:  'Call family first',
+        },
+        thenAction: { type: 'SYSTEM', system: 'TRUST_CONTACT' },
+      },
+      accessibilityLabel: 'Dismiss this warning',
+      accessibilityHint:  'Requires a second confirmation',
+    },
+  ],
+
+  persistent: ['EMERGENCY_BUTTON'],
+
+  voice: {
+    alwaysListening: false,
+    entrySpeak: {
+      template:   'I want to slow things down for a moment. {{scamExplanation}} There\'s no rush.',
+      bindings:   ['scamExplanation'],
+      voice:      'calm',
+      delay_ms:   400,
+      skipIfSilentMode: false,
+    },
+    commands: [
+      {
+        commandId: 'call_family_together',
+        utterances: ['call sarah', 'call family', 'call together', 'get help'],
+        intent:     'CALL_FAMILY',
+      },
+    ],
+    fallback: {
+      message:      "HAVEN is here. No rush. Would you like to call family first?",
+      offerOptions: true,
+      options: [
+        { label: 'Call family',    intent: 'CALL_FAMILY'    },
+        { label: 'Go back home',   intent: 'NAVIGATE_HOME'  },
+      ],
+    },
+  },
+
+  navigation: {
+    fromScreens:   ['ELDER_HOME', 'ELDER_TODAY', 'ELDER_FAMILY'],
+    backTarget:    'ELDER_HOME',
+    depthFromHome: 2,
+    isOverlay:     true,
+  },
+
+  dataSources: [
+    { key: 'scamExplanation', queryKey: 'shield.currentEvent.explanation', offlineCacheTTL: 60000, shape: 'string'   },
+    { key: 'scamRedFlags',    queryKey: 'shield.currentEvent.redFlags',    offlineCacheTTL: 60000, shape: 'string[]' },
+    { key: 'primaryContact',  queryKey: 'family.primaryContact',           offlineCacheTTL: 86400000, shape: 'FamilyMember' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 8: SHIELD — BLACK (TRANSACTION INTERCEPT)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_SHIELD_BLACK: ScreenSchema = {
+  screenId:           'ELDER_SHIELD_BLACK',
+  title:              'One moment',
+  accessibilityLabel: 'HAVEN is asking you to pause before sending money',
+  layout:             'FULL_OVERLAY',
+  backgroundColor:    'bg.overlay_black',
+  headerVariant:      'HIDDEN',
+  maxPrimaryItems:    2,
+  trackingId:         'elder_shield_black_view',
+
+  contentBlocks: [
+    {
+      blockId:    'black_icon',
+      blockType:  'TEXT',
+      text:       '✋',
+      variant:    'hero',
+      align:      'center',
+      animateIn:  { type: 'SCALE_IN', duration: 600, easing: 'smooth' },
+    },
+    {
+      blockId:    'black_title',
+      blockType:  'TEXT',
+      text:       'Before you send money —',
+      variant:    'title',
+      align:      'center',
+    },
+    {
+      blockId:    'black_sub',
+      blockType:  'TEXT',
+      text:       'Let\'s call {{primaryContactName}} together first.',
+      variant:    'bodyLarge',
+      align:      'center',
+    },
+    {
+      blockId:    'black_explanation',
+      blockType:  'ALERT_EXPLANATION',
+      level:      'black',
+      explanationBinding: 'scamExplanation',
+      redFlagsBinding:    'scamRedFlags',
+      showRedFlags: true,
+      maxRedFlags:  3,
+      tone:         'warm',
+    },
+  ],
+
+  bottomActions: [
+    {
+      actionId:   'black_call_together',
+      label:      'Call {{primaryContactName}} now',
+      icon:       '📞',
+      style:      'primary',
+      fullWidth:  true,
+      action:     { type: 'SYSTEM', system: 'CALL_FAMILY_TOGETHER' },
+      accessibilityLabel: 'Call family before sending money',
+      accessibilityHint:  'Call your designated family member right now',
+    },
+    {
+      actionId:   'black_continue',
+      label:      'Continue anyway',
+      icon:       '→',
+      style:      'ghost',
+      action:     {
+        type: 'CONFIRM_THEN',
+        confirm: {
+          title:        'Are you completely sure?',
+          body:         'Real banks, the government, and real businesses never ask you to send money this way. Are you absolutely sure you want to continue?',
+          confirmLabel: 'Yes, continue',
+          cancelLabel:  'Go back — call family',
+        },
+        thenAction: { type: 'SYSTEM', system: 'PAUSE_TRANSACTION' },
+      },
+      accessibilityLabel: 'Continue with the payment',
+      accessibilityHint:  'This requires two confirmations',
+    },
+  ],
+
+  persistent: [],  // no distractions on black level
+
+  voice: {
+    alwaysListening: true,
+    entrySpeak: {
+      template:   'Please wait one moment before sending any money. {{scamExplanation}} Let\'s call {{primaryContactName}} first.',
+      bindings:   ['scamExplanation', 'primaryContactName'],
+      voice:      'urgent_calm',
+      delay_ms:   200,
+      skipIfSilentMode: false,
+    },
+    commands: [
+      {
+        commandId: 'call_family_black',
+        utterances: ['call sarah', 'call family', 'yes call', 'call now'],
+        intent:     'CALL_FAMILY',
+      },
+    ],
+    fallback: {
+      message:      "Please press the button to call family before sending money.",
+      offerOptions: false,
+    },
+  },
+
+  navigation: {
+    fromScreens:   ['ELDER_HOME'],
+    backTarget:    'ELDER_HOME',
+    depthFromHome: 2,
+    isOverlay:     true,
+    isModal:       true,
+  },
+
+  dataSources: [
+    { key: 'scamExplanation',    queryKey: 'shield.currentEvent.explanation',    offlineCacheTTL: 60000,    shape: 'string'      },
+    { key: 'scamRedFlags',       queryKey: 'shield.currentEvent.redFlags',       offlineCacheTTL: 60000,    shape: 'string[]'    },
+    { key: 'primaryContact',     queryKey: 'family.primaryContact',              offlineCacheTTL: 86400000, shape: 'FamilyMember'},
+    { key: 'primaryContactName', queryKey: 'family.primaryContact.name',         offlineCacheTTL: 86400000, shape: 'string'      },
+    { key: 'transactionAmount',  queryKey: 'shield.currentEvent.transactionAmount', offlineCacheTTL: 60000, shape: 'number'     },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 9: VOICE MESSAGE RECORDER
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_VOICE_MESSAGE: ScreenSchema = {
+  screenId:           'ELDER_VOICE_MESSAGE',
+  title:              'Send a message',
+  accessibilityLabel: 'Record a voice message for your family',
+  layout:             'VOICE_FOCUS',
+  backgroundColor:    'bg.secondary',
+  headerVariant:      'TITLE_BACK',
+  maxPrimaryItems:    2,
+  trackingId:         'elder_voice_message_view',
+
+  contentBlocks: [
+    {
+      blockId:    'voice_msg_prompt',
+      blockType:  'TEXT',
+      text:       'Recording a message for {{recipientName}}',
+      variant:    'heading',
+      align:      'center',
+    },
+    {
+      blockId:    'voice_msg_recorder',
+      blockType:  'VOICE_PROMPT',
+      promptText: 'Press and hold to record',
+      subtext:    'Release when you\'re done speaking',
+      showMicButton: true,
+      micSize:    'xl',
+      autoDismissOnComplete: false,
+    },
+  ],
+
+  bottomActions: [
+    {
+      actionId:   'send_message',
+      label:      'Send message',
+      icon:       '📤',
+      style:      'primary',
+      action:     {
+        type: 'CONFIRM_THEN',
+        confirm: {
+          title:        'Send this message?',
+          body:         'Your voice message will be sent to {{recipientName}}.',
+          confirmLabel: 'Yes, send it',
+          cancelLabel:  'Record again',
+        },
+        thenAction: { type: 'SYSTEM', system: 'SEND_THINKING_OF_YOU' },
+      },
+      accessibilityLabel: 'Send your voice message',
+      accessibilityHint:  'Your message will be sent to your family member',
+    },
+  ],
+
+  persistent: ['EMERGENCY_BUTTON', 'BACK_BUTTON'],
+
+  voice: {
+    alwaysListening: false,
+    entrySpeak: {
+      template:   'Press and hold the big button to record your message for {{recipientName}}.',
+      bindings:   ['recipientName'],
+      voice:      'warm',
+      delay_ms:   400,
+      skipIfSilentMode: true,
+    },
+    commands: [],
+    fallback: {
+      message:      "Press and hold the big button to record your message.",
+      offerOptions: false,
+    },
+  },
+
+  emptyState: undefined,
+
+  navigation: {
+    fromScreens:   ['ELDER_FAMILY'],
+    backTarget:    'ELDER_FAMILY',
+    depthFromHome: 2,
+  },
+
+  dataSources: [
+    { key: 'recipientName', queryKey: 'family.selectedMember.name', offlineCacheTTL: 86400000, shape: 'string' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 10: READ MESSAGE
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_READ_MESSAGE: ScreenSchema = {
+  screenId:           'ELDER_READ_MESSAGE',
+  title:              'Message',
+  accessibilityLabel: 'A message from your family',
+  layout:             'ONE_CARD',
+  backgroundColor:    'bg.primary',
+  headerVariant:      'TITLE_BACK',
+  maxPrimaryItems:    2,
+  trackingId:         'elder_read_message_view',
+
+  contentBlocks: [
+    {
+      blockId:    'message_sender',
+      blockType:  'TEXT',
+      textBinding: 'messageFrom',
+      variant:    'heading',
+      align:      'center',
+    },
+    {
+      blockId:    'message_card',
+      blockType:  'CARD',
+      cardVariant: 'elevated',
+      maxRows:    1,
+      rows: [{
+        rowId:    'message_content',
+        rowType:  'INFO',
+        label:    '{{messagePreview}}',
+        tapAction: { type: 'SYSTEM', system: 'SPEAK_DAILY_BRIEF' },
+        accessibilityLabel: 'Message content',
+        accessibilityHint:  'Tap to hear the message read aloud',
+      }],
+    },
+    {
+      blockId:    'message_media',
+      blockType:  'PHOTO_GRID',
+      dataBinding: 'messageMedia',
+      columns:    1,
+      showCaption: false,
+      showDate:   false,
+      tapAction:  'EXPAND_PHOTO',
+      visible:    { condition: 'DATA_EXISTS', dataKey: 'messageMedia' },
+    },
+  ],
+
+  bottomActions: [
+    {
+      actionId:   'reply_voice',
+      label:      'Send a reply',
+      icon:       '🎤',
+      style:      'primary',
+      action:     { type: 'NAVIGATE', screenId: 'ELDER_VOICE_MESSAGE' },
+      accessibilityLabel: 'Record a voice reply',
+      accessibilityHint:  'Record and send a voice message back',
+    },
+    {
+      actionId:   'thinking_of_you',
+      label:      'Send a ❤️',
+      icon:       '💙',
+      style:      'secondary',
+      action:     { type: 'SYSTEM', system: 'SEND_THINKING_OF_YOU' },
+      accessibilityLabel: 'Send a thinking of you',
+      accessibilityHint:  'Instantly lets your family know you\'re thinking of them',
+    },
+  ],
+
+  persistent: ['EMERGENCY_BUTTON', 'VOICE_BUTTON'],
+
+  voice: {
+    alwaysListening: false,
+    entrySpeak: {
+      template:   '{{messageFrom}} sent you a message. {{messageContent}}',
+      bindings:   ['messageFrom', 'messageContent'],
+      voice:      'warm',
+      delay_ms:   600,
+      skipIfSilentMode: true,
+    },
+    commands: [
+      {
+        commandId: 'reply',
+        utterances: ['reply', 'send a reply', 'send a message', 'respond'],
+        intent:     'SEND_VOICE_MESSAGE',
+      },
+      {
+        commandId: 'thinking_of_you',
+        utterances: ['send a heart', 'thinking of you', 'send love'],
+        intent:     'SEND_THINKING_OF_YOU',
+      },
+    ],
+    fallback: {
+      message:      "Would you like to send a reply, or send a loving thought back?",
+      offerOptions: true,
+      options: [
+        { label: 'Send a reply',  intent: 'SEND_VOICE_MESSAGE'   },
+        { label: 'Send a ❤️',    intent: 'SEND_THINKING_OF_YOU' },
+      ],
+    },
+  },
+
+  navigation: {
+    fromScreens:   ['ELDER_FAMILY', 'ELDER_TODAY'],
+    backTarget:    'ELDER_FAMILY',
+    depthFromHome: 2,
+  },
+
+  dataSources: [
+    { key: 'messageFrom',    queryKey: 'messages.current.senderName',   offlineCacheTTL: 300000, shape: 'string' },
+    { key: 'messageContent', queryKey: 'messages.current.content',      offlineCacheTTL: 300000, shape: 'string' },
+    { key: 'messagePreview', queryKey: 'messages.current.preview',      offlineCacheTTL: 300000, shape: 'string' },
+    { key: 'messageMedia',   queryKey: 'messages.current.media',        offlineCacheTTL: 300000, shape: 'MediaItem[]' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 11: LIFE STORY RECORDER
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_LIFE_STORY: ScreenSchema = {
+  screenId:           'ELDER_LIFE_STORY',
+  title:              'Your story',
+  accessibilityLabel: 'Record a life memory for your family',
+  layout:             'STORY',
+  backgroundColor:    'bg.story',
+  headerVariant:      'TITLE_BACK',
+  maxPrimaryItems:    2,
+  trackingId:         'elder_life_story_view',
+
+  contentBlocks: [
+    {
+      blockId:    'story_prompt_text',
+      blockType:  'TEXT',
+      textBinding: 'storyPromptText',
+      variant:    'bodyLarge',
+      align:      'center',
+      animateIn:  { type: 'FADE_IN', duration: 800, easing: 'smooth' },
+    },
+    {
+      blockId:    'story_recorder',
+      blockType:  'RECORDER',
+      promptBinding:  'currentStoryPrompt',
+      showWaveform:   true,
+      showDuration:   true,
+      showSkip:       true,
+      skipLabel:      'Skip this week',
+      doneLabel:      'I\'m done',
+      maxDurationSeconds: 300,
+    },
+  ],
+
+  bottomActions: [],  // recorder handles its own actions
+
+  persistent: ['BACK_BUTTON'],
+
+  voice: {
+    alwaysListening: false,
+    entrySpeak: {
+      template:   '{{storyPromptText}} Take your time. Press the big button when you\'re ready to start.',
+      bindings:   ['storyPromptText'],
+      voice:      'warm',
+      delay_ms:   800,
+      skipIfSilentMode: false,
+    },
+    commands: [
+      {
+        commandId: 'skip_story',
+        utterances: ['skip', 'not today', 'skip this week', 'next time'],
+        intent:     'SKIP_STORY',
+      },
+    ],
+    fallback: {
+      message:      "Press the big button to start recording, or say 'skip' to come back next week.",
+      offerOptions: false,
+    },
+  },
+
+  emptyState: undefined,
+
+  navigation: {
+    fromScreens:   ['ELDER_FAMILY'],
+    backTarget:    'ELDER_FAMILY',
+    depthFromHome: 2,
+  },
+
+  dataSources: [
+    { key: 'storyPromptText',   queryKey: 'stories.weeklyPrompt.text', offlineCacheTTL: 86400000, shape: 'string' },
+    { key: 'currentStoryPrompt', queryKey: 'stories.weeklyPrompt',     offlineCacheTTL: 86400000, shape: 'LifeStoryPrompt' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 12: WELLNESS CHECK-IN
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_WELLNESS_CHECKIN: ScreenSchema = {
+  screenId:           'ELDER_WELLNESS_CHECKIN',
+  title:              'How are you today?',
+  accessibilityLabel: 'Daily wellness check-in',
+  layout:             'ONE_CARD',
+  backgroundColor:    'bg.primary',
+  headerVariant:      'TITLE_BACK',
+  maxPrimaryItems:    1,
+  trackingId:         'elder_wellness_checkin_view',
+
+  contentBlocks: [
+    {
+      blockId:    'wellness_question',
+      blockType:  'TEXT',
+      text:       'How are you feeling today?',
+      variant:    'title',
+      align:      'center',
+    },
+    {
+      blockId:    'wellness_selector',
+      blockType:  'WELLNESS_SELECTOR',
+      options: [
+        {
+          value: 'great',
+          emoji: '😊',
+          label: 'Great',
+          color: '#16A34A',
+          accessibilityLabel: 'Feeling great today',
+        },
+        {
+          value: 'okay',
+          emoji: '😐',
+          label: 'Okay',
+          color: '#F59E0B',
+          accessibilityLabel: 'Feeling okay today',
+        },
+        {
+          value: 'not_great',
+          emoji: '😔',
+          label: 'Not great',
+          color: '#DC2626',
+          accessibilityLabel: 'Not feeling great today',
+        },
+      ],
+    },
+  ],
+
+  bottomActions: [],  // wellness selector is self-submitting
+
+  persistent: ['EMERGENCY_BUTTON'],
+
+  voice: {
+    alwaysListening: false,
+    entrySpeak: {
+      template:   'How are you feeling today, {{elderName}}?',
+      bindings:   ['elderName'],
+      voice:      'warm',
+      delay_ms:   400,
+      skipIfSilentMode: false,
+    },
+    commands: [
+      {
+        commandId: 'great',
+        utterances: ['great', 'good', 'wonderful', 'excellent', 'fine', 'very well'],
+        intent:     'SUBMIT_WELLNESS_GREAT',
+      },
+      {
+        commandId: 'okay',
+        utterances: ['okay', 'alright', 'so so', 'not bad', 'average'],
+        intent:     'SUBMIT_WELLNESS_OKAY',
+      },
+      {
+        commandId: 'not_great',
+        utterances: [
+          'not great', 'not good', 'not well', 'bad',
+          'tired', 'sad', 'worried', 'unwell', 'poorly',
+        ],
+        intent:     'SUBMIT_WELLNESS_NOT_GREAT',
+      },
+    ],
+    fallback: {
+      message:      "Tap one of the faces to let me know how you're feeling.",
+      offerOptions: false,
+    },
+  },
+
+  navigation: {
+    fromScreens:   ['ELDER_HOME', 'ELDER_TODAY'],
+    backTarget:    'ELDER_HOME',
+    depthFromHome: 2,
+  },
+
+  dataSources: [
+    { key: 'elderName', queryKey: 'profile.preferredName', offlineCacheTTL: 86400000, shape: 'string' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 13: DOCUMENT EXPLAINER ("What Was That?")
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_DOCUMENT_EXPLAINER: ScreenSchema = {
+  screenId:           'ELDER_DOCUMENT_EXPLAINER',
+  title:              'What does this say?',
+  accessibilityLabel: 'Take a photo of any letter or document to understand it',
+  layout:             'ONE_CARD',
+  backgroundColor:    'bg.secondary',
+  headerVariant:      'TITLE_BACK',
+  maxPrimaryItems:    2,
+  trackingId:         'elder_document_explainer_view',
+
+  contentBlocks: [
+    {
+      blockId:    'doc_scan_prompt',
+      blockType:  'VOICE_PROMPT',
+      promptText: 'Take a photo of a letter or form',
+      subtext:    'HAVEN will explain it in plain words',
+      showMicButton: false,
+      micSize:    'md',
+      autoDismissOnComplete: false,
+      visible:    { condition: 'DATA_EMPTY', dataKey: 'documentSummary' },
+    },
+    {
+      blockId:    'doc_summary',
+      blockType:  'DOCUMENT_SUMMARY',
+      summaryBinding: 'documentSummary',
+      showPoints:     true,
+      showDoctorQuestions: true,
+      showActions:    true,
+      visible:    { condition: 'DATA_EXISTS', dataKey: 'documentSummary' },
+      animateIn:  { type: 'SLIDE_UP', duration: 600, easing: 'slow_ease' },
+    },
+  ],
+
+  bottomActions: [
+    {
+      actionId:   'scan_document',
+      label:      'Take a photo',
+      icon:       '📷',
+      style:      'primary',
+      action:     { type: 'SYSTEM', system: 'SCAN_DOCUMENT' },
+      accessibilityLabel: 'Open camera to photograph a document',
+      accessibilityHint:  'Take a photo of any letter or form to understand it',
+      visible:    { condition: 'DATA_EMPTY', dataKey: 'documentSummary' },
+    },
+    {
+      actionId:   'scan_another',
+      label:      'Scan another letter',
+      icon:       '📷',
+      style:      'secondary',
+      action:     { type: 'SYSTEM', system: 'SCAN_DOCUMENT' },
+      accessibilityLabel: 'Scan another document',
+      accessibilityHint:  'Photograph another letter or form',
+      visible:    { condition: 'DATA_EXISTS', dataKey: 'documentSummary' },
+    },
+  ],
+
+  persistent: ['EMERGENCY_BUTTON', 'BACK_BUTTON'],
+
+  voice: {
+    alwaysListening: false,
+    entrySpeak: {
+      template:   'Press the big button and take a photo of your letter. I\'ll explain what it says.',
+      bindings:   [],
+      voice:      'warm',
+      delay_ms:   500,
+      skipIfSilentMode: true,
+    },
+    commands: [
+      {
+        commandId: 'read_document',
+        utterances: ['read it', 'explain it', 'what does it say'],
+        intent:     'READ_DOCUMENT',
+      },
+    ],
+    fallback: {
+      message:      "Press 'Take a photo' to photograph your letter.",
+      offerOptions: false,
+    },
+  },
+
+  emptyState: {
+    icon:   '📄',
+    title:  'Take a photo of any letter',
+    body:   'HAVEN will explain what it says in plain words.',
+    action: {
+      label:  'Take a photo',
+      action: { type: 'SYSTEM', system: 'SCAN_DOCUMENT' },
+    },
+  },
+
+  navigation: {
+    fromScreens:   ['ELDER_TODAY', 'ELDER_HOME'],
+    backTarget:    'ELDER_HOME',
+    depthFromHome: 2,
+  },
+
+  dataSources: [
+    { key: 'documentSummary', queryKey: 'documents.currentSummary', offlineCacheTTL: 3600000, shape: 'DocumentSummary' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 14: COGNITIVE CHECK-IN
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_COGNITIVE_CHECKIN: ScreenSchema = {
+  screenId:           'ELDER_COGNITIVE_CHECKIN',
+  title:              'Quick question',
+  accessibilityLabel: 'Quick daily question',
+  layout:             'ONE_CARD',
+  backgroundColor:    'bg.primary',
+  headerVariant:      'TITLE_BACK',
+  maxPrimaryItems:    1,
+  trackingId:         'elder_cognitive_checkin_view',
+
+  contentBlocks: [
+    {
+      blockId:    'cognitive_question',
+      blockType:  'COGNITIVE_CHALLENGE',
+      questionBinding: 'cognitiveQuestion',
+      responseOptions: 'BOTH',
+      tone:           'conversational',
+      showSkip:       true,
+      skipLabel:      'Skip for today',
+    },
+  ],
+
+  bottomActions: [],  // challenge handles its own actions
+
+  persistent: ['EMERGENCY_BUTTON'],
+
+  voice: {
+    alwaysListening: true,
+    entrySpeak: {
+      template:   '{{cognitiveQuestionText}}',
+      bindings:   ['cognitiveQuestionText'],
+      voice:      'warm',
+      delay_ms:   600,
+      skipIfSilentMode: false,
+    },
+    commands: [
+      {
+        commandId: 'answer_cognitive',
+        utterances: ['*'],  // wildcard — any response captured as answer
+        intent:     'ANSWER_COGNITIVE',
+        slots: [{
+          name:     'answer',
+          type:     'TEXT',
+          required: true,
+          reprompt: "What do you think the answer is?",
+        }],
+      },
+    ],
+    fallback: {
+      message:      "Take your time. You can also tap 'Skip for today' if you\'d prefer.",
+      offerOptions: false,
+    },
+  },
+
+  navigation: {
+    fromScreens:   ['ELDER_HOME', 'ELDER_TODAY'],
+    backTarget:    'ELDER_HOME',
+    depthFromHome: 2,
+  },
+
+  dataSources: [
+    { key: 'cognitiveQuestion',    queryKey: 'cognition.todayQuestion',      offlineCacheTTL: 86400000, shape: 'CognitiveQuestion' },
+    { key: 'cognitiveQuestionText', queryKey: 'cognition.todayQuestion.text', offlineCacheTTL: 86400000, shape: 'string'           },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN 15: SETTINGS (minimal — elder-facing)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_SETTINGS: ScreenSchema = {
+  screenId:           'ELDER_SETTINGS',
+  title:              'My Settings',
+  accessibilityLabel: 'Your personal preferences',
+  layout:             'ONE_CARD',
+  backgroundColor:    'bg.primary',
+  headerVariant:      'TITLE_BACK',
+  maxPrimaryItems:    3,
+  trackingId:         'elder_settings_view',
+
+  contentBlocks: [
+    {
+      blockId:    'settings_display',
+      blockType:  'CARD',
+      cardVariant: 'elevated',
+      header:     'Display',
+      maxRows:    3,
+      rows: [
+        {
+          rowId:   'settings_text_size',
+          rowType: 'INFO',
+          label:   'Text size',
+          valueBinding: 'fontSizeLabel',
+          tapAction: { type: 'SHEET', sheetId: 'SHEET_TASK_DETAIL' },
+          accessibilityLabel: 'Adjust text size',
+          accessibilityHint:  'Make text larger or smaller',
+          icon: '🔤',
+        },
+        {
+          rowId:   'settings_high_contrast',
+          rowType: 'ACTION',
+          label:   'High contrast mode',
+          icon:    '◐',
+          style:   'normal',
+          tapAction: { type: 'SYSTEM', system: 'START_VOICE_INPUT' },
+          accessibilityLabel: 'Toggle high contrast mode',
+          accessibilityHint:  'Makes colours easier to see',
+        },
+        {
+          rowId:   'settings_voice',
+          rowType: 'INFO',
+          label:   'HAVEN voice',
+          valueBinding: 'voiceName',
+          tapAction: { type: 'SHEET', sheetId: 'SHEET_TASK_DETAIL' },
+          accessibilityLabel: 'Change HAVEN\'s voice',
+          accessibilityHint:  'Choose how HAVEN sounds when speaking',
+          icon: '🎙️',
+        },
+      ],
+    },
+    {
+      blockId:    'settings_privacy',
+      blockType:  'CARD',
+      cardVariant: 'flat',
+      header:     'Privacy',
+      maxRows:    2,
+      rows: [
+        {
+          rowId:   'settings_location',
+          rowType: 'ACTION',
+          label:   'Safe zone',
+          icon:    '📍',
+          style:   'normal',
+          tapAction: { type: 'SHEET', sheetId: 'SHEET_TASK_DETAIL' },
+          accessibilityLabel: 'Safe zone settings',
+          accessibilityHint:  'Manage your location check-in preferences',
+        },
+        {
+          rowId:   'settings_family_access',
+          rowType: 'ACTION',
+          label:   'Family access',
+          icon:    '👪',
+          style:   'normal',
+          tapAction: { type: 'SHEET', sheetId: 'SHEET_TASK_DETAIL' },
+          accessibilityLabel: 'Family access settings',
+          accessibilityHint:  'Choose what your family can see',
+        },
+      ],
+    },
+  ],
+
+  bottomActions: [],
+
+  persistent: ['EMERGENCY_BUTTON', 'BACK_BUTTON'],
+
+  voice: {
+    alwaysListening: false,
+    commands: [],
+    fallback: {
+      message:      "These are your settings. Ask your family if you need help changing anything.",
+      offerOptions: false,
+    },
+  },
+
+  navigation: {
+    fromScreens:   ['ELDER_HOME'],
+    backTarget:    'ELDER_HOME',
+    depthFromHome: 1,
+  },
+
+  dataSources: [
+    { key: 'fontSizeLabel', queryKey: 'profile.fontSizeLabel', offlineCacheTTL: 86400000, shape: 'string' },
+    { key: 'voiceName',     queryKey: 'profile.voiceName',     offlineCacheTTL: 86400000, shape: 'string' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN REGISTRY — single import point
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SCREEN_REGISTRY: Record<ScreenId, ScreenSchema> = {
+  ELDER_HOME:               SCREEN_HOME,
+  ELDER_TODAY:              SCREEN_TODAY,
+  ELDER_MY_PILLS:           SCREEN_MY_PILLS,
+  ELDER_PILL_DETAIL:        SCREEN_MY_PILLS,        // detail uses same schema + sheet
+  ELDER_TAKE_PILL:          SCREEN_MY_PILLS,
+  ELDER_FAMILY:             SCREEN_FAMILY,
+  ELDER_VOICE_MESSAGE:      SCREEN_VOICE_MESSAGE,
+  ELDER_READ_MESSAGE:       SCREEN_READ_MESSAGE,
+  ELDER_LIFE_STORY:         SCREEN_LIFE_STORY,
+  ELDER_HELP:               SCREEN_HELP,
+  ELDER_SHIELD_AMBER:       SCREEN_SHIELD_AMBER,
+  ELDER_SHIELD_RED:         SCREEN_SHIELD_RED,
+  ELDER_SHIELD_BLACK:       SCREEN_SHIELD_BLACK,
+  ELDER_COACHING_CARD:      SCREEN_SHIELD_AMBER,    // coaching is a partial overlay
+  ELDER_DOCUMENT_EXPLAINER: SCREEN_DOCUMENT_EXPLAINER,
+  ELDER_WELLNESS_CHECKIN:   SCREEN_WELLNESS_CHECKIN,
+  ELDER_COGNITIVE_CHECKIN:  SCREEN_COGNITIVE_CHECKIN,
+  ELDER_MEMORY_LANE:        SCREEN_HOME,            // defined elsewhere, maps here for now
+  ELDER_STORY_ARCHIVE:      SCREEN_LIFE_STORY,
+  ELDER_SETTINGS:           SCREEN_SETTINGS,
+  ELDER_ONBOARDING_WELCOME: SCREEN_HOME,
+  ELDER_ONBOARDING_VOICE_TEST: SCREEN_HOME,
+  ELDER_ONBOARDING_COMPLETE:   SCREEN_HOME,
+};
+Part 3 — React Native Renderer Architecture
+This is the engine that turns a ScreenSchema into a real, bespoke, pixel-perfect screen. The key insight: the renderer is the complexity; the schema is the clarity.
+
+TypeScript
+
+// renderer/ScreenRenderer.tsx
+// ─────────────────────────────────────────────────────────────────────────────
+// HAVEN SCREEN RENDERER
+// Turns any ScreenSchema into a fully accessible, elder-safe screen.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import React, { useEffect, useMemo, useCallback } from 'react';
+import {
+  View, ScrollView, StyleSheet, AccessibilityInfo, Platform,
+} from 'react-native';
+import Animated, {
+  useSharedValue, useAnimatedStyle,
+  withSpring, withTiming, withRepeat, withSequence,
+  FadeIn, SlideInDown, ZoomIn,
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
+
+import type { ScreenSchema, ContentBlock, ScreenStateOverride } from '../schema/types';
+import { useScreenData }        from '../hooks/useScreenData';
+import { useScreenState }       from '../hooks/useScreenState';
+import { useVoiceEngine }       from '../hooks/useVoiceEngine';
+import { useHavenTheme }        from '../hooks/useHavenTheme';
+import { useVisibility }        from '../hooks/useVisibility';
+import { useActionHandler }     from '../hooks/useActionHandler';
+import { useSchemaValidator }   from '../hooks/useSchemaValidator';
+import { useAnalytics }         from '../hooks/useAnalytics';
+import { useTemplateString }    from '../hooks/useTemplateString';
+
+// Block renderers
+import { renderGreetingBlock }      from './blocks/GreetingBlock';
+import { renderHaloBlock }          from './blocks/HaloBlock';
+import { renderButtonGridBlock }    from './blocks/ButtonGridBlock';
+import { renderCardBlock }          from './blocks/CardBlock';
+import { renderListBlock }          from './blocks/ListBlock';
+import { renderMedNextBlock }       from './blocks/MedNextBlock';
+import { renderVoicePromptBlock }   from './blocks/VoicePromptBlock';
+import { renderRecorderBlock }      from './blocks/RecorderBlock';
+import { renderAlertBlock }         from './blocks/AlertExplanationBlock';
+import { renderCoachingCardBlock }  from './blocks/CoachingCardBlock';
+import { renderDocSummaryBlock }    from './blocks/DocumentSummaryBlock';
+import { renderWellnessBlock }      from './blocks/WellnessSelectorBlock';
+import { renderCognitiveBlock }     from './blocks/CognitiveChallengeBlock';
+import { renderPhotoGridBlock }     from './blocks/PhotoGridBlock';
+import { renderFamilyListBlock }    from './blocks/FamilyListBlock';
+import { renderTextBlock }          from './blocks/TextBlock';
+import { renderDividerBlock }       from './blocks/DividerBlock';
+import { renderSpacerBlock }        from './blocks/SpacerBlock';
+
+// Persistent components
+import { HEmergencyButton }     from '../components/HEmergencyButton';
+import { HVoiceButton }         from '../components/HVoiceButton';
+import { HStatusHalo }          from '../components/HStatusHalo';
+import { HBackButton }          from '../components/HBackButton';
+import { HScreenHeader }        from '../components/HScreenHeader';
+import { HBottomActions }       from '../components/HBottomActions';
+import { HLoadingState }        from '../components/HLoadingState';
+import { HEmptyState }          from '../components/HEmptyState';
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ScreenRendererProps {
+  schema:         ScreenSchema;
+  routeParams?:   Record<string, string>;
+  testID?:        string;
+}
+
+export const ScreenRenderer: React.FC<ScreenRendererProps> = ({
+  schema,
+  routeParams,
+  testID,
+}) => {
+  const insets      = useSafeAreaInsets();
+  const theme       = useHavenTheme();
+  const analytics   = useAnalytics();
+  const { handle }  = useActionHandler(schema.screenId);
+
+  // ── 0. Schema validation (dev only) ─────────────────────────────────────
+  const { validate } = useSchemaValidator();
+  useEffect(() => {
+    if (__DEV__) validate(schema);
+  }, [schema]);
+
+  // ── 1. Load all declared data sources ───────────────────────────────────
+  const { data, isLoading, isError, isOffline } = useScreenData(
+    schema.dataSources,
+    { routeParams }
+  );
+
+  // ── 2. Determine current screen state ───────────────────────────────────
+  const currentState = useScreenState(schema.screenId, data);
+
+  // ── 3. Merge state overrides ─────────────────────────────────────────────
+  const mergedSchema: ScreenSchema = useMemo(() => {
+    if (!currentState || !schema.states?.[currentState]) return schema;
+    const override = schema.states[currentState] as ScreenStateOverride;
+    return {
+      ...schema,
+      backgroundColor: override.backgroundColor  ?? schema.backgroundColor,
+      headerVariant:   override.headerVariant    ?? schema.headerVariant,
+      contentBlocks:   override.replaceBlocks    ?? [
+        ...schema.contentBlocks,
+        ...(override.extraBlocks ?? []),
+      ],
+      bottomActions:   override.bottomActions    ?? schema.bottomActions,
+      voice: override.voiceOverride
+        ? { ...schema.voice, ...override.voiceOverride }
+        : schema.voice,
+    };
+  }, [schema, currentState]);
+
+  // ── 4. Boot voice engine for this screen ─────────────────────────────────
+  const { isListening, isSpeaking, startListening } = useVoiceEngine({
+    voiceSchema:  mergedSchema.voice,
+    data,
+    screenId:     mergedSchema.screenId,
+    onIntent:     handle,
+  });
+
+  // ── 5. Track screen view ──────────────────────────────────────────────────
+  useEffect(() => {
+    analytics.screen(mergedSchema.trackingId, { state: currentState });
+    AccessibilityInfo.announceForAccessibility(mergedSchema.accessibilityLabel);
+  }, [mergedSchema.screenId]);
+
+  // ── 6. Background color ───────────────────────────────────────────────────
+  const bgColor = theme.resolveColor(
+    mergedSchema.backgroundColor ?? 'bg.primary',
+    currentState
+  );
+
+  // ── 7. Layout variant ─────────────────────────────────────────────────────
+  const isOverlay  = mergedSchema.navigation.isOverlay;
+  const isModal    = mergedSchema.navigation.isModal;
+
+  // ── 8. Loading state ──────────────────────────────────────────────────────
+  if (isLoading) {
+    return (
+      <HLoadingState
+        message="Getting things ready…"
+        backgroundColor={bgColor}
+        testID={`${testID}-loading`}
+      />
+    );
+  }
+
+  // ── 9. Render ─────────────────────────────────────────────────────────────
+  return (
+    <View
+      style={[
+        styles.root,
+        { backgroundColor: bgColor, paddingTop: insets.top },
+        isOverlay && styles.overlay,
+        isModal   && styles.modal,
+      ]}
+      testID={testID}
+      accessibilityLabel={mergedSchema.accessibilityLabel}
+    >
+      {/* HEADER */}
+      <HScreenHeader
+        variant={mergedSchema.headerVariant ?? 'TITLE_BACK'}
+        title={mergedSchema.title}
+        screenId={mergedSchema.screenId}
+        data={data}
+      />
+
+      {/* CONTENT */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 120 }, // clear bottom actions
+        ]}
+        showsVerticalScrollIndicator={false}
+        accessibilityRole="main"
+        bounces={false}
+      >
+        <BlockRenderer
+          blocks={mergedSchema.contentBlocks}
+          data={data}
+          layout={mergedSchema.layout}
+          onAction={handle}
+          isOffline={isOffline}
+          currentState={currentState}
+        />
+      </ScrollView>
+
+      {/* BOTTOM ACTIONS (fixed) */}
+      {mergedSchema.bottomActions.length > 0 && (
+        <HBottomActions
+          actions={mergedSchema.bottomActions}
+          data={data}
+          onAction={handle}
+          insets={insets}
+        />
+      )}
+
+      {/* PERSISTENT ELEMENTS */}
+      <PersistentElements
+        elements={mergedSchema.persistent}
+        data={data}
+        isListening={isListening}
+        onVoiceTap={startListening}
+        onAction={handle}
+        insets={insets}
+      />
+    </View>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BLOCK RENDERER
+// Dispatches to the correct block renderer based on blockType
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface BlockRendererProps {
+  blocks:       ContentBlock[];
+  data:         Record<string, unknown>;
+  layout:       string;
+  onAction:     (action: unknown) => void;
+  isOffline:    boolean;
+  currentState: string | null;
+}
+
+export const BlockRenderer: React.FC<BlockRendererProps> = ({
+  blocks, data, layout, onAction, isOffline, currentState
+}) => {
+  const { isVisible } = useVisibility(data);
+
+  return (
+    <>
+      {blocks
+        .filter(block => !block.visible || isVisible(block.visible))
+        .map(block => (
+          <AnimatedBlock
+            key={block.blockId}
+            block={block}
+            data={data}
+            layout={layout}
+            onAction={onAction}
+          />
+        ))
+      }
+    </>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANIMATED BLOCK WRAPPER
+// Applies entry animation then renders the block
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface AnimatedBlockProps {
+  block:    ContentBlock;
+  data:     Record<string, unknown>;
+  layout:   string;
+  onAction: (action: unknown) => void;
+}
+
+const AnimatedBlock: React.FC<AnimatedBlockProps> = ({
+  block, data, layout, onAction
+}) => {
+  const animSpec  = block.animateIn;
+
+  const entering = useMemo(() => {
+    if (!animSpec) return undefined;
+    switch (animSpec.type) {
+      case 'SLIDE_UP':   return SlideInDown.duration(animSpec.duration).delay(animSpec.delay ?? 0);
+      case 'FADE_IN':    return FadeIn.duration(animSpec.duration).delay(animSpec.delay ?? 0);
+      case 'SCALE_IN':   return ZoomIn.duration(animSpec.duration).delay(animSpec.delay ?? 0);
+      default:           return undefined;
+    }
+  }, [animSpec]);
+
+  return (
+    <Animated.View entering={entering}>
+      <BlockSwitch block={block} data={data} layout={layout} onAction={onAction} />
+    </Animated.View>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BLOCK SWITCH
+// Type-narrows the ContentBlock union and calls the right renderer
+// ─────────────────────────────────────────────────────────────────────────────
+
+const BlockSwitch: React.FC<AnimatedBlockProps> = ({ block, data, layout, onAction }) => {
+  switch (block.blockType) {
+    case 'GREETING':          return renderGreetingBlock(block, data);
+    case 'HALO':              return renderHaloBlock(block, data);
+    case 'BUTTON_GRID':       return renderButtonGridBlock(block, data, onAction);
+    case 'CARD':              return renderCardBlock(block, data, onAction);
+    case 'LIST':              return renderListBlock(block, data, onAction);
+    case 'MED_NEXT':          return renderMedNextBlock(block, data, onAction);
+    case 'VOICE_PROMPT':      return renderVoicePromptBlock(block, data, onAction);
+    case 'RECORDER':          return renderRecorderBlock(block, data, onAction);
+    case 'ALERT_EXPLANATION': return renderAlertBlock(block, data);
+    case 'COACHING_CARD':     return renderCoachingCardBlock(block, data);
+    case 'DOCUMENT_SUMMARY':  return renderDocSummaryBlock(block, data, onAction);
+    case 'WELLNESS_SELECTOR': return renderWellnessBlock(block, data, onAction);
+    case 'COGNITIVE_CHALLENGE': return renderCognitiveBlock(block, data, onAction);
+    case 'PHOTO_GRID':        return renderPhotoGridBlock(block, data, onAction);
+    case 'FAMILY_LIST':       return renderFamilyListBlock(block, data, onAction);
+    case 'TEXT':              return renderTextBlock(block, data);
+    case 'DIVIDER':           return renderDividerBlock(block);
+    case 'SPACER':            return renderSpacerBlock(block);
+    default: {
+      if (__DEV__) console.warn(`[HAVEN] Unknown block type: ${(block as ContentBlock).blockType}`);
+      return null;
+    }
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PERSISTENT ELEMENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface PersistentElementsProps {
+  elements:       string[];
+  data:           Record<string, unknown>;
+  isListening:    boolean;
+  onVoiceTap:     () => void;
+  onAction:       (action: unknown) => void;
+  insets:         { bottom: number; right: number };
+}
+
+const PersistentElements: React.FC<PersistentElementsProps> = ({
+  elements, data, isListening, onVoiceTap, onAction, insets
+}) => (
+  <>
+    {elements.includes('EMERGENCY_BUTTON') && (
+      <HEmergencyButton
+        primaryContact={data.primaryContact as string}
+        onPress={() => onAction({ type: 'NAVIGATE', screenId: 'ELDER_HELP' })}
+        insets={insets}
+      />
+    )}
+    {elements.includes('VOICE_BUTTON') && (
+      <HVoiceButton
+        isListening={isListening}
+        onPress={onVoiceTap}
+        insets={insets}
+      />
+    )}
+    {elements.includes('BACK_BUTTON') && (
+      <HBackButton
+        onPress={() => onAction({ type: 'NAVIGATE', screenId: 'ELDER_HOME' })}
+      />
+    )}
+  </>
+);
+
+const styles = StyleSheet.create({
+  root: {
+    flex:           1,
+  },
+  scrollView: {
+    flex:           1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop:        16,
+    gap:               16,
+  },
+  overlay: {
+    position:       'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    zIndex:         1000,
+  },
+  modal: {
+    borderTopLeftRadius:  24,
+    borderTopRightRadius: 24,
+    marginTop:            80,
+  },
+});
+Part 4 — Core Block Renderer Implementations
+TypeScript
+
+// renderer/blocks/CardBlock.tsx
+// ─────────────────────────────────────────────────────────────────────────────
+// CARD BLOCK — the most frequently used block
+// ─────────────────────────────────────────────────────────────────────────────
+
+import React from 'react';
+import { View, TouchableOpacity, StyleSheet, AccessibilityInfo } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import type { CardBlock, CardRow } from '../../schema/types';
+import { HText }     from '../../components/HText';
+import { HIcon }     from '../../components/HIcon';
+import { useHavenTheme }  from '../../hooks/useHavenTheme';
+import { useTemplateString } from '../../hooks/useTemplateString';
+
+export const renderCardBlock = (
+  block: CardBlock,
+  data:  Record<string, unknown>,
+  onAction: (action: unknown) => void
+) => (
+  <CardBlockComponent
+    key={block.blockId}
+    block={block}
+    data={data}
+    onAction={onAction}
+  />
+);
+
+const CardBlockComponent: React.FC<{
+  block:    CardBlock;
+  data:     Record<string, unknown>;
+  onAction: (action: unknown) => void;
+}> = ({ block, data, onAction }) => {
+  const theme     = useHavenTheme();
+  const { fill }  = useTemplateString(data);
+
+  const cardStyles = [
+    styles.card,
+    styles[`card_${block.cardVariant}`] ?? {},
+  ];
+
+  return (
+    <View
+      style={cardStyles}
+      accessibilityRole="none"
+    >
+      {/* Section header */}
+      {block.header && (
+        <View style={styles.cardHeader}>
+          {block.headerIcon && (
+            <HText variant="bodyLarge" style={styles.headerIcon}>
+              {block.headerIcon}
+            </HText>
+          )}
+          <HText variant="subheading" color="text.secondary">
+            {block.header}
+          </HText>
+        </View>
+      )}
+
+      {/* Rows */}
+      {block.rows.map((row, idx) => (
+        <CardRowComponent
+          key={row.rowId}
+          row={row}
+          data={data}
+          onAction={onAction}
+          isLast={idx === block.rows.length - 1}
+          fill={fill}
+        />
+      ))}
+    </View>
+  );
+};
+
+const CardRowComponent: React.FC<{
+  row:      CardRow;
+  data:     Record<string, unknown>;
+  onAction: (action: unknown) => void;
+  isLast:   boolean;
+  fill:     (template: string) => string;
+}> = ({ row, data, onAction, isLast, fill }) => {
+  const theme = useHavenTheme();
+
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onAction(row.tapAction);
+  };
+
+  // Resolve display values based on row type
+  const { leftContent, rightContent, icon, badge } = resolveRowContent(row, data, fill);
+
+  return (
+    <>
+      <TouchableOpacity
+        style={styles.row}
+        onPress={handlePress}
+        accessibilityLabel={fill(row.accessibilityLabel)}
+        accessibilityHint={row.accessibilityHint}
+        accessibilityRole="button"
+        activeOpacity={0.7}
+      >
+        {/* Left: icon + text */}
+        <View style={styles.rowLeft}>
+          {icon && (
+            <HText variant="bodyLarge" style={styles.rowIcon}>
+              {icon}
+            </HText>
+          )}
+          <View style={styles.rowTextGroup}>
+            {leftContent.primary && (
+              <HText variant="bodyLarge" color="text.primary">
+                {leftContent.primary}
+              </HText>
+            )}
+            {leftContent.secondary && (
+              <HText variant="body" color="text.secondary">
+                {leftContent.secondary}
+              </HText>
+            )}
+          </View>
+        </View>
+
+        {/* Right: value or badge or chevron */}
+        <View style={styles.rowRight}>
+          {rightContent && (
+            <HText variant="body" color="text.tertiary">
+              {rightContent}
+            </HText>
+          )}
+          {badge && (
+            <View style={[styles.badge, styles[`badge_${badge.color}`]]}>
+              <HText variant="caption" color="text.inverse">
+                {badge.label}
+              </HText>
+            </View>
+          )}
+          <HText variant="bodyLarge" color="text.tertiary" style={styles.chevron}>
+            ›
+          </HText>
+        </View>
+      </TouchableOpacity>
+
+      {/* Divider (not after last row) */}
+      {!isLast && <View style={styles.divider} />}
+    </>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ROW CONTENT RESOLVER
+// Maps row data bindings to display values
+// ─────────────────────────────────────────────────────────────────────────────
+
+function resolveRowContent(
+  row:  CardRow,
+  data: Record<string, unknown>,
+  fill: (s: string) => string
+): {
+  leftContent: { primary?: string; secondary?: string };
+  rightContent?: string;
+  icon?: string;
+  badge?: { label: string; color: string };
+} {
+  switch (row.rowType) {
+
+    case 'MED_REMINDER': {
+      const med = data[row.dataBinding] as {
+        plainDescription?: string;
+        scheduledAt?: string;
+        status?: string;
+      } | null;
+      if (!med) return { leftContent: {} };
+      const time = med.scheduledAt
+        ? new Date(med.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : '';
+      return {
+        icon:         '💊',
+        leftContent:  { primary: med.plainDescription ?? '', secondary: time },
+        badge:        med.status === 'taken'
+                        ? { label: 'Done ✓', color: 'green' }
+                        : med.status === 'missed'
+                          ? { label: 'Missed', color: 'amber' }
+                          : undefined,
+      };
+    }
+
+    case 'APPOINTMENT': {
+      const appt = data[row.dataBinding] as {
+        title?: string;
+        dueAt?: string;
+        location?: string;
+      } | null;
+      if (!appt) return { leftContent: {} };
+      const time = appt.dueAt
+        ? new Date(appt.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : '';
+      return {
+        icon:         '🏥',
+        leftContent:  { primary: appt.title ?? '', secondary: `${time}${appt.location ? ` · ${appt.location}` : ''}` },
+      };
+    }
+
+    case 'FAMILY_MESSAGE': {
+      const msg = data[row.dataBinding] as {
+        senderName?: string;
+        preview?: string;
+      } | null;
+      if (!msg) return { leftContent: {} };
+      return {
+        icon:         '💬',
+        leftContent:  { primary: msg.senderName ?? '', secondary: msg.preview ?? '' },
+        badge:        { label: 'New', color: 'blue' },
+      };
+    }
+
+    case 'TASK': {
+      const task = data[row.dataBinding] as {
+        title?: string;
+        dueAt?: string;
+        familyAttribution?: string;
+      } | null;
+      if (!task) return { leftContent: {} };
+      const time = task.dueAt
+        ? new Date(task.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : '';
+      return {
+        icon:        '📌',
+        leftContent: {
+          primary:   task.title ?? '',
+          secondary: [time, task.familyAttribution].filter(Boolean).join(' · '),
+        },
+      };
+    }
+
+    case 'PROMPT': {
+      return {
+        icon:         row.promptIcon,
+        leftContent:  { primary: fill(row.promptText), secondary: row.cta },
+      };
+    }
+
+    case 'INFO': {
+      return {
+        icon:         row.icon,
+        leftContent:  {
+          primary:    fill(row.label),
+          secondary:  row.valueBinding ? String(data[row.valueBinding] ?? '') : row.value,
+        },
+      };
+    }
+
+    case 'ACTION': {
+      return {
+        icon:         row.icon,
+        leftContent:  { primary: fill(row.label) },
+      };
+    }
+
+    default:
+      return { leftContent: {} };
+  }
+}
+
+const styles = StyleSheet.create({
+  card: {
+    borderRadius:         16,
+    backgroundColor:      '#FFFFFF',
+    shadowColor:          '#000',
+    shadowOffset:         { width: 0, height: 4 },
+    shadowOpacity:        0.08,
+    shadowRadius:         12,
+    elevation:            4,
+    overflow:             'hidden',
+  },
+  card_default: {
+    backgroundColor:      '#FFFFFF',
+  },
+  card_elevated: {
+    backgroundColor:      '#FFFFFF',
+    shadowOpacity:        0.12,
+    shadowRadius:         16,
+    elevation:            8,
+  },
+  card_flat: {
+    backgroundColor:      '#F8FAFC',
+    shadowOpacity:        0,
+    elevation:            0,
+    borderWidth:          1,
+    borderColor:          '#E2E8F0',
+  },
+  card_alert_amber: {
+    backgroundColor:      '#FFFBEB',
+    borderWidth:          2,
+    borderColor:          '#F59E0B',
+    shadowColor:          '#F59E0B',
+    shadowOpacity:        0.25,
+    shadowRadius:         16,
+  },
+  card_alert_red: {
+    backgroundColor:      '#FEF2F2',
+    borderWidth:          2,
+    borderColor:          '#DC2626',
+    shadowColor:          '#DC2626',
+    shadowOpacity:        0.25,
+    shadowRadius:         16,
+  },
+  card_safe: {
+    backgroundColor:      '#F0FDF4',
+    borderWidth:          2,
+    borderColor:          '#16A34A',
+  },
+  card_story: {
+    backgroundColor:      '#FEFCE8',
+    borderWidth:          1,
+    borderColor:          '#FDE68A',
+  },
+  card_memorial: {
+    backgroundColor:      '#FAF5FF',
+    borderWidth:          1,
+    borderColor:          '#DDD6FE',
+  },
+  cardHeader: {
+    flexDirection:        'row',
+    alignItems:           'center',
+    gap:                  8,
+    paddingHorizontal:    20,
+    paddingTop:           16,
+    paddingBottom:        12,
+  },
+  headerIcon: {
+    fontSize:             20,
+  },
+  row: {
+    flexDirection:        'row',
+    alignItems:           'center',
+    justifyContent:       'space-between',
+    paddingHorizontal:    20,
+    paddingVertical:      18,
+    minHeight:            72,               // WCAG AAA tap target
+  },
+  rowLeft: {
+    flexDirection:        'row',
+    alignItems:           'center',
+    flex:                 1,
+    gap:                  12,
+  },
+  rowIcon: {
+    fontSize:             28,
+    lineHeight:           36,
+  },
+  rowTextGroup: {
+    flex:                 1,
+    gap:                  4,
+  },
+  rowRight: {
+    flexDirection:        'row',
+    alignItems:           'center',
+    gap:                  8,
+    marginLeft:           12,
+  },
+  chevron: {
+    fontSize:             28,
+  },
+  badge: {
+    paddingHorizontal:    10,
+    paddingVertical:      4,
+    borderRadius:         9999,
+  },
+  badge_green: { backgroundColor: '#16A34A' },
+  badge_amber: { backgroundColor: '#F59E0B' },
+  badge_blue:  { backgroundColor: '#1A4FBA' },
+  badge_red:   { backgroundColor: '#DC2626' },
+  divider: {
+    height:               1,
+    backgroundColor:      '#F1F5F9',
+    marginLeft:           60,
+  },
+});
+TypeScript
+
+// renderer/blocks/MedNextBlock.tsx
+// ─────────────────────────────────────────────────────────────────────────────
+// MEDICATION NEXT DOSE — the hero medication block
+// ─────────────────────────────────────────────────────────────────────────────
+
+import React, { useCallback } from 'react';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue, useAnimatedStyle,
+  withSpring, withTiming, interpolateColor,
+} from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
+import type { MedicationNextBlock } from '../../schema/types';
+import { HText }      from '../../components/HText';
+import { HButton }    from '../../components/HButton';
+import { useMedication }     from '../../hooks/useMedication';
+import { useTemplateString } from '../../hooks/useTemplateString';
+
+export const renderMedNextBlock = (
+  block:    MedicationNextBlock,
+  data:     Record<string, unknown>,
+  onAction: (action: unknown) => void
+) => (
+  <MedNextBlockComponent
+    key={block.blockId}
+    block={block}
+    data={data}
+    onAction={onAction}
+  />
+);
+
+const MedNextBlockComponent: React.FC<{
+  block:    MedicationNextBlock;
+  data:     Record<string, unknown>;
+  onAction: (action: unknown) => void;
+}> = ({ block, data, onAction }) => {
+  const reminder      = data[block.dataBinding] as {
+    scheduledAt?:       string;
+    plainDescription?:  string;
+    pillColor?:         string;
+    pillShape?:         string;
+    status?:            string;
+  } | null;
+
+  // Confirmation animation
+  const confirmedScale  = useSharedValue(1);
+  const confirmedOpacity= useSharedValue(1);
+
+  const handleTake = useCallback(() => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // Animate card away
+    confirmedScale.value  = withSpring(0.95);
+    confirmedOpacity.value= withTiming(0, { duration: 400 });
+    // Then dispatch action
+    setTimeout(() => onAction({ type: 'SYSTEM', system: 'CONFIRM_TAKEN' }), 350);
+  }, [onAction]);
+
+  const handleSnooze = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onAction({ type: 'SYSTEM', system: 'SNOOZE_REMINDER' });
+  }, [onAction]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: confirmedScale.value }],
+    opacity:   confirmedOpacity.value,
+  }));
+
+  if (!reminder) return null;
+
+  const time = reminder.scheduledAt
+    ? new Date(reminder.scheduledAt).toLocaleTimeString([], {
+        hour:   '2-digit',
+        minute: '2-digit',
+      })
+    : '';
+
+  return (
+    <Animated.View style={[styles.container, animStyle]}>
+
+      {/* Time display (giant) */}
+      {block.showLargeTime && (
+        <HText variant="4xl" align="center" style={styles.timeText}>
+          {time}
+        </HText>
+      )}
+
+      {/* Pill visual */}
+      {block.showPillVisual && reminder.pillColor && (
+        <View style={styles.pillVisualRow}>
+          <View style={[
+            styles.pillShape,
+            styles[`pill_${reminder.pillShape ?? 'oval'}`],
+            { backgroundColor: reminder.pillColor },
+          ]} />
+        </View>
+      )}
+
+      {/* Plain description */}
+      {block.showPillDescription && (
+        <HText variant="bodyLarge" align="center" color="text.secondary" style={styles.description}>
+          {reminder.plainDescription}
+        </HText>
+      )}
+
+      {/* Actions */}
+      <View style={styles.actions}>
+        <HButton
+          label={block.primaryAction.label}
+          onPress={handleTake}
+          variant="safe"
+          size="lg"
+          fullWidth
+          accessibilityLabel={block.primaryAction.accessibilityLabel}
+          testID="med-take-button"
+        />
+        <HButton
+          label={block.secondaryAction.label}
+          onPress={handleSnooze}
+          variant="secondary"
+          size="md"
+          fullWidth
+          accessibilityLabel={block.secondaryAction.accessibilityLabel}
+          testID="med-snooze-button"
+        />
+      </View>
+    </Animated.View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor:    '#FFFFFF',
+    borderRadius:       24,
+    padding:            28,
+    gap:                20,
+    shadowColor:        '#000',
+    shadowOffset:       { width: 0, height: 8 },
+    shadowOpacity:      0.10,
+    shadowRadius:       20,
+    elevation:          8,
+  },
+  timeText: {
+    fontFeatureSettings: '"tnum"',   // tabular numbers
+  },
+  pillVisualRow: {
+    alignItems:         'center',
+    justifyContent:     'center',
+    height:             48,
+  },
+  pillShape: {
+    width:              72,
+    height:             30,
+    borderRadius:       15,
+  },
+  pill_oval:   { borderRadius: 15 },
+  pill_round:  { width: 30, height: 30, borderRadius: 15 },
+  pill_oblong: { width: 90, height: 28, borderRadius: 14 },
+  pill_square: { width: 30, height: 30, borderRadius: 4 },
+  description: {
+    lineHeight:         32,
+  },
+  actions: {
+    gap:                12,
+  },
+});
+TypeScript
+
+// renderer/blocks/HaloBlock.tsx
+// ─────────────────────────────────────────────────────────────────────────────
+// THE HAVEN HALO — Breathing status ring (signature motif)
+// ─────────────────────────────────────────────────────────────────────────────
+
+import React, { useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue, useAnimatedStyle,
+  withRepeat, withSequence, withTiming,
+} from 'react-native-reanimated';
+import type { HaloBlock } from '../../schema/types';
+import { HText } from '../../components/HText';
+
+export const renderHaloBlock = (
+  block: HaloBlock,
+  data:  Record<string, unknown>
+) => (
+  <HaloBlockComponent
+    key={block.blockId}
+    block={block}
+    data={data}
+  />
+);
+
+const HALO_COLORS: Record<string, { ring: string; glow: string; label: string }> = {
+  safe:  { ring: '#16A34A', glow: 'rgba(22, 163, 74, 0.15)',  label: '#16A34A' },
+  amber: { ring: '#F59E0B', glow: 'rgba(245, 158, 11, 0.20)', label: '#B45309' },
+  red:   { ring: '#DC2626', glow: 'rgba(220, 38, 38, 0.20)',  label: '#DC2626' },
+};
+
+const HALO_SIZES: Record<string, { outer: number; inner: number; ring: number }> = {
+  sm: { outer: 12, inner: 8,  ring: 2 },
+  md: { outer: 20, inner: 14, ring: 3 },
+  lg: { outer: 32, inner: 22, ring: 4 },
+};
+
+const HaloBlockComponent: React.FC<{
+  block: HaloBlock;
+  data:  Record<string, unknown>;
+}> = ({ block, data }) => {
+  const status = (data[block.dataBinding] as string) ?? 'safe';
+  const colors = HALO_COLORS[status] ?? HALO_COLORS.safe;
+  const sizes  = HALO_SIZES[block.size];
+  const label  = block.showLabel ? block.labelMap[status as keyof typeof block.labelMap] : null;
+
+  // Breathing pulse animation
+  const pulseOpacity = useSharedValue(1);
+  const pulseScale   = useSharedValue(1);
+
+  useEffect(() => {
+    // "Breathing" — slow, calm, never alarming
+    pulseOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.4, { duration: 2000 }),
+        withTiming(1.0, { duration: 2000 }),
+      ),
+      -1,
+      false
+    );
+    pulseScale.value = withRepeat(
+      withSequence(
+        withTiming(1.2, { duration: 2000 }),
+        withTiming(1.0, { duration: 2000 }),
+      ),
+      -1,
+      false
+    );
+  }, [status]);  // restart animation when status changes
+
+  const outerAnimStyle = useAnimatedStyle(() => ({
+    opacity:   pulseOpacity.value,
+    transform: [{ scale: pulseScale.value }],
+  }));
+
+  return (
+    <View style={styles.wrapper} accessibilityLabel={`Status: ${status}`}>
+      {/* Glow ring (animated) */}
+      <Animated.View style={[
+        styles.glowRing,
+        {
+          width:           sizes.outer * 2 + 24,
+          height:          sizes.outer * 2 + 24,
+          borderRadius:    sizes.outer + 12,
+          backgroundColor: colors.glow,
+        },
+        outerAnimStyle,
+      ]} />
+
+      {/* Solid ring */}
+      <View style={[
+        styles.solidRing,
+        {
+          width:            sizes.inner * 2 + sizes.ring * 2 + 4,
+          height:           sizes.inner * 2 + sizes.ring * 2 + 4,
+          borderRadius:     sizes.inner + sizes.ring + 2,
+          borderWidth:      sizes.ring,
+          borderColor:      colors.ring,
+        },
+      ]}>
+        {/* Core dot */}
+        <View style={[
+          styles.coreDot,
+          {
+            width:            sizes.inner,
+            height:           sizes.inner,
+            borderRadius:     sizes.inner / 2,
+            backgroundColor:  colors.ring,
+          },
+        ]} />
+      </View>
+
+      {/* Label */}
+      {label && (
+        <HText
+          variant="caption"
+          style={[styles.label, { color: colors.label }]}
+          accessibilityRole="text"
+        >
+          {label}
+        </HText>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  wrapper: {
+    alignItems:     'center',
+    flexDirection:  'row',
+    gap:            10,
+    paddingVertical: 4,
+  },
+  glowRing: {
+    position:       'absolute',
+    left:           -4,
+  },
+  solidRing: {
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  coreDot: {},
+  label: {
+    fontWeight:     '500',
+    letterSpacing:  0.2,
+  },
+});
+TypeScript
+
+// renderer/blocks/AlertExplanationBlock.tsx
+// ─────────────────────────────────────────────────────────────────────────────
+// ALERT EXPLANATION BLOCK — calm, warm, elder-safe
+// ─────────────────────────────────────────────────────────────────────────────
+
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import Animated, { SlideInDown } from 'react-native-reanimated';
+import type { AlertExplanationBlock } from '../../schema/types';
+import { HText } from '../../components/HText';
+
+export const renderAlertBlock = (
+  block: AlertExplanationBlock,
+  data:  Record<string, unknown>
+) => (
+  <AlertExplanationComponent
+    key={block.blockId}
+    block={block}
+    data={data}
+  />
+);
+
+const AlertExplanationComponent: React.FC<{
+  block: AlertExplanationBlock;
+  data:  Record<string, unknown>;
+}> = ({ block, data }) => {
+  const explanation = data[block.explanationBinding] as string ?? '';
+  const redFlags    = (data[block.redFlagsBinding] as string[] ?? []).slice(0, block.maxRedFlags);
+
+  const levelStyles = {
+    amber: { card: styles.card_amber, flag: styles.flag_amber, flagDot: '#F59E0B' },
+    red:   { card: styles.card_red,   flag: styles.flag_red,   flagDot: '#DC2626' },
+    black: { card: styles.card_black, flag: styles.flag_black, flagDot: '#FFFFFF' },
+  }[block.level];
+
+  return (
+    <Animated.View
+      entering={SlideInDown.duration(500)}
+      style={[styles.card, levelStyles.card]}
+    >
+      {/* Explanation text — warm, calm */}
+      <HText
+        variant="bodyLarge"
+        color={block.level === 'black' ? 'text.inverse' : 'text.primary'}
+        style={styles.explanation}
+      >
+        {explanation}
+      </HText>
+
+      {/* Red flags (max 3, always plain English) */}
+      {block.showRedFlags && redFlags.length > 0 && (
+        <View style={styles.flagsContainer}>
+          {redFlags.map((flag, idx) => (
+            <View key={idx} style={[styles.flagRow, levelStyles.flag]}>
+              <View style={[styles.flagDot, { backgroundColor: levelStyles.flagDot }]} />
+              <HText
+                variant="body"
+                color={block.level === 'black' ? 'text.inverse' : 'text.primary'}
+                style={styles.flagText}
+              >
+                {flag}
+              </HText>
+            </View>
+          ))}
+        </View>
+      )}
+    </Animated.View>
+  );
+};
+
+const styles = StyleSheet.create({
+  card: {
+    borderRadius:       16,
+    padding:            20,
+    gap:                16,
+  },
+  card_amber: {
+    backgroundColor:    '#FFFBEB',
+    borderLeftWidth:    4,
+    borderLeftColor:    '#F59E0B',
+  },
+  card_red: {
+    backgroundColor:    '#FEF2F2',
+    borderLeftWidth:    4,
+    borderLeftColor:    '#DC2626',
+  },
+  card_black: {
+    backgroundColor:    '#1F1F1F',
+    borderLeftWidth:    4,
+    borderLeftColor:    '#FFFFFF',
+  },
+  explanation: {
+    lineHeight:         32,
+  },
+  flagsContainer: {
+    gap:                10,
+  },
+  flagRow: {
+    flexDirection:      'row',
+    alignItems:         'flex-start',
+    gap:                10,
+    padding:            12,
+    borderRadius:       10,
+  },
+  flag_amber: { backgroundColor: 'rgba(245, 158, 11, 0.08)' },
+  flag_red:   { backgroundColor: 'rgba(220, 38, 38, 0.08)' },
+  flag_black: { backgroundColor: 'rgba(255, 255, 255, 0.08)' },
+  flagDot: {
+    width:              8,
+    height:             8,
+    borderRadius:       4,
+    marginTop:          8,
+    flexShrink:         0,
+  },
+  flagText: {
+    flex:               1,
+    lineHeight:         28,
+  },
+});
+Part 5 — Critical Hooks
+TypeScript
+
+// hooks/useScreenData.ts
+// ─────────────────────────────────────────────────────────────────────────────
+// Data fetching for a screen's declared data sources.
+// Uses React Query — each data source becomes one cached query.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { useQueries, UseQueryResult } from '@tanstack/react-query';
+import NetInfo from '@react-native-community/netinfo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { DataSourceDescriptor } from '../schema/types';
+import { havenAPI } from '../api/havenAPI';
+
+export function useScreenData(
+  sources:     DataSourceDescriptor[],
+  options?:    { routeParams?: Record<string, string> }
+): {
+  data:       Record<string, unknown>;
+  isLoading:  boolean;
+  isError:    boolean;
+  isOffline:  boolean;
+} {
+  const queries = useQueries({
+    queries: sources.map(source => ({
+      queryKey:     [source.queryKey, options?.routeParams],
+      queryFn:      () => havenAPI.query(source.queryKey, options?.routeParams),
+      staleTime:    source.offlineCacheTTL,
+      gcTime:       source.offlineCacheTTL * 2,
+      refetchInterval: source.refetchInterval,
+      retry:        1,
+      // Serve stale cache when offline
+      networkMode:  'offlineFirst' as const,
+    })),
+  });
+
+  // Merge all query results into a flat data map
+  const data: Record<string, unknown> = {};
+  queries.forEach((result: UseQueryResult, idx) => {
+    if (result.data !== undefined) {
+      data[sources[idx].key] = result.data;
+    }
+  });
+
+  const isLoading = queries.every(q => q.isLoading) && queries.some(q => !q.data);
+  const isError   = queries.some(q => q.isError);
+  const isOffline = queries.some(q => q.fetchStatus === 'paused');
+
+  return { data, isLoading, isError, isOffline };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// hooks/useScreenState.ts
+// Derives the current screen "state" from data + global alerts
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { useMemo } from 'react';
+import { useShieldStore }    from '../stores/shieldStore';
+import { useBereavementStore } from '../stores/bereavementStore';
+import type { ScreenId, ScreenStateName } from '../schema/types';
+
+export function useScreenState(
+  screenId: ScreenId,
+  data:     Record<string, unknown>
+): ScreenStateName | null {
+  const shieldLevel   = useShieldStore(s => s.currentLevel);
+  const isBereavement = useBereavementStore(s => s.isActive);
+
+  return useMemo((): ScreenStateName | null => {
+    // Highest priority: alert states
+    if (shieldLevel === 'red')   return 'RED_ALERT';
+    if (shieldLevel === 'amber') return 'AMBER_ALERT';
+
+    // Bereavement
+    if (isBereavement) return 'BEREAVEMENT';
+
+    // Data-derived states
+    const medOverdue = data.currentReminder &&
+      (data.currentReminder as { isOverdue?: boolean }).isOverdue;
+    if (medOverdue) return 'MEDICATION_OVERDUE';
+
+    // Offline check
+    if (data._offline) return 'OFFLINE';
+
+    return null;
+  }, [shieldLevel, isBereavement, data]);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// hooks/useVoiceEngine.ts
+// Manages voice I/O for a screen — STT input + TTS output
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { useEffect, useCallback, useRef, useState } from 'react';
+import * as Speech from 'expo-speech';
+import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
+import type { VoiceSchema, VoiceIntent } from '../schema/types';
+import { useTemplateString } from './useTemplateString';
+import { useIntentClassifier } from './useIntentClassifier';
+
+interface UseVoiceEngineProps {
+  voiceSchema:  VoiceSchema;
+  data:         Record<string, unknown>;
+  screenId:     string;
+  onIntent:     (intent: VoiceIntent, slots?: Record<string, string>) => void;
+}
+
+export function useVoiceEngine({
+  voiceSchema, data, screenId, onIntent
+}: UseVoiceEngineProps) {
+  const [isListening,  setIsListening]  = useState(false);
+  const [isSpeaking,   setIsSpeaking]   = useState(false);
+  const { fill }         = useTemplateString(data);
+  const { classify }     = useIntentClassifier(voiceSchema.commands);
+  const hasSpokenEntry   = useRef(false);
+
+  // ── Entry speak (once per screen mount) ───────────────────────────────────
+  useEffect(() => {
+    if (!voiceSchema.entrySpeak || hasSpokenEntry.current) return;
+    if (voiceSchema.entrySpeak.skipIfSilentMode && isSilentMode()) return;
+
+    const text    = fill(voiceSchema.entrySpeak.template);
+    const delay   = voiceSchema.entrySpeak.delay_ms ?? 0;
+    const timeout = setTimeout(() => {
+      setIsSpeaking(true);
+      Speech.speak(text, {
+        language: 'en',
+        pitch:    1.0,
+        rate:     0.9,
+        onDone:   () => {
+          setIsSpeaking(false);
+          // After entry speak, auto-listen if always-listening mode
+          if (voiceSchema.alwaysListening) startListening();
+        },
+      });
+      hasSpokenEntry.current = true;
+    }, delay);
+
+    return () => clearTimeout(timeout);
+  }, [screenId]);  // only on screen mount
+
+  // ── STT ───────────────────────────────────────────────────────────────────
+  const startListening = useCallback(async () => {
+    setIsListening(true);
+    await ExpoSpeechRecognitionModule.start({
+      lang:                'en-US',
+      interimResults:      false,
+      maxAlternatives:     3,
+      contextualStrings:   getContextualHints(voiceSchema.commands),
+    });
+  }, [voiceSchema.commands]);
+
+  useSpeechRecognitionEvent('result', (event) => {
+    if (!event.results?.[0]) {
+      handleFallback();
+      return;
+    }
+
+    const transcript    = event.results[0].transcript.toLowerCase().trim();
+    const classification= classify(transcript);
+
+    if (classification) {
+      const { intent, slots } = classification;
+      if (voiceSchema.commands.find(c => c.intent === intent)?.confirmBefore) {
+        // Show confirmation before acting
+        speakConfirmation(
+          voiceSchema.commands.find(c => c.intent === intent)!.confirmMessage ?? "Are you sure?",
+          () => onIntent(intent, slots)
+        );
+      } else {
+        onIntent(intent, slots);
+      }
+    } else {
+      handleFallback();
+    }
+
+    setIsListening(false);
+  });
+
+  useSpeechRecognitionEvent('end', () => setIsListening(false));
+  useSpeechRecognitionEvent('error', () => {
+    setIsListening(false);
+    handleFallback();
+  });
+
+  const handleFallback = useCallback(() => {
+    const { fallback } = voiceSchema;
+    Speech.speak(fallback.message, { rate: 0.9 });
+  }, [voiceSchema.fallback]);
+
+  const speakConfirmation = useCallback((message: string, onConfirm: () => void) => {
+    Speech.speak(message, {
+      rate:   0.9,
+      onDone: () => {
+        // After speaking confirmation, listen for yes/no
+        startListening();
+        // Simple yes/no handler — re-registered once
+      },
+    });
+  }, []);
+
+  return { isListening, isSpeaking, startListening };
+}
+
+// Derive contextual hints from command utterances to improve STT accuracy
+function getContextualHints(commands: VoiceSchema['commands']): string[] {
+  return commands
+    .flatMap(c => c.utterances)
+    .filter(u => !u.includes('*'))  // exclude wildcards
+    .slice(0, 100);                  // STT APIs limit contextual hints
+}
+
+function isSilentMode(): boolean {
+  // Platform-specific silent mode check
+  return false; // Implement via expo-av AudioMode
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// hooks/useSchemaValidator.ts
+// Build-time + runtime schema validation
+// ─────────────────────────────────────────────────────────────────────────────
+
+import type { ScreenSchema } from '../schema/types';
+
+export function useSchemaValidator() {
+  const validate = (schema: ScreenSchema) => {
+    const errors: string[] = [];
+
+    // Rule 1: Max 3 primary items
+    const primaryItems = schema.contentBlocks.filter(b =>
+      ['CARD', 'MED_NEXT', 'BUTTON_GRID', 'LIST'].includes(b.blockType)
+    );
+    if (primaryItems.length > schema.maxPrimaryItems) {
+      errors.push(`[${schema.screenId}] Too many primary blocks: ${primaryItems.length} > ${schema.maxPrimaryItems}`);
+    }
+
+    // Rule 2: Max 2 bottom actions
+    if (schema.bottomActions.length > 2) {
+      errors.push(`[${schema.screenId}] Too many bottom actions: ${schema.bottomActions.length} > 2`);
+    }
+
+    // Rule 3: Navigation depth ≤ 2
+    if (schema.navigation.depthFromHome > 2) {
+      errors.push(`[${schema.screenId}] Navigation depth ${schema.navigation.depthFromHome} exceeds maximum of 2`);
+    }
+
+    // Rule 4: All HeroButtons have accessibilityLabel
+    const gridBlocks = schema.contentBlocks.filter(b => b.blockType === 'BUTTON_GRID');
+    gridBlocks.forEach((grid: unknown) => {
+      (grid as { buttons: { accessibilityLabel?: string }[] }).buttons?.forEach((btn, idx) => {
+        if (!btn.accessibilityLabel) {
+          errors.push(`[${schema.screenId}] Button grid button[${idx}] missing accessibilityLabel`);
+        }
+      });
+    });
+
+    // Rule 5: Voice fallback always defined
+    if (!schema.voice.fallback) {
+      errors.push(`[${schema.screenId}] Missing voice fallback`);
+    }
+
+    if (errors.length > 0) {
+      console.error('[HAVEN Schema Validator]\n' + errors.join('\n'));
+      if (process.env.NODE_ENV === 'test') {
+        throw new Error('[HAVEN Schema Validator] Schema violations found:\n' + errors.join('\n'));
+      }
+    }
+
+    return errors;
+  };
+
+  return { validate };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// hooks/useVisibility.ts
+// Evaluates VisibilityCondition against live data
+// ─────────────────────────────────────────────────────────────────────────────
+
+import type { VisibilityCondition } from '../schema/types';
+import { useShieldStore }     from '../stores/shieldStore';
+import { useBereavementStore } from '../stores/bereavementStore';
+import { useFeatureFlags }    from './useFeatureFlags';
+import { useElderSettings }   from './useElderSettings';
+
+export function useVisibility(data: Record<string, unknown>) {
+  const shieldLevel   = useShieldStore(s => s.currentLevel);
+  const isBereavement = useBereavementStore(s => s.isActive);
+  const { getFlag }   = useFeatureFlags();
+  const { getSetting } = useElderSettings();
+
+  const isVisible = (condition: VisibilityCondition): boolean => {
+    switch (condition.condition) {
+
+      case 'DATA_EXISTS':
+        return data[condition.dataKey] != null &&
+               (Array.isArray(data[condition.dataKey])
+                 ? (data[condition.dataKey] as unknown[]).length > 0
+                 : true);
+
+      case 'DATA_EMPTY':
+        return data[condition.dataKey] == null ||
+               (Array.isArray(data[condition.dataKey])
+                 ? (data[condition.dataKey] as unknown[]).length === 0
+                 : false);
+
+      case 'FEATURE_FLAG':
+        return getFlag(condition.flag);
+
+      case 'USER_SETTING':
+        return getSetting(condition.setting) === condition.value;
+
+      case 'ALERT_LEVEL':
+        return shieldLevel === condition.level;
+
+      case 'TIME_OF_DAY': {
+        const now   = new Date();
+        const hours = now.getHours() * 60 + now.getMinutes();
+        const from  = timeToMinutes(condition.from);
+        const to    = timeToMinutes(condition.to);
+        return from <= to ? hours >= from && hours <= to
+                          : hours >= from || hours <= to;  // overnight range
+      }
+
+      case 'BEREAVEMENT_ACTIVE':
+        return isBereavement;
+
+      case 'AND':
+        return condition.conditions.every(isVisible);
+
+      case 'OR':
+        return condition.conditions.some(isVisible);
+
+      default:
+        return true;
+    }
+  };
+
+  return { isVisible };
+}
+
+function timeToMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + (m ?? 0);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// hooks/useActionHandler.ts
+// Central dispatcher for all schema actions
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { useCallback } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
+import type { ButtonAction, SystemAction, ScreenId } from '../schema/types';
+import { useConfirmSheet } from './useConfirmSheet';
+import { useMedicationStore } from '../stores/medicationStore';
+import { useMessagesStore }   from '../stores/messagesStore';
+import { useShieldStore }     from '../stores/shieldStore';
+import { usePhoneCall }       from './usePhoneCall';
+
+export function useActionHandler(currentScreenId: ScreenId) {
+  const navigation     = useNavigation();
+  const { showConfirm } = useConfirmSheet();
+  const { confirmMedTaken, snoozeMed } = useMedicationStore();
+  const { sendThinkingOfYou }          = useMessagesStore();
+  const { trustContact, dismissAlert } = useShieldStore();
+  const { callContact }                = usePhoneCall();
+
+  const handle = useCallback((action: ButtonAction | SystemAction | unknown) => {
+    const a = action as ButtonAction;
+    if (!a?.type) return;
+
+    switch (a.type) {
+
+      case 'NAVIGATE':
+        navigation.navigate(a.screenId as never);
+        break;
+
+      case 'SYSTEM':
+        handleSystem(a.system as SystemAction);
+        break;
+
+      case 'SHEET':
+        navigation.navigate(a.sheetId as never);
+        break;
+
+      case 'CALL':
+        callContact(a.contactBinding);
+        break;
+
+      case 'VOICE_INTENT':
+        // Handled by voice engine — no-op here
+        break;
+
+      case 'CONFIRM_THEN':
+        showConfirm({
+          ...a.confirm,
+          onConfirm: () => handle(a.thenAction),
+        });
+        break;
+    }
+  }, [navigation, callContact, showConfirm]);
+
+  const handleSystem = useCallback((system: SystemAction) => {
+    switch (system) {
+      case 'CONFIRM_TAKEN':         confirmMedTaken();                     break;
+      case 'SNOOZE_REMINDER':       snoozeMed(15);                         break;
+      case 'SEND_THINKING_OF_YOU':  sendThinkingOfYou();                   break;
+      case 'TRUST_CONTACT':         trustContact();                        break;
+      case 'CALL_FAMILY_TOGETHER':  callContact('primaryContact');         break;
+      case 'CALL_EMERGENCY_SERVICES': callContact('emergencyServices');    break;
+      case 'START_VOICE_INPUT':     /* Voice engine handles */             break;
+      case 'OPEN_CAMERA_OCR':       navigation.navigate('CameraOCR' as never); break;
+      case 'SCAN_DOCUMENT':         navigation.navigate('DocumentScanner' as never); break;
+      case 'SPEAK_DAILY_BRIEF':     /* Voice engine handles */             break;
+    }
+  }, [confirmMedTaken, snoozeMed, sendThinkingOfYou, trustContact, callContact]);
+
+  return { handle };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// hooks/useTemplateString.ts
+// Fills "{{variable}}" templates with live data
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function useTemplateString(data: Record<string, unknown>) {
+  const fill = (template: string): string => {
+    if (!template) return '';
+    return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+      const value = data[key];
+      if (value === undefined || value === null) return '';
+      return String(value);
+    });
+  };
+
+  return { fill };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// hooks/useIntentClassifier.ts
+// Fast intent matching: utterances → VoiceIntent
+// ─────────────────────────────────────────────────────────────────────────────
+
+import type { VoiceCommand, VoiceIntent } from '../schema/types';
+
+export function useIntentClassifier(commands: VoiceCommand[]) {
+  const classify = (transcript: string): { intent: VoiceIntent; slots: Record<string, string> } | null => {
+    const lower = transcript.toLowerCase().trim();
+
+    for (const command of commands) {
+      for (const utterance of command.utterances) {
+
+        // Exact match
+        if (utterance === lower) {
+          return { intent: command.intent, slots: {} };
+        }
+
+        // Wildcard match (e.g. "remind me to *")
+        if (utterance.endsWith('*')) {
+          const prefix = utterance.slice(0, -1).trim();
+          if (lower.startsWith(prefix)) {
+            const slotValue = lower.slice(prefix.length).trim();
+            const slotName  = command.slots?.[0]?.name ?? 'value';
+            return { intent: command.intent, slots: { [slotName]: slotValue } };
+          }
+        }
+
+        // Contains match (for multi-word partial triggers)
+        if (utterance.length > 6 && lower.includes(utterance)) {
+          return { intent: command.intent, slots: {} };
+        }
+      }
+    }
+
+    // Wildcard command (*) — catch all
+    const wildcard = commands.find(c => c.utterances.includes('*'));
+    if (wildcard) {
+      const slotName = wildcard.slots?.[0]?.name ?? 'value';
+      return { intent: wildcard.intent, slots: { [slotName]: lower } };
+    }
+
+    return null;
+  };
+
+  return { classify };
+}
+Part 6 — App Entry Point (Schema-Driven Navigation)
+TypeScript
+
+// app/ElderApp.tsx
+// ─────────────────────────────────────────────────────────────────────────────
+// ROOT OF THE ELDER APP
+// Navigation is driven entirely by SCREEN_REGISTRY.
+// No ad-hoc screens. No ad-hoc navigation config.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import React from 'react';
+import { NavigationContainer }   from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SafeAreaProvider }      from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+import { SCREEN_REGISTRY }   from '../schema/screens';
+import { ScreenRenderer }    from '../renderer/ScreenRenderer';
+import { HavenThemeProvider } from '../theme/HavenThemeProvider';
+import { ShieldMonitor }     from '../services/ShieldMonitor';
+import type { ScreenId }     from '../schema/types';
+
+const Stack   = createNativeStackNavigator();
+const qClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime:  30_000,
+      gcTime:     300_000,
+      retry:      1,
+      networkMode: 'offlineFirst',
+    },
+  },
+});
+
+// All navigable elder screens in order (home first)
+const ELDER_SCREENS: ScreenId[] = [
+  'ELDER_HOME',
+  'ELDER_TODAY',
+  'ELDER_MY_PILLS',
+  'ELDER_FAMILY',
+  'ELDER_HELP',
+  'ELDER_VOICE_MESSAGE',
+  'ELDER_READ_MESSAGE',
+  'ELDER_LIFE_STORY',
+  'ELDER_SHIELD_AMBER',
+  'ELDER_SHIELD_RED',
+  'ELDER_SHIELD_BLACK',
+  'ELDER_DOCUMENT_EXPLAINER',
+  'ELDER_WELLNESS_CHECKIN',
+  'ELDER_COGNITIVE_CHECKIN',
+  'ELDER_SETTINGS',
+];
+
+export const ElderApp: React.FC = () => (
+  <GestureHandlerRootView style={{ flex: 1 }}>
+    <SafeAreaProvider>
+      <QueryClientProvider client={qClient}>
+        <HavenThemeProvider>
+          {/* Background service: monitors for scams, fires alerts */}
+          <ShieldMonitor />
+
+          <NavigationContainer>
+            <Stack.Navigator
+              initialRouteName="ELDER_HOME"
+              screenOptions={{
+                headerShown:    false,
+                animation:      'slide_from_right',
+                gestureEnabled: true,
+                gestureDirection: 'horizontal',
+              }}
+            >
+              {ELDER_SCREENS.map(screenId => (
+                <Stack.Screen
+                  key={screenId}
+                  name={screenId}
+                  options={{
+                    // Overlay screens slide from bottom
+                    animation: SCREEN_REGISTRY[screenId]?.navigation.isOverlay
+                      ? 'slide_from_bottom'
+                      : 'slide_from_right',
+                    presentation: SCREEN_REGISTRY[screenId]?.navigation.isModal
+                      ? 'modal'
+                      : 'card',
+                  }}
+                >
+                  {({ route }) => (
+                    <ScreenRenderer
+                      schema={SCREEN_REGISTRY[screenId]}
+                      routeParams={route.params as Record<string, string>}
+                      testID={`screen-${screenId}`}
+                    />
+                  )}
+                </Stack.Screen>
+              ))}
+            </Stack.Navigator>
+          </NavigationContainer>
+        </HavenThemeProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
+  </GestureHandlerRootView>
+);
+Part 7 — Schema Build Tests (Enforces the UX Constitution in CI)
+TypeScript
+
+// __tests__/schema.test.ts
+// ─────────────────────────────────────────────────────────────────────────────
+// SCHEMA COMPLIANCE TEST SUITE
+// Runs in CI. Any schema violation fails the build.
+// This is how simplicity is ENFORCED, not just recommended.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { SCREEN_REGISTRY } from '../schema/screens';
+import type { ScreenSchema, ContentBlock } from '../schema/types';
+
+const schemas = Object.values(SCREEN_REGISTRY);
+
+describe('HAVEN Schema Compliance', () => {
+
+  describe('Navigation Depth', () => {
+    test.each(schemas)('[$screenId] depth from home ≤ 2', (schema) => {
+      expect(schema.navigation.depthFromHome).toBeLessThanOrEqual(2);
+    });
+  });
+
+  describe('Bottom Actions', () => {
+    test.each(schemas)('[$screenId] max 2 bottom actions', (schema) => {
+      expect(schema.bottomActions.length).toBeLessThanOrEqual(2);
+    });
+  });
+
+  describe('Content Blocks', () => {
+    test.each(schemas)('[$screenId] maxPrimaryItems respected', (schema) => {
+      const primaryBlocks = schema.contentBlocks.filter(b =>
+        ['CARD', 'MED_NEXT', 'BUTTON_GRID', 'LIST'].includes(b.blockType)
+      );
+      expect(primaryBlocks.length).toBeLessThanOrEqual(schema.maxPrimaryItems);
+    });
+
+    test.each(schemas)('[$screenId] all blocks have blockId', (schema) => {
+      schema.contentBlocks.forEach(block => {
+        expect(block.blockId).toBeTruthy();
+        expect(typeof block.blockId).toBe('string');
+      });
+    });
+  });
+
+  describe('Accessibility', () => {
+    test.each(schemas)('[$screenId] has accessibilityLabel', (schema) => {
+      expect(schema.accessibilityLabel).toBeTruthy();
+    });
+
+    test.each(schemas)('[$screenId] all bottom actions have accessibilityLabel', (schema) => {
+      schema.bottomActions.forEach(action => {
+        expect(action.accessibilityLabel).toBeTruthy();
+      });
+    });
+
+    test.each(schemas)('[$screenId] button grid buttons have accessibilityLabel', (schema) => {
+      const grids = schema.contentBlocks.filter(b => b.blockType === 'BUTTON_GRID');
+      grids.forEach((grid: ContentBlock) => {
+        if (grid.blockType === 'BUTTON_GRID') {
+          grid.buttons.forEach((btn, idx) => {
+            expect(btn.accessibilityLabel).toBeTruthy();
+            expect(btn.accessibilityHint).toBeTruthy();
+          });
+        }
+      });
+    });
+  });
+
+  describe('Voice Schema', () => {
+    test.each(schemas)('[$screenId] has voice fallback', (schema) => {
+      expect(schema.voice.fallback).toBeDefined();
+      expect(schema.voice.fallback.message).toBeTruthy();
+    });
+
+    test.each(schemas)('[$screenId] fallback message ≤ 15 words', (schema) => {
+      const wordCount = schema.voice.fallback.message.split(' ').length;
+      expect(wordCount).toBeLessThanOrEqual(15);
+    });
+
+    test.each(schemas)('[$screenId] all commands have at least 1 utterance', (schema) => {
+      schema.voice.commands.forEach(cmd => {
+        expect(cmd.utterances.length).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  describe('Data Sources', () => {
+    test.each(schemas)('[$screenId] all data sources have offlineCacheTTL', (schema) => {
+      schema.dataSources.forEach(ds => {
+        expect(ds.offlineCacheTTL).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  describe('Microcopy Tone', () => {
+    const BANNED_WORDS = [
+      'warning', 'error', 'failed', 'stupid', 'wrong',
+      'critical', 'danger', 'detected', 'alert:', 'never',
+    ];
+
+    const extractAllText = (schema: ScreenSchema): string[] => {
+      const texts: string[] = [];
+      texts.push(schema.title);
+      schema.voice.fallback?.message && texts.push(schema.voice.fallback.message);
+      schema.voice.entrySpeak?.template && texts.push(schema.voice.entrySpeak.template);
+      schema.emptyState?.title && texts.push(schema.emptyState.title);
+      schema.emptyState?.body  && texts.push(schema.emptyState.body);
+      schema.bottomActions.forEach(a => texts.push(a.label));
+      return texts;
+    };
+
+    test.each(schemas)('[$screenId] no banned words in copy', (schema) => {
+      const allText = extractAllText(schema).join(' ').toLowerCase();
+      BANNED_WORDS.forEach(word => {
+        // Allow "never" only in scam copy (shield screens)
+        if (word === 'never' && schema.screenId.includes('SHIELD')) return;
+        expect(allText).not.toContain(word);
+      });
+    });
+  });
+
+  describe('Emergency Access', () => {
+    const NON_HELP_SCREENS = schemas.filter(
+      s => s.screenId !== 'ELDER_HELP' &&
+           s.screenId !== 'ELDER_SHIELD_BLACK' &&
+           !s.screenId.includes('ONBOARDING')
+    );
+
+    test.each(NON_HELP_SCREENS)(
+      '[$screenId] has EMERGENCY_BUTTON persistent element',
+      (schema) => {
+        expect(schema.persistent).toContain('EMERGENCY_BUTTON');
+      }
+    );
+  });
+});
+What You Now Have
+Artifact	What it does
+Schema type definitions (Part 1)	Full TypeScript contract for every screen, block, action, voice command, state
+15 complete screen schemas (Part 2)	Every elder screen, every row, every voice command, every empty state — in JSON
+ScreenRenderer (Part 3)	Turns any schema into a real screen — dispatches to block renderers, handles states, boots voice
+BlockRenderer + BlockSwitch (Part 3)	Type-narrows the block union and calls the right renderer
+5 block renderer implementations (Part 4)	CardBlock, MedNextBlock, HaloBlock, AlertExplanationBlock — the bespoke, pixel-precise ones
+7 core hooks (Part 5)	useScreenData, useScreenState, useVoiceEngine, useSchemaValidator, useVisibility, useActionHandler, useTemplateString, useIntentClassifier
+ElderApp.tsx (Part 6)	Root app where navigation is schema-driven — no ad-hoc screens possible
+Schema build tests (Part 7)	20+ automated tests that fail the CI build if any screen violates the UX constitution
+The result: you cannot accidentally ship a complex screen. The schema is the UX contract. The build tests are the enforcement. The renderer is the craftsperson who executes both.

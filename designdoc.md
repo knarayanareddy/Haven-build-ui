@@ -1,5 +1,54 @@
+HAVEN Engineering Design Suite
+Version: 1.1.0
+Status: Approved — Single Source of Truth
+Date: 2026-06-10
+Jurisdiction: Netherlands (nl-NL) / EU / Dutch law
+
+CHANGES FROM v1.0.0:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Change 1: Fraud statistics corrected
+  63,469 meldingen (2024, +10% YoY) — not "580,000"
+  101,734 meldingen (2025, +60% YoY)
+  Source: Fraudehelpdesk Jaarverslag 2024 + Terugblik 2025
+
+Change 2: Loneliness statistics corrected + sourced
+  ~10% sterk eenzaam 15+ (CBS SSW 2024)
+  ~7.5% sterk eenzaam 65+ (RIVM/CBS 2024)
+  ~13% sterk eenzaam 18+ (GGD/CBS/RIVM Gezondheidsmonitor 2024)
+  "1 in 3 severe loneliness 75+" claim removed (unsupported)
+  Sources: CBS, RIVM, vzinfo.nl
+
+Change 3: BSN removed from entire document
+  No BSN columns in schema
+  No BSN in vault product promises
+  No BSN in security asset lists
+  Dutch UAVG Art. 46 constraint documented
+
+Change 4: WGBO retention corrected
+  15 years → 20 years (Art. 7:454 BW)
+  Applies only to WACHT (Phase 2, professional care context)
+  Consumer app retention periods clarified separately
+
+Change 5: EU AI Act transparency corrected
+  "als AI" is no longer a banned phrase
+  REQUIRED disclosure copy defined in Dutch
+  Deceptive "I am human" phrases now banned instead
+  Hard product rule: HAVEN must answer "ben jij een mens?" honestly
+
+Change 6: RLS canonicality resolved
+  Addendum A declared canonical RLS source
+  Doc 05 declared illustrative only
+  Precedence banner added to both sections
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ITEMS STILL REQUIRING HUMAN ACTION (not engineering):
+  ⚠️ Addendum J (DPIA) — DPO must complete before production
+  ⚠️ Addendum K (Vendor Register) — DPO must sign off DPA column
+  ⚠️ Doc 06 — Named DPO must be recorded
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 HAVEN — Engineering Design Document Suite
-Version: 1.0.0 Status: Approved — Single Source of Truth Locale: Netherlands (nl-NL) | Jurisdiction: EU / Dutch Law Last Updated: 2026-06-10 Replaces: README.md, HAVEN_BLUEPRINT.md, UIUXRENDER
+Version: 1.1.0 Status: Approved — Single Source of Truth Locale: Netherlands (nl-NL) | Jurisdiction: EU / Dutch Law Last Updated: 2026-06-10 Replaces: README.md, HAVEN_BLUEPRINT.md, UIUXRENDER
 
 Document 01 — Product Specification
 1. Mission
@@ -11,8 +60,23 @@ HAVEN is not a tracking app. It is not a panic button. It is not a replacement f
 Dutch older adults — particularly those aged 70 and above — face four compounding challenges:
 
 Challenge	Dutch Context
-Financial fraud & scams	The Fraudehelpdesk reported over 580,000 fraud reports in 2024. Elders are the primary target of "bankhelpdeskfraude", phishing, and "vriend-in-nood" (friend-in-need) scams.
-Loneliness & isolation	CBS (Centraal Bureau voor de Statistiek) reports 1 in 3 Dutch adults over 75 experiences severe loneliness.
+Financial fraud & scams	In 2024, the Fraudehelpdesk registered **63,469 fraud reports** (meldingen) via callcenter and web form — a **10% increase** versus 2023 — with reported financial damage rising **20% to nearly €53 million**. Notably, **telephone fraud doubled** in 2024 compared to the year before. The majority of cases involved **helpdeskfraude** — fraudsters posing as helpdesk staff — including **bankhelpdeskfraude**, one of the most damaging forms, accounting for 6,057 reports alone. In 2025, this trend accelerated sharply: total meldingen reached **101,734** (a 60% rise over 2024), financial damage climbed to **€68.5 million** (+30%), and the number of financially harmed victims rose **65%** — while reported false emails numbered **522,103**. Elders are the primary target of "bankhelpdeskfraude", phishing, and "vriend-in-nood" (friend-in-need) scams.
+
+> ⚠️ **DATA NOTE:** Fraudehelpdesk publishes two separate figures:
+> (1) "Meldingen" — formal fraud reports via callcenter/webformulier
+> (2) "Valse e-mails" — suspicious emails submitted to the valse-e-mailcheck
+> These must never be combined into a single "reports" headline figure.
+> Source: Fraudehelpdesk Jaarverslag 2024 (Feb 2025) + Terugblik 2025 (Feb 2026)
+Loneliness & isolation	According to CBS (2024), **approximately 10% of Dutch people aged 15 and older** experience strong loneliness (*sterk eenzaam*); a further **30% report feeling somewhat lonely**, and 61% do not feel lonely. Among people **aged 65 and older specifically**, RIVM monitoring (CBS Sociale Samenhang en Welzijn data) shows the share reporting strong loneliness ranged between **7.5% (2024) and 8.7% (2023)**. Using the broader Gezondheidsmonitor Volwassenen en Ouderen 2024 (GGD/CBS/RIVM), **46% of Dutch adults (18+) report some form of loneliness**, of whom **33% are moderately lonely** and **13% strongly lonely**. The groups most at risk of strong loneliness are **people living alone (14%)** and single parents (18%). Loneliness is most prevalent among **young people and the very oldest**.
+
+HAVEN's KRING pillar addresses a structural and growing loneliness challenge in the Netherlands. While the majority of older adults are not severely lonely in any given year, the cumulative risk rises sharply with age, isolation, bereavement, and reduced mobility — precisely the cohort HAVEN serves. Even moderate loneliness in this group is associated with significantly worse health outcomes and quality of life (CBS/RIVM, 2024).
+
+> ⚠️ **DATA NOTE:** Two different surveys measure loneliness in NL with different methodology and age cut-offs, producing different headline percentages:
+> (1) CBS Sociale Samenhang en Welzijn: 15+ population, ~10% sterk eenzaam (2024)
+> (2) GGD/CBS/RIVM Gezondheidsmonitor Volwassenen en Ouderen: 18+, ~13% sterk eenzaam (2024)
+> Both are valid; cite the source explicitly when using either figure.
+> The "1 in 3 severe loneliness 75+" figure is NOT supported by either source and must not be used.
+> Sources: CBS cbs.nl/nl-nl/nieuws/2025/39 | vzinfo.nl/eenzaamheid | rivm.nl/mentale-gezondheid
 Medication non-adherence	Approximately 50% of Dutch older adults with chronic conditions take medications incorrectly, per RIVM data.
 Cognitive safety	Over 290,000 people in the Netherlands live with dementia (Alzheimer Nederland, 2025). Safe navigation and orientation support is an unmet gap in consumer tech.
 3. Target Users
@@ -43,7 +107,12 @@ Features:
 Real-time call reputation analysis
 Multi-layer scam scoring pipeline (per-call, per-message, per-link)
 Conversation coaching during a flagged live call ("stay on the line, this may be a scam")
-Vault for sensitive documents (DigiD, BSN card, insurance cards, passports)
+Document Vault (SCHILD): Securely store and label important documents — such as insurance policies, medication overviews, wills, and utility contracts.
+
+  Explicit exclusions (displayed in UI):
+  - Do not upload documents showing your full BSN. If you wish to store an identity document, redact the BSN number before uploading.
+  - HAVEN does not process or read BSN numbers and cannot validate identity documents.
+  - DigiD integration: DigiD is explicitly out of scope for MVP. Any future DigiD integration (e.g. for MedMij access) requires a separate legal basis assessment and technical security review before implementation.
 Transaction intercept for flagged anomalies (via PSD2 Open Banking APIs)
 Alert levels: Amber (worth knowing) → Rood (take action) → Zwart (transaction blocked)
 Social engineering memory: tracks escalating "grooming" patterns across time
@@ -787,8 +856,14 @@ CREATE TABLE elder_profiles (
   profile_id                UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
 
   -- Dutch healthcare identifiers
-  bsn_encrypted             BYTEA,                       -- AES-256-GCM encrypted BSN
-  bsn_last_four             CHAR(4),                     -- for display/verification only
+  -- ⚠️ BSN (Burgerservicenummer) is explicitly NOT stored.
+  -- Under Dutch law (UAVG Art. 46), organizations outside government may only
+  -- process BSN if a specific law grants them this right. HAVEN has no such basis
+  -- in MVP or Phase 2 (consumer wellness product).
+  -- If HAVEN later enters a regulated healthcare chain requiring BSN (e.g. as a
+  -- recognised zorgaanbieder under a specific WMO/Zvw context), this must be
+  -- re-assessed by legal counsel before any BSN field is introduced.
+  -- Reference: rijksoverheid.nl/onderwerpen/privacy/burgerservicenummer-bsn
   zorgverzekering_nummer    TEXT,                        -- health insurance number
   huisarts_naam             TEXT,
   huisarts_praktijk         TEXT,
@@ -1418,7 +1493,22 @@ CREATE TABLE push_tokens (
 ALTER TABLE push_tokens ENABLE ROW LEVEL SECURITY;
 FORCE ROW LEVEL SECURITY ON push_tokens;
 12. RLS Policy Definitions
-These are the canonical RLS policies. All are PERMISSIVE unless stated.
+
+## 🔴 CANONICAL RLS SOURCE — READ THIS FIRST
+
+The **authoritative, complete, production-ready RLS policy SQL** for all tables
+is defined in **Addendum A** (`docs/addenda/A-rls-policies.md`).
+
+The policy examples shown in this section (Doc 05) are **illustrative summaries
+only** — they exist to explain the access-control philosophy, not to be
+implemented directly.
+
+**Engineer rule:** When implementing or auditing RLS, use ONLY Addendum A.
+If Doc 05 and Addendum A ever conflict, **Addendum A wins**.
+
+Last reconciliation check: 2026-06-10 ✅
+
+These are illustrative RLS policy examples only. All are PERMISSIVE unless stated.
 
 SQL
 
@@ -1635,7 +1725,7 @@ Data Category	AVG Article 9 Special Category?	Legal Basis	Notes
 Name, contact details, profile	No	Article 6(1)(b) — contract performance	Core service delivery
 Voice recordings (STEM)	No (unless health content)	Article 6(1)(a) — explicit consent	Consent captured on onboarding; withdrawable at any time
 Medication data	Yes — health data	Article 9(2)(a) — explicit consent	Must be granular and informed
-BSN (Dutch citizen number)	Yes — Article 87 UAVG special	UAVG Article 46 — only if strictly necessary	Encrypted at rest; access restricted to elder only
+BSN (Burgerservicenummer)	Forbidden to collect	Not stored, not processed, not transmitted. UI warns users not to upload documents containing unredacted BSN.
 Location data	No	Article 6(1)(a) — explicit consent	Consent per-family-member; elder can revoke
 Financial transaction data (Phase 2)	No	Article 6(1)(a) — explicit consent	PSD2 consent flow required
 Health check-ins / wellness	Yes — health data	Article 9(2)(a) — explicit consent	
@@ -1688,12 +1778,24 @@ Internal Supabase service communication: encrypted by Supabase platform
 5.2 At Rest
 Supabase hosted PostgreSQL: AES-256 disk encryption (AWS EBS)
 Supabase Storage: AES-256 (AWS S3)
-BSN field: additional application-level AES-256-GCM encryption. Key stored in Supabase Vault (not in application code or environment variables accessible to Edge Functions)
+(No BSN field — HAVEN does not store BSN. See BSN hard product rule below.)
 Voice recordings: encrypted at storage path level via Supabase Storage (AES-256); paths are not guessable (UUID-based)
 5.3 Key Management
 Application secrets: Supabase Vault
 Service role key: never exposed to frontend; only used in Edge Functions server-side
-BSN encryption key: rotated annually; old key retained for 90 days post-rotation for re-encryption
+(No BSN encryption key — BSN is not stored or processed. See BSN hard product rule below.)
+5.4 BSN — Not Processed (Hard Product Rule)
+
+HAVEN does not collect, store, or process BSN.
+This is a hard product rule enforced at:
+  - DB schema level (no BSN columns)
+  - UI level (vault upload warning)
+  - Data classification level (Class 4 — forbidden to collect)
+  - Vendor contract level (vendors must not receive BSN from HAVEN)
+
+If any integration partner requests BSN transmission, this must be escalated
+to the DPO immediately and rejected unless a specific statutory basis is confirmed.
+
 6. Threat Model
 6.1 Assets to Protect
 Elder personal and health data (Class 4)
@@ -1701,7 +1803,7 @@ Family member access credentials
 Voice recordings and life stories
 Companion memory (persistent personal history)
 Financial data (Phase 2)
-BSN and healthcare identifiers
+Healthcare identifiers (zorgverzekering nummer, huisarts contact) — BSN is not stored (hard product rule)
 6.2 Threat Actors
 Actor	Motivation	Capability
 Opportunistic attacker	Financial gain via elder data	Low-medium
@@ -1720,7 +1822,7 @@ Supabase API	Unauthorised data access	RLS on all tables; service role key never 
 Edge Functions	Injection via malformed audio/text	Input validation + sanitisation on all Edge Function inputs
 Push notifications	Spoofed notifications	Notifications only sent server-side via service role
 PSD2 webhooks (Phase 2)	Spoofed webhook	HMAC-SHA256 signature verification on all inbound webhooks
-BSN storage	Data breach exposure	AES-256-GCM application-level encryption; key in Vault
+BSN	Not collected	N/A — HAVEN does not store BSN (hard product rule; see Section 5.4)
 7. Data Retention & Deletion Policy
 Data Type	Retention Period	Deletion Method	AVG Right to Erasure
 Voice recordings (audio files)	30 days	Auto-delete via pg_cron	Immediate on request
@@ -1732,10 +1834,33 @@ Location events (fuzzed)	6 months	Auto-delete via pg_cron	Immediate on request
 Location events (precise)	24 hours	pg_cron — location_precise column nulled	N/A (already auto-deleted)
 Life stories	Indefinite (elder's choice)	Elder-controlled; soft delete	Immediate on request
 Financial transactions (Phase 2)	7 years	Soft delete (Dutch accounting law: Boekhoudbesluit)	Restricted — legal retention obligation
-Carer visit logs	15 years	Soft delete (WGBO medical record retention)	Restricted — legal retention obligation
+Carer visit logs	20 years (WGBO — Art. 7:454 BW, as amended)	Soft delete (WGBO medical record retention)	Restricted — legal retention obligation
 Incident reports (Meldcode)	5 years	Soft delete (Meldcode retention obligations)	Restricted
 Push tokens	Until unregistered	Hard delete on unregister	Immediate
 Audit logs	7 years	Immutable append-only	Not deletable — legal basis
+⚠️ WGBO RETENTION NOTE:
+The Dutch Civil Code (Art. 7:454 BW) sets a general retention period of
+20 years for medical dossiers (dossierbewaringsplicht), measured from
+the date of the last entry — or longer if medically necessary.
+
+This applies to HAVEN's professional care module (WACHT, Phase 2) when
+carer visit logs and incident reports form part of a patient dossier.
+
+For the consumer HAVEN app (MVP — no registered healthcare provider status):
+WGBO does not directly apply. Use the general AVG proportionality test
+for retention of wellness/reminder data (shorter periods are appropriate).
+
+Practical retention table for HAVEN:
+  Medication reminders (consumer): 12 months after last event
+  Wellness check-ins (consumer): 12 months
+  Voice interaction transcripts: 30 days (unless elder explicitly saves to story)
+  Life stories (elder-initiated): permanent until deletion request
+  Carer visit logs (WACHT, Phase 2): 20 years (WGBO)
+  Safeguarding incident reports (WACHT, Phase 2): 20 years (WGBO)
+  Scam event logs: 24 months (operational necessity + AVG proportionality)
+  Location events (fuzzed): 90 days
+  Precise location (safe-zone exit only): 48 hours maximum then nulled
+
 7.1 Right to Erasure Process
 Elder or authorised family member submits deletion request (in-app or email to privacy@haven.nl)
 Request logged in deletion_requests table with timestamp
@@ -1778,7 +1903,7 @@ Obligation	Implementation
 Privacy by Design	Schema-driven UI prevents accidental data collection; fuzzed location; no raw audio stored beyond 30 days
 Data Minimisation	Only data necessary for each feature is collected; fields for Phase 2 features are nullable and not populated
 Verwerkingsregister (Article 30 Record of Processing)	Maintained as living document in Notion; reviewed quarterly
-DPIA (Data Protection Impact Assessment)	Required for voice recordings, location, health data, BSN. Completed before MVP launch.
+DPIA (Data Protection Impact Assessment)	Required for voice recordings, location, and health data. Completed before MVP launch. (BSN is not processed — no BSN-specific DPIA scope.)
 Privacy Policy (Privacyverklaring)	Available in plain Dutch at haven.nl/privacy; version-controlled
 Autoriteit Persoonsgegevens Registration	Not mandatory unless processing meets Article 37 DPO threshold; assessed at launch
 Data Breach Notification	Within 72 hours to AP (Autoriteit Persoonsgegevens) per AVG Article 33; within "without undue delay" to affected elders per Article 34
@@ -1809,7 +1934,7 @@ Voice fallback	Required on every screen; ≤ 15 words
 Offline cache TTL	Required on every screen
 Emergency button	Required on all screens except modals
 Accessibility label	Required on every interactive element
-Banned words	fout, mislukt, waarschuwing, gevaar, ongeldig, fout opgetreden, als een AI
+Banned words (deceptive/scary)	fout, mislukt, waarschuwing, gevaar, ongeldig, fout opgetreden; "Ik ben een echte medewerker", "Ik ben geen computer", "U spreekt met een persoon" (EU AI Act Art. 50 — deceptive identity claims banned; AI disclosure required)
 Banned words (SCHILD exception)	"Nooit" is allowed on SCHILD screens only
 Font size	Minimum 18sp body; minimum 24sp primary actions
 Touch targets	Minimum 56×56dp
@@ -2223,9 +2348,37 @@ TypeScript
 
 import { SCREEN_REGISTRY } from '../schema/registry';
 
+// ✅ CORRECT EU AI ACT COMPLIANCE RULE:
+// EU AI Act Art. 50 requires disclosure that the user is interacting with
+// an AI system (unless context makes it obvious). Therefore:
+
+// BANNED — because they are evasive/misleading (not because they mention AI):
+const BANNED_AI_COPY = [
+  'Ik ben een echte medewerker',        // false claim of human identity
+  'Ik ben geen computer',               // deceptive denial
+  'U spreekt met een persoon',          // impersonation
+];
+
+// REQUIRED — first interaction per day must include a disclosure variant:
+const REQUIRED_AI_DISCLOSURE_NL = [
+  // Option A (warm, brief):
+  'Hallo, ik ben HAVEN — uw digitale hulp.',
+  // Option B (slightly more explicit, for first-ever use):
+  'Hallo, ik ben HAVEN. Ik ben een digitale hulp, geen echte persoon.',
+  // Option C (if elder directly asks "ben jij een mens?"):
+  'Nee, ik ben een digitale hulp. Maar ik ben er wel voor u.',
+];
+
+// RULE: If a user directly asks "ben jij een mens?" or "ben jij echt?",
+// HAVEN MUST answer honestly. This is a hard product rule, not just a
+// compliance rule — it is also the right thing to do for elder dignity.
+
+// STILL BANNED (tone/anxiety reasons, unchanged):
 const BANNED_WORDS_NL = [
-  'fout', 'mislukt', 'waarschuwing', 'gevaar', 'ongeldig',
-  'fout opgetreden', 'als een ai', 'als ai'
+  'fout', 'foutmelding', 'error', 'mislukt',
+  'gevaar', 'gevaarlijk', 'waarschuwing', 'kritiek',
+  'illegaal',
+  'nooit', 'altijd', 'onmogelijk',
 ];
 
 describe('HAVEN UX Constitution', () => {
@@ -2730,7 +2883,7 @@ Font scaling (200%)	Automated snapshot tests	WCAG 1.4.4
 Keyboard navigation (web dashboard)	Playwright keyboard navigation tests	WCAG 2.1.1
 1.7 Test Data & Fixtures
 No real elder personal data is ever used in tests
-Fixture data is entirely synthetic: generated Dutch names (Jan de Vries, Maria Bakker), synthetic BSN numbers (format-valid but not real)
+Fixture data is entirely synthetic: generated Dutch names (Jan de Vries, Maria Bakker). No BSN numbers in test data — HAVEN does not store or process BSN
 Synthetic voice audio for Whisper testing: recorded by team members reading Dutch test phrases
 Test Supabase project (separate from production): haven-test.supabase.co
 2. Observability
@@ -2816,6 +2969,17 @@ Expo Push	1,000 elders
 # Addendum A — RLS Policies (Complete SQL)
 
 **File:** `docs/addenda/A-rls-policies.md`
+
+## 🟢 THIS IS THE CANONICAL RLS SOURCE
+
+This file contains the complete, production-ready `CREATE POLICY` SQL for
+every table in HAVEN. It is the single RLS source of truth.
+
+Doc 05 contains illustrative summaries only — do not implement from Doc 05.
+
+Precedence: **Addendum A > Doc 05** for all RLS definitions.
+
+---
 
 ## A.1 Principles
 - Every user-data table has RLS **enabled + forced**
@@ -3975,14 +4139,37 @@ This is non-negotiable for a 68–90 year old Dutch audience. Using "jij/je" wit
 ### F.1.3 Banned words (enforced in CI)
 
 ```typescript
-// From schema constitution tests
+// ✅ CORRECT EU AI ACT COMPLIANCE RULE:
+// EU AI Act Art. 50 requires disclosure that the user is interacting with
+// an AI system (unless context makes it obvious). Therefore:
+
+// BANNED — because they are evasive/misleading (not because they mention AI):
+const BANNED_AI_COPY = [
+  'Ik ben een echte medewerker',        // false claim of human identity
+  'Ik ben geen computer',               // deceptive denial
+  'U spreekt met een persoon',          // impersonation
+];
+
+// REQUIRED — first interaction per day must include a disclosure variant:
+const REQUIRED_AI_DISCLOSURE_NL = [
+  // Option A (warm, brief):
+  'Hallo, ik ben HAVEN — uw digitale hulp.',
+  // Option B (slightly more explicit, for first-ever use):
+  'Hallo, ik ben HAVEN. Ik ben een digitale hulp, geen echte persoon.',
+  // Option C (if elder directly asks "ben jij een mens?"):
+  'Nee, ik ben een digitale hulp. Maar ik ben er wel voor u.',
+];
+
+// RULE: If a user directly asks "ben jij een mens?" or "ben jij echt?",
+// HAVEN MUST answer honestly. This is a hard product rule, not just a
+// compliance rule — it is also the right thing to do for elder dignity.
+
+// STILL BANNED (tone/anxiety reasons, unchanged):
 const BANNED_WORDS_NL = [
-  'fout', 'foutmelding', 'error', 'mislukt', 'mislukt',
+  'fout', 'foutmelding', 'error', 'mislukt',
   'gevaar', 'gevaarlijk', 'waarschuwing', 'kritiek',
-  'illegaal', 'oplichter', // too scary for elder UI
-  'als AI', 'als taalmodel', // EU AI Act violation
-  'nooit', 'altijd',        // absolute claims
-  'onmogelijk',
+  'illegaal',
+  'nooit', 'altijd', 'onmogelijk',
 ];
 
 // Allowed exceptions for SCHILD screens only
@@ -4684,16 +4871,18 @@ EXPO_APPLE_APP_SPECIFIC_PASSWORD  (iOS builds)
 
 ## K.1 Vendor register
 
-| Vendor | Purpose | Data shared | Storage location | DPA signed? | SCC needed? | Review date |
-|---|---|---|---|---|---|---|
-| Supabase | Backend + DB + storage | All personal data | EU (to be confirmed: select EU region in Supabase) | ✅ (Supabase DPA available) | No (EU hosted) | Annual |
-| OpenAI | STT (Whisper) + LLM + embeddings | Voice transcript text (no names if possible); context text | USA | ⚠️ Required | Yes — SCC required | Annual |
-| ElevenLabs | TTS voice output | Response text (no personal data) | USA | ⚠️ Required | Yes — SCC required | Annual |
-| Expo (EAS Build) | Mobile build pipeline | App binary (no personal data) | USA | ✅ | Review | Annual |
-| Vercel | Family dashboard hosting | Request logs (IP, headers) | USA/EU | ⚠️ Review | Review | Annual |
-| Sentry | Error tracking | Stack traces, device info | EU option available | ✅ | No if EU region | Annual |
-| APNs (Apple) | iOS push | Push token + notification payload | USA | Review Apple DPA | Review | Annual |
-| FCM (Google) | Android push | Push token + notification payload | USA | Review Google DPA | Review | Annual |
+> **Hard rule: BSN (Burgerservicenummer) is NEVER transmitted to any vendor. This is a non-negotiable product constraint. Any integration partner requesting BSN transmission must be escalated to the DPO immediately and rejected unless a specific statutory basis is confirmed.**
+
+| Vendor | Purpose | Data shared | Storage location | DPA signed? | SCC needed? | BSN transmitted? | Review date |
+|---|---|---|---|---|---|---|---|
+| Supabase | Backend + DB + storage | All personal data | EU (to be confirmed: select EU region in Supabase) | ✅ (Supabase DPA available) | No (EU hosted) | Never. Hard rule. | Annual |
+| OpenAI | STT (Whisper) + LLM + embeddings | Voice transcript text (no names if possible); context text | USA | ⚠️ Required | Yes — SCC required | Never. Hard rule. | Annual |
+| ElevenLabs | TTS voice output | Response text (no personal data) | USA | ⚠️ Required | Yes — SCC required | Never. Hard rule. | Annual |
+| Expo (EAS Build) | Mobile build pipeline | App binary (no personal data) | USA | ✅ | Review | Never. Hard rule. | Annual |
+| Vercel | Family dashboard hosting | Request logs (IP, headers) | USA/EU | ⚠️ Review | Review | Never. Hard rule. | Annual |
+| Sentry | Error tracking | Stack traces, device info | EU option available | ✅ | No if EU region | Never. Hard rule. | Annual |
+| APNs (Apple) | iOS push | Push token + notification payload | USA | Review Apple DPA | Review | Never. Hard rule. | Annual |
+| FCM (Google) | Android push | Push token + notification payload | USA | Review Google DPA | Review | Never. Hard rule. | Annual |
 
 ---
 

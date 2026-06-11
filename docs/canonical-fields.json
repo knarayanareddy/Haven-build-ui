@@ -1,0 +1,196 @@
+{
+  "version": "1.2.2",
+  "last_updated": "2026-06-11",
+  "schema": {
+    "profiles": {
+      "columns": {
+        "id": { "type": "uuid", "nullable": false },
+        "role": { "type": "user_role", "nullable": false },
+        "phone_nl": { "type": "text", "nullable": true },
+        "locale": { "type": "text", "nullable": false },
+        "timezone": { "type": "text", "nullable": false },
+        "country_code": { "type": "char(2)", "nullable": false },
+        "high_contrast": { "type": "boolean", "nullable": false },
+        "font_size_multiplier": { "type": "numeric(3,2)", "nullable": false },
+        "voice_id": { "type": "text", "nullable": true },
+        "onboarding_complete": { "type": "boolean", "nullable": false },
+        "created_at": { "type": "timestamptz", "nullable": false },
+        "updated_at": { "type": "timestamptz", "nullable": false },
+        "deleted_at": { "type": "timestamptz", "nullable": true }
+      }
+    },
+    "elder_profiles": {
+      "columns": {
+        "id": { "type": "uuid", "nullable": false },
+        "profile_id": { "type": "uuid", "nullable": false },
+        "zorgverzekering_nummer": { "type": "text", "nullable": true },
+        "huisarts_naam": { "type": "text", "nullable": true },
+        "huisarts_praktijk": { "type": "text", "nullable": true },
+        "huisarts_telefoon": { "type": "text", "nullable": true },
+        "apotheker_naam": { "type": "text", "nullable": true },
+        "apotheker_adres": { "type": "text", "nullable": true },
+        "medical_conditions": { "type": "text[]", "nullable": true },
+        "allergies": { "type": "text[]", "nullable": true },
+        "current_medications_count": { "type": "integer", "nullable": true },
+        "blood_type": { "type": "text", "nullable": true },
+        "dnr_on_file": { "type": "boolean", "nullable": true },
+        "emergency_contact_name": { "type": "text", "nullable": true },
+        "emergency_contact_phone": { "type": "text", "nullable": true },
+        "cognitive_support_enabled": { "type": "boolean", "nullable": false },
+        "cognitive_trend": { "type": "cognitive_trend", "nullable": true },
+        "bereavement_active": { "type": "boolean", "nullable": false },
+        "bereavement_start_date": { "type": "date", "nullable": true },
+        "bereavement_person_name": { "type": "text", "nullable": true },
+        "safe_zone_centre": { "type": "geometry(point,4326)", "nullable": true },
+        "safe_zone_radius_metres": { "type": "integer", "nullable": true },
+        "safe_zone_label": { "type": "text", "nullable": true },
+        "night_mode_enabled": { "type": "boolean", "nullable": false },
+        "night_mode_start": { "type": "time", "nullable": true },
+        "night_mode_end": { "type": "time", "nullable": true },
+        "legacy_setup_complete": { "type": "boolean", "nullable": false },
+        "created_at": { "type": "timestamptz", "nullable": false },
+        "updated_at": { "type": "timestamptz", "nullable": false },
+        "deleted_at": { "type": "timestamptz", "nullable": true }
+      }
+    },
+    "family_relationships": {
+      "columns": {
+        "id": { "type": "uuid", "nullable": false },
+        "family_user_id": { "type": "uuid", "nullable": false },
+        "elder_id": { "type": "uuid", "nullable": false },
+        "relationship_type": { "type": "text", "nullable": false },
+        "elder_consented": { "type": "boolean", "nullable": false },
+        "is_active": { "type": "boolean", "nullable": false },
+        "can_view_meds": { "type": "boolean", "nullable": false },
+        "can_view_messages": { "type": "boolean", "nullable": false },
+        "can_view_location": { "type": "boolean", "nullable": false },
+        "can_view_alerts": { "type": "boolean", "nullable": false },
+        "can_view_stories": { "type": "boolean", "nullable": false },
+        "can_view_financials": { "type": "boolean", "nullable": false },
+        "created_at": { "type": "timestamptz", "nullable": false },
+        "updated_at": { "type": "timestamptz", "nullable": false },
+        "deleted_at": { "type": "timestamptz", "nullable": true }
+      }
+    },
+    "medications": {
+      "columns": {
+        "id": { "type": "uuid", "nullable": false },
+        "elder_id": { "type": "uuid", "nullable": false },
+        "name": { "type": "text", "nullable": false },
+        "dosage": { "type": "text", "nullable": false },
+        "frequency": { "type": "med_frequency", "nullable": false },
+        "scheduled_times": { "type": "time[]", "nullable": false },
+        "instructions": { "type": "text", "nullable": true },
+        "is_active": { "type": "boolean", "nullable": false },
+        "requires_verification": { "type": "boolean", "nullable": false },
+        "start_date": { "type": "date", "nullable": false },
+        "end_date": { "type": "date", "nullable": true },
+        "created_at": { "type": "timestamptz", "nullable": false },
+        "updated_at": { "type": "timestamptz", "nullable": false },
+        "deleted_at": { "type": "timestamptz", "nullable": true }
+      }
+    },
+    "medication_reminders": {
+      "columns": {
+        "id": { "type": "uuid", "nullable": false },
+        "medication_id": { "type": "uuid", "nullable": false },
+        "elder_id": { "type": "uuid", "nullable": false },
+        "scheduled_time": { "type": "timestamptz", "nullable": false },
+        "status": { "type": "reminder_status", "nullable": false },
+        "snooze_count": { "type": "smallint", "nullable": false },
+        "first_reminded_at": { "type": "timestamptz", "nullable": true },
+        "confirmed_at": { "type": "timestamptz", "nullable": true },
+        "escalated_at": { "type": "timestamptz", "nullable": true },
+        "family_notified_at": { "type": "timestamptz", "nullable": true },
+        "created_at": { "type": "timestamptz", "nullable": false },
+        "updated_at": { "type": "timestamptz", "nullable": false }
+      }
+    },
+    "voice_interactions": {
+      "columns": {
+        "id": { "type": "uuid", "nullable": false },
+        "elder_id": { "type": "uuid", "nullable": false },
+        "screen_id": { "type": "text", "nullable": false },
+        "transcript_nl": { "type": "text", "nullable": true },
+        "transcript_redacted": { "type": "boolean", "nullable": false },
+        "intent": { "type": "text", "nullable": true },
+        "entities": { "type": "jsonb", "nullable": true },
+        "confidence_score": { "type": "numeric(4,3)", "nullable": true },
+        "response_text_nl": { "type": "text", "nullable": true },
+        "response_audio_path": { "type": "text", "nullable": true },
+        "distress_detected": { "type": "boolean", "nullable": false },
+        "distress_phrase": { "type": "text", "nullable": true },
+        "action_taken": { "type": "text", "nullable": true },
+        "duration_ms": { "type": "integer", "nullable": true },
+        "embedding": { "type": "vector(1536)", "nullable": true },
+        "audio_path": { "type": "text", "nullable": true },
+        "created_at": { "type": "timestamptz", "nullable": false },
+        "auto_delete_audio_at": { "type": "timestamptz", "nullable": true },
+        "updated_at": { "type": "timestamptz", "nullable": true },
+        "deleted_at": { "type": "timestamptz", "nullable": true }
+      }
+    },
+    "companion_memory": {
+      "columns": {
+        "id": { "type": "uuid", "nullable": false },
+        "elder_id": { "type": "uuid", "nullable": false },
+        "memory_type": { "type": "memory_type", "nullable": false },
+        "content_nl": { "type": "text", "nullable": true },
+        "memory_redacted": { "type": "boolean", "nullable": false },
+        "importance_score": { "type": "integer", "nullable": true },
+        "embedding": { "type": "vector(1536)", "nullable": true },
+        "source": { "type": "text", "nullable": true },
+        "source_id": { "type": "uuid", "nullable": true },
+        "last_referenced": { "type": "timestamptz", "nullable": true },
+        "expires_at": { "type": "timestamptz", "nullable": true },
+        "created_at": { "type": "timestamptz", "nullable": true },
+        "updated_at": { "type": "timestamptz", "nullable": true },
+        "deleted_at": { "type": "timestamptz", "nullable": true }
+      }
+    },
+    "scam_events": {
+      "columns": {
+        "id": { "type": "uuid", "nullable": false },
+        "elder_id": { "type": "uuid", "nullable": false },
+        "alert_level": { "type": "alert_level", "nullable": false },
+        "score_reputation": { "type": "smallint", "nullable": true },
+        "score_pattern": { "type": "smallint", "nullable": true },
+        "score_nlp_intent": { "type": "smallint", "nullable": true },
+        "score_longitudinal": { "type": "smallint", "nullable": true },
+        "explanation_nl": { "type": "text", "nullable": false },
+        "embedding": { "type": "vector(1536)", "nullable": true },
+        "elder_dismissed": { "type": "boolean", "nullable": false },
+        "elder_dismissed_at": { "type": "timestamptz", "nullable": true },
+        "family_notified": { "type": "boolean", "nullable": false },
+        "family_notified_at": { "type": "timestamptz", "nullable": true },
+        "linked_transaction_id": { "type": "uuid", "nullable": true },
+        "transaction_flagged": { "type": "boolean", "nullable": true },
+        "created_at": { "type": "timestamptz", "nullable": false },
+        "updated_at": { "type": "timestamptz", "nullable": false },
+        "deleted_at": { "type": "timestamptz", "nullable": true }
+      }
+    },
+    "financial_transactions": {
+      "columns": {
+        "id": { "type": "uuid", "nullable": false },
+        "elder_id": { "type": "uuid", "nullable": false },
+        "account_id_masked": { "type": "text", "nullable": false },
+        "bank_name": { "type": "text", "nullable": true },
+        "amount_cents": { "type": "bigint", "nullable": false },
+        "currency": { "type": "char(3)", "nullable": false },
+        "counterparty_name": { "type": "text", "nullable": true },
+        "counterparty_iban_masked": { "type": "text", "nullable": true },
+        "description": { "type": "text", "nullable": true },
+        "transaction_date": { "type": "date", "nullable": false },
+        "anomaly_score": { "type": "smallint", "nullable": true },
+        "flagged": { "type": "boolean", "nullable": false },
+        "linked_scam_event_id": { "type": "uuid", "nullable": true },
+        "warning_dispatched": { "type": "boolean", "nullable": true },
+        "elder_reviewed": { "type": "boolean", "nullable": true },
+        "created_at": { "type": "timestamptz", "nullable": false },
+        "updated_at": { "type": "timestamptz", "nullable": false },
+        "deleted_at": { "type": "timestamptz", "nullable": true }
+      }
+    }
+  }
+}

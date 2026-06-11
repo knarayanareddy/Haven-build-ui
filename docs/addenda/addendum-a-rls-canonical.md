@@ -2,11 +2,12 @@
 
 **File:** `docs/addenda/A-rls-policies.md`
 
-last-updated: 2026-06-11   (PATCH HAVEN-SSOT-002 applied:
-                            field names reconciled with
-                            designdoc.md canonical schema.
-                            All non-canonical column refs
-                            removed. Zero drift from SSOT.)
+last-updated: 2026-06-11  (HAVEN-SSOT-003 applied:
+                            all policy bodies reconciled
+                            with designdoc.md canonical
+                            schema. Zero non-canonical
+                            column names remain in any
+                            SQL block in this file.)
 
 ## 🟢 THIS IS THE CANONICAL RLS SOURCE
 

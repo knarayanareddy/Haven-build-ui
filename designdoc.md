@@ -1,6 +1,6 @@
 ---
 title: HAVEN Engineering Design Suite
-version: 1.2.3
+version: 1.2.4
 status: Approved — Single Source of Truth
 locale: Netherlands (nl-NL)
 jurisdiction: EU / Dutch law (AVG/UAVG/WGBO)
@@ -8,6 +8,8 @@ timezone: Europe/Amsterdam
 last_updated: 2026-06-11
 
 changelog:
+  1.2.4: Solutions Architect Review Patch (HAVEN-SSOT-003) applied:
+         reconciled push_tokens, helper functions, and storage paths in Addendum A and designdoc.md.
   1.2.3: Solutions Architect Review Patch (HAVEN-SSOT-002) applied:
          reconciled column names (family_member_id, carer_member_id,
          can_view_medications, can_view_location_events, profile_id);
@@ -49,37 +51,25 @@ items_requiring_human_dpo_action:
   - Doc 06: Named DPO must be recorded before production launch
 ---
 
-## v1.2.3 Patch Summary Card
+## v1.2.4 Patch Summary Card
 
 ```
 HAVEN Engineering Design Suite
-Version: 1.2.3
+Version: 1.2.4
 Status:  Approved — Single Source of Truth
 Date:    2026-06-11
 
-v1.2.3 PATCH SUMMARY (Solutions Architect Review - HAVEN-SSOT-002):
+v1.2.4 PATCH SUMMARY (Solutions Architect Review - HAVEN-SSOT-003):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-HUNK A-1  family_relationships    Replaced family_user_id with family_member_id
-          family_member_id        globally in helper functions and policies.
-HUNK A-2  can_view_medications    Replaced can_view_meds with can_view_medications
-          in policies.
-HUNK A-3  can_view_location_events Replaced can_view_location with
-          can_view_location_events in policies.
-HUNK A-4  carer_member_id         Replaced carer_user_id with carer_member_id
-          in helper functions and carer policies.
-HUNK A-5  push_tokens profile_id  Replaced push_tokens.user_id with profile_id
-          in push_tokens policies.
-HUNK A-8  Drift Guard Table       Added canonical column cross-reference table.
-HUNK A-9  RLS Policies Replaced   Replaced critical policies in full.
-HUNK D-1  Local Reminder Sync     Replaced scheduled_for with scheduled_time
-          in TS snippet & LocalReminder interface; added ReminderStatus.
-HUNK D-5  family_relationships    Aligned DDL, index, and seeds with canonical
-          columns and alert subscriptions.
-HUNK D-6  carer_relationships     Aligned carer DDL, index, and seeds with
-          carer_member_id.
-HUNK D-8  Index Annotations       Marked pending addenda B/C/D/E as FILE PENDING.
-HUNK D-9  canonical-fields.json   Extended json schema registry to cover carer
-          relationships, push tokens, and corrected columns.
+[Addendum A] HUNK 1-2:   auth.family_can() & auth.carer_can() helper
+                         functions reconciled with canonical schema columns.
+[Addendum A] HUNKS 3-8:  All inline family/carer policy bodies updated
+                         with canonical column names.
+[Addendum A] HUNK 9:     push_tokens policies - replaced user_id with profile_id.
+[Addendum A] HUNK 10:    RLS test fixture comments corrected.
+[Addendum A] HUNK 11:    Metadata block updated.
+[designdoc]  HUNK 12:    Storage path {user_id} → {profile_id} updated
+                         in path convention table.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ITEMS STILL REQUIRING HUMAN DPO ACTION (unchanged):
   ⚠️ Addendum J (DPIA) — must be completed + signed before production
@@ -137,7 +127,7 @@ building all six pillars without hitting schema/contract mismatches.
 ```
 
 HAVEN — Engineering Design Document Suite
-Version: 1.2.3 Status: Approved — Single Source of Truth Locale: Netherlands (nl-NL) | Jurisdiction: EU / Dutch Law Last Updated: 2026-06-11 Replaces: README.md, HAVEN_BLUEPRINT.md, UIUXRENDER
+Version: 1.2.4 Status: Approved — Single Source of Truth Locale: Netherlands (nl-NL) | Jurisdiction: EU / Dutch Law Last Updated: 2026-06-11 Replaces: README.md, HAVEN_BLUEPRINT.md, UIUXRENDER
 
 Document 01 — Product Specification
 1. Mission
@@ -4767,7 +4757,7 @@ life-story-photos/
   {elder_id}/{story_id}/{photo_id}.jpg
 
 profile-photos/
-  {user_id}/avatar.jpg
+  {profile_id}/avatar.jpg
 
 document-vault/
   {elder_id}/{document_id}/{filename}

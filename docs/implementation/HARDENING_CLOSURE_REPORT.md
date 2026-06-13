@@ -79,6 +79,6 @@ Not rated 9+ because true production confidence requires a real Supabase reset, 
 An external review identified four production-readiness items. The repository now addresses the implementable items:
 
 1. **URL pathname space bug** — fixed in `scripts/validate-suite.mjs` by using `fileURLToPath(new URL(...))` instead of `.pathname`.
-2. **AI mock mode** — added `scripts/mock-ai-server.mjs`, `npm run mock:ai`, and `HAVEN_AI_MOCK` / `HAVEN_AI_MOCK_URL` support in `_shared/ai.ts`.
-3. **Live RLS integration test harness** — added `tests/integration/live-rls.test.mjs` and `npm run test:integration:live`. It runs real Supabase assertions when `HAVEN_LIVE_RLS=1` and test JWTs are provided.
+2. **AI mock mode** — added `scripts/mock-ai-server.mjs`, `corepack pnpm run mock:ai`, and `HAVEN_AI_MOCK` / `HAVEN_AI_MOCK_URL` support in `_shared/ai.ts`.
+3. **Live RLS integration test harness** — added `tests/integration/live-rls.test.mjs` and `corepack pnpm run test:integration:live`. It runs real Supabase assertions when `HAVEN_LIVE_RLS=1` and test JWTs are provided.
 4. **Legal sign-offs** — remain human-owned and are tracked in release/compliance docs and DB tables.

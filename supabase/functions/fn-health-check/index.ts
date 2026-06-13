@@ -1,8 +1,10 @@
 import { admin, cors, json, recordMetric } from "../_shared/core.ts";
+import { requireInternalAccess } from "../_shared/internal.ts";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const started = Date.now();
   try {
+    requireInternalAccess(req);
     const db = admin();
     const [profiles, flags, metrics] = await Promise.all([
       db.from('profiles').select('id', { count: 'exact', head: true }),

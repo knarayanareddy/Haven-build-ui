@@ -28,7 +28,7 @@ Source: `designdoc.md` v1.2.1
    - Companion memory
    - BUURT discover, match and events ingest
 
-4. **Validation**: `npm run validate:suite`
+4. **Validation**: `corepack pnpm run validate:suite`
    - Confirms key files exist.
    - Confirms forced RLS and required schema areas are present.
    - Confirms unresolved build tokens are not present in the generated app and production schema.
@@ -78,4 +78,4 @@ The machine-readable implementation status is tracked in:
 - `docs/implementation/FEATURE_IMPLEMENTATION_MATRIX.json`
 - `docs/implementation/FEATURE_IMPLEMENTATION_MATRIX.md`
 
-`npm run validate:suite` now verifies the full function inventory, expanded migrations, app scaffold files and feature matrix.
+`corepack pnpm run validate:suite` now verifies the full function inventory, expanded migrations, app scaffold files and feature matrix.

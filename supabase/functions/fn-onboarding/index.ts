@@ -1,8 +1,10 @@
 import { admin, cors, dispatchNotification, json, recordMetric, requireFields } from "../_shared/core.ts";
+import { requireInternalAccess } from "../_shared/internal.ts";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const started = Date.now();
   try {
+    requireInternalAccess(req);
     const body = await req.json();
     requireFields(body, ["family_member_id", "elder_name", "elder_locale"]);
     const db = admin();

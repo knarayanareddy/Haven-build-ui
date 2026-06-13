@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    SecureStore.getItemAsync(SESSION_KEY).then(async (stored) => {
+    SecureStore.getItemAsync(SESSION_KEY).then(async (stored: string | null) => {
       if (!mounted) return;
       if (stored) {
         const parsed = JSON.parse(stored) as Session;
@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setReady(true);
     });
-    const { data } = supabase.auth.onAuthStateChange(async (_event, next) => {
+    const { data } = supabase.auth.onAuthStateChange(async (_event: string, next: Session | null) => {
       setSession(next);
       if (next) await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(next), { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY });
       else await SecureStore.deleteItemAsync(SESSION_KEY);

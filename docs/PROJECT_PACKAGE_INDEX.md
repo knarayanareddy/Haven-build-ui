@@ -90,5 +90,5 @@ This document is the top-level index for the HAVEN production-shaped package.
 ## Current verification command
 
 ```bash
-npm test
+corepack pnpm test
 ```

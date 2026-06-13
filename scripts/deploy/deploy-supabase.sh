@@ -6,5 +6,5 @@ cd "$DIR"
 supabase link --project-ref "$SUPABASE_PROJECT_REF"
 supabase db push
 supabase functions deploy
-npm test
+corepack pnpm test
 echo "HAVEN Supabase deployment completed."

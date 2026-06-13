@@ -5,13 +5,13 @@
 Required for full local backend execution:
 
 - Node.js 20+
-- npm 10+
+- Corepack enabled
+- pnpm 9+
 - Supabase CLI
 - Docker
 
 Optional for app development:
 
-- pnpm 9+
 - Expo CLI / EAS CLI
 - Xcode for iOS simulator/device builds
 - Android Studio for Android emulator/device builds
@@ -19,48 +19,50 @@ Optional for app development:
 ## Install
 
 ```bash
-npm install
+corepack pnpm install --frozen-lockfile
 ```
 
 ## Validate repository
 
 ```bash
-npm run validate:suite
+corepack pnpm run validate:suite
 ```
 
 ## Run tests
 
 ```bash
-npm test
+corepack pnpm test
+```
+
+## Run quality gate
+
+```bash
+corepack pnpm run quality:check
 ```
 
 ## Preview static surfaces
 
 ```bash
-npm run preview:iphone
-npm run preview:family
+corepack pnpm run preview:iphone
+corepack pnpm run preview:family
 ```
 
 ## Run local Supabase
 
 ```bash
-./scripts/check-local-supabase.sh
+corepack pnpm run verify:supabase:local
 ```
 
-## Elder app
+## Elder app scaffold typecheck
 
 ```bash
-cd apps/elder
-npm install
-npm run start
+corepack pnpm run typecheck:elder
 ```
 
 ## Family app
 
 ```bash
-cd apps/family
-npm install
-npm run dev
+corepack pnpm run build:family
 ```
 
 ## Adding a new feature
@@ -71,7 +73,7 @@ npm run dev
 4. Add app surface or schema entry.
 5. Add tests.
 6. Update feature matrix.
-7. Run `npm test`.
+7. Run `corepack pnpm test`.
 
 ## Definition of done
 

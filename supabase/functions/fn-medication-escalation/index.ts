@@ -1,8 +1,10 @@
 import { admin, cors, dispatchNotification, json, recordMetric } from "../_shared/core.ts";
+import { requireInternalAccess } from "../_shared/internal.ts";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const started = Date.now();
   try {
+    requireInternalAccess(req);
     const db = admin();
     const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const { data: reminders, error } = await db.from("medication_reminders").select("id, elder_id, status, scheduled_time").in("status", ["herinnerd", "gesnoozed_1", "gesnoozed_2"]).lt("scheduled_time", cutoff);

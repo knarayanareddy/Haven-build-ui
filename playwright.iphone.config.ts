@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: './tests/e2e',
   testMatch: /iphone-suite\.playwright\.spec\.ts/,
   webServer: {
-    command: 'npm run preview:iphone',
+    command: 'corepack pnpm run preview:iphone',
     port: 4173,
     reuseExistingServer: true,
   },

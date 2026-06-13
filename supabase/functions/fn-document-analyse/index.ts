@@ -1,8 +1,16 @@
-import { admin, cors, dispatchNotification, json, recordMetric, requireFields } from "../_shared/core.ts";
+import { admin, cors, dispatchNotification, json, recordMetric, userClient } from "../_shared/core.ts";
+import { assertSelf, getJwtUserId } from "../_shared/authz.ts";
+import { validateBody } from "../_shared/validation.ts";
 
 function looksLikeBsn(text: string) {
   const compact = text.replace(/\D/g, "");
   return /\d{9}/.test(compact);
+}
+
+function assertOwnedStoragePath(userId: string, storagePath: string) {
+  const ownerId = storagePath.split('/').filter(Boolean)[0] ?? '';
+  if (!ownerId) throw new Error('storage_path must include an owner folder');
+  if (ownerId !== userId) throw new Error('storage_path must belong to the authenticated elder');
 }
 
 Deno.serve(async (req) => {
@@ -10,12 +18,16 @@ Deno.serve(async (req) => {
   const started = Date.now();
   try {
     const body = await req.json();
-    requireFields(body, ["elder_id", "storage_path", "document_type", "label_nl"]);
+    validateBody(body, { elder_id: 'uuid', storage_path: 'string', document_type: 'string', label_nl: 'string' }, { allowUnknown: true });
+    const userId = await getJwtUserId(req);
+    assertSelf(userId, String(body.elder_id), 'document analysis');
+    assertOwnedStoragePath(userId, String(body.storage_path));
+
     const extracted = String(body.extracted_text ?? "");
     const bsnDetected = looksLikeBsn(extracted);
-    const db = admin();
+    const db = userClient(req);
     const { data: doc, error: docError } = await db.from("documents").insert({
-      elder_id: body.elder_id,
+      elder_id: userId,
       label_nl: body.label_nl,
       label_en: body.label_en ?? body.label_nl,
       document_type: body.document_type,
@@ -27,7 +39,7 @@ Deno.serve(async (req) => {
     }).select().single();
     if (docError) throw docError;
     const { data: job, error: jobError } = await db.from("document_analysis_jobs").insert({
-      elder_id: body.elder_id,
+      elder_id: userId,
       document_id: doc.id,
       storage_path: body.storage_path,
       status: bsnDetected ? "needs_review" : "completed",
@@ -41,13 +53,13 @@ Deno.serve(async (req) => {
     if (jobError) throw jobError;
 
     if (body.is_sensitive_legal) {
-      const { data: family } = await db.from("family_relationships").select("family_member_id").eq("elder_id", body.elder_id).eq("elder_consented", true).eq("is_active", true).eq("can_view_alerts", true);
-      await Promise.all((family ?? []).map((f) => dispatchNotification({ recipient_id: f.family_member_id, elder_id: body.elder_id, notification_type: "systeem", title_nl: "Belangrijk document", title_en: "Important document", body_nl: "Er is een gevoelig document opgeslagen. Vraag rustig of u kunt helpen.", body_en: "A sensitive document was stored. Calmly ask if you can help.", data: { document_id: doc.id } })));
+      const { data: family } = await admin().from("family_relationships").select("family_member_id").eq("elder_id", userId).eq("elder_consented", true).eq("is_active", true).eq("can_view_alerts", true);
+      await Promise.all((family ?? []).map((f) => dispatchNotification({ recipient_id: f.family_member_id, elder_id: userId, notification_type: "systeem", title_nl: "Belangrijk document", title_en: "Important document", body_nl: "Er is een gevoelig document opgeslagen. Vraag rustig of u kunt helpen.", body_en: "A sensitive document was stored. Calmly ask if you can help.", data: { document_id: doc.id } })));
     }
     await recordMetric("fn-document-analyse", started, "success");
     return json({ success: true, document_id: doc.id, analysis_job_id: job.id, redaction_required: bsnDetected, status: job.status });
   } catch (e) {
     await recordMetric("fn-document-analyse", started, "error");
-    return json({ error: String(e.message ?? e) }, 400);
+    return json({ error: String((e as Error).message ?? e) }, 400);
   }
 });

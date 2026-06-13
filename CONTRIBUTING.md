@@ -7,7 +7,7 @@ HAVEN is an elder-care, safety and health-adjacent product. Contributions must p
 Run:
 
 ```bash
-npm test
+corepack pnpm test
 ```
 
 The test suite must pass before review.

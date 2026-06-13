@@ -5,6 +5,11 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const required = [
   'apps/iphone-suite/index.html',
+  'pnpm-lock.yaml',
+  'eslint.config.mjs',
+  'tsconfig.base.json',
+  'tsconfig.packages.json',
+  'types/mobile-shims.d.ts',
   'supabase/migrations/20260611000001_haven_v121_production_schema.sql',
   'supabase/migrations/20260611000002_storage_rpc_security.sql',
   'supabase/migrations/20260611000003_full_feature_domain_tables.sql',
@@ -13,15 +18,25 @@ const required = [
   'supabase/migrations/20260611000006_integrations_observability_grandchild.sql',
   'supabase/migrations/20260611000007_grandchild_unique_fix.sql',
   'supabase/migrations/20260611000008_phase3_safety_community_legacy.sql',
+  'supabase/migrations/20260611000009_hardening_idempotency_integration_status.sql',
+  'supabase/migrations/20260613000010_edge_authz_hardening.sql',
+  'supabase/migrations/20260613000011_voice_interactions_self_write.sql',
+  'supabase/migrations/20260613000012_data_lifecycle_expansion.sql',
+  'playwright.family.config.ts',
   'supabase/seed.sql',
   'supabase/config.toml',
   'apps/family-dashboard/index.html',
+  'apps/family/next-env.d.ts',
+  'apps/family/tsconfig.json',
+  'apps/family/src/app/layout.tsx',
+  'apps/family/src/app/inloggen/page.tsx',
   'apps/admin-console/index.html',
   'apps/carer-portal/index.html',
   'apps/browser-shield/manifest.json',
   'apps/browser-shield/src/content.js',
   'apps/browser-shield/src/background.js',
   'apps/elder/App.tsx',
+  'apps/elder/tsconfig.json',
   'apps/elder/src/services/havenClient.ts',
   'apps/elder/src/auth/AuthProvider.tsx',
   'apps/elder/src/navigation/AppNavigator.tsx',
@@ -31,6 +46,7 @@ const required = [
   'apps/elder/src/services/sqliteOfflineQueue.ts',
   'apps/elder/src/services/voiceRecorder.ts',
   'apps/elder/src/services/documentCamera.ts',
+  'apps/elder/src/services/documentCameraView.tsx',
   'apps/elder/src/services/pushRegistration.ts',
   'apps/elder/src/state/networkResilience.ts',
   'apps/elder/src/state/offlineSyncMachine.ts',
@@ -40,9 +56,13 @@ const required = [
   'apps/elder/src/schema/screens.ts',
   'apps/family/src/services/dashboard.ts',
   'apps/grandchild/App.tsx',
+  'apps/grandchild/tsconfig.json',
   'apps/grandchild/src/client.ts',
   'packages/contracts/src/haven.ts',
   'packages/i18n/src/copy.ts',
+  'packages/scam-engine/src/catalog.mjs',
+  'packages/scam-engine/src/catalog.d.ts',
+  'packages/scam-engine/src/catalog.d.mts',
   'packages/scam-engine/src/rules.ts',
   'packages/ui/src/tokens.ts',
   'packages/ui/src/components.ts',
@@ -52,6 +72,7 @@ const required = [
   'packages/database/src/client.ts',
   'supabase/functions/_shared/validation.ts',
   'supabase/functions/_shared/authz.ts',
+  'supabase/functions/_shared/internal.ts',
   'supabase/functions/_shared/idempotency.ts',
   'supabase/functions/_shared/retry.ts',
   'supabase/functions/_shared/webhook.ts',
@@ -65,6 +86,16 @@ const required = [
   'docs/implementation/DESIGN_DOC_DIFF.md',
   'docs/implementation/PHASE_COVERAGE_AUDIT.md',
   'docs/implementation/HARDENING_CLOSURE_REPORT.md',
+  'docs/implementation/EDGE_FUNCTION_TRUST_BOUNDARY_MATRIX.md',
+  'docs/implementation/DATA_LIFECYCLE_AUDIT.md',
+  'docs/implementation/STORAGE_BLOB_LIFECYCLE_AUDIT.md',
+  'docs/implementation/CODE_QUALITY_GUARDRAILS.md',
+  'docs/implementation/SUPABASE_CI_STRATEGY.md',
+  'docs/implementation/RESIDUAL_HARDENING_REPORT.md',
+  'docs/implementation/RELEASE_CANDIDATE_SUMMARY.md',
+  'docs/implementation/PRIORITIZED_REMAINING_ISSUES.md',
+  'docs/implementation/NEXT_10_GITHUB_ISSUES.md',
+  'docs/implementation/SESSION_HANDOFF_CHANGELOG.md',
 
   'docs/PROJECT_PACKAGE_INDEX.md',
   'docs/ENVIRONMENT.md',
@@ -80,7 +111,10 @@ const required = [
   'docs/release/ELDER_USABILITY_PROTOCOL.md',
   'docs/release/COPY_REVIEW.md',
   'scripts/check-local-supabase.sh',
+  'scripts/export-scam-rules.mjs',
   'tests/integration/live-rls.test.mjs',
+  'tests/edge/data-lifecycle-diff.test.mjs',
+  '.github/workflows/supabase-integration.yml',
   'docs/api/openapi.yaml',
   'docs/api/EDGE_FUNCTION_CATALOG.md',
   'scripts/deploy/check-production-env.sh',
@@ -150,6 +184,11 @@ for (const rel of required) {
   statSync(join(root, rel));
 }
 const html = readFileSync(join(root, 'apps/iphone-suite/index.html'), 'utf8');
+const workflow = readFileSync(join(root, '.github/workflows/production-checks.yml'), 'utf8');
+const supabaseWorkflow = readFileSync(join(root, '.github/workflows/supabase-integration.yml'), 'utf8');
+const verifyCore = readFileSync(join(root, 'scripts/ci/verify-core.sh'), 'utf8');
+const verifyBrowser = readFileSync(join(root, 'scripts/ci/verify-browser.sh'), 'utf8');
+const verifyLocalSupabase = readFileSync(join(root, 'scripts/ci/verify-local-supabase.sh'), 'utf8');
 const sql = readFileSync(join(root, 'supabase/migrations/20260611000001_haven_v121_production_schema.sql'), 'utf8');
 const sql2 = readFileSync(join(root, 'supabase/migrations/20260611000002_storage_rpc_security.sql'), 'utf8');
 const sql3 = readFileSync(join(root, 'supabase/migrations/20260611000003_full_feature_domain_tables.sql'), 'utf8');
@@ -158,6 +197,10 @@ const sql5 = readFileSync(join(root, 'supabase/migrations/20260611000005_complia
 const sql6 = readFileSync(join(root, 'supabase/migrations/20260611000006_integrations_observability_grandchild.sql'), 'utf8');
 const sql7 = readFileSync(join(root, 'supabase/migrations/20260611000007_grandchild_unique_fix.sql'), 'utf8');
 const sql8 = readFileSync(join(root, 'supabase/migrations/20260611000008_phase3_safety_community_legacy.sql'), 'utf8');
+const sql9 = readFileSync(join(root, 'supabase/migrations/20260611000009_hardening_idempotency_integration_status.sql'), 'utf8');
+const sql10 = readFileSync(join(root, 'supabase/migrations/20260613000010_edge_authz_hardening.sql'), 'utf8');
+const sql11 = readFileSync(join(root, 'supabase/migrations/20260613000011_voice_interactions_self_write.sql'), 'utf8');
+const sql12 = readFileSync(join(root, 'supabase/migrations/20260613000012_data_lifecycle_expansion.sql'), 'utf8');
 const checks = [
   [new RegExp(['TO','DO'].join('') + '|' + ['FIX','ME'].join('') + '|' + String.fromCharCode(123,123), 'i'), 'unresolved build token'],
   [/create table profiles/i, 'profiles table'],
@@ -191,8 +234,8 @@ const checks = [
 ];
 for (const [rx, label] of checks) {
   if (label === 'unresolved build token') {
-    if (rx.test(html) || rx.test(sql) || rx.test(sql2) || rx.test(sql3) || rx.test(sql4) || rx.test(sql5) || rx.test(sql6) || rx.test(sql7) || rx.test(sql8)) throw new Error(`Found ${label}`);
-  } else if (!rx.test(sql + '\n' + sql2 + '\n' + sql3 + '\n' + sql4 + '\n' + sql5 + '\n' + sql6 + '\n' + sql7 + '\n' + sql8)) {
+    if (rx.test(html) || rx.test(sql) || rx.test(sql2) || rx.test(sql3) || rx.test(sql4) || rx.test(sql5) || rx.test(sql6) || rx.test(sql7) || rx.test(sql8) || rx.test(sql9) || rx.test(sql10) || rx.test(sql11) || rx.test(sql12)) throw new Error(`Found ${label}`);
+  } else if (!rx.test(sql + '\n' + sql2 + '\n' + sql3 + '\n' + sql4 + '\n' + sql5 + '\n' + sql6 + '\n' + sql7 + '\n' + sql8 + '\n' + sql9 + '\n' + sql10 + '\n' + sql11 + '\n' + sql12)) {
     throw new Error(`Missing ${label}`);
   }
 }
@@ -203,4 +246,17 @@ const matrix = JSON.parse(readFileSync(join(root, 'docs/implementation/FEATURE_I
 const missingFeatures = matrix.features.filter((feature) => feature.status !== 'implemented');
 if (missingFeatures.length) throw new Error(`Feature matrix has non-implemented features: ${missingFeatures.map((f) => f.key).join(', ')}`);
 if (matrix.features.length < 17) throw new Error('Feature matrix is incomplete');
-console.log(JSON.stringify({ ok: true, app: 'apps/iphone-suite/index.html', edgeFunctions: functions.length, schemaBytes: sql.length + sql2.length + sql3.length + sql4.length + sql5.length + sql6.length + sql7.length + sql8.length }, null, 2));
+for (const rel of ['package.json', 'apps/elder/package.json', 'apps/family/package.json', 'apps/grandchild/package.json']) {
+  const pkg = readFileSync(join(root, rel), 'utf8');
+  if (pkg.includes('"latest"')) throw new Error(`Found non-reproducible latest dependency in ${rel}`);
+}
+if (!workflow.includes('./scripts/ci/verify-core.sh')) throw new Error('CI workflow is missing root core orchestration');
+if (!workflow.includes('./scripts/ci/verify-browser.sh')) throw new Error('CI workflow is missing root browser orchestration');
+if (!verifyCore.includes('git diff --exit-code')) throw new Error('verify-core.sh is missing clean-tree drift checks');
+if (!verifyCore.includes('corepack pnpm run quality:check')) throw new Error('verify-core.sh should run the combined quality gate');
+if (!verifyBrowser.includes('playwright install')) throw new Error('verify-browser.sh should provision Playwright browsers');
+if (!verifyLocalSupabase.includes('HAVEN_LIVE_RLS=1 corepack pnpm run test:integration:live')) throw new Error('verify-local-supabase.sh is missing live RLS execution');
+if (!supabaseWorkflow.includes('./scripts/ci/verify-local-supabase.sh')) throw new Error('Supabase workflow is missing local reset orchestration');
+if (!supabaseWorkflow.includes('HAVEN_LIVE_RLS=1 corepack pnpm run test:integration:live')) throw new Error('Supabase workflow is missing live RLS coverage');
+if (!supabaseWorkflow.includes('workflow_dispatch')) throw new Error('Supabase workflow should support manual dispatch');
+console.log(JSON.stringify({ ok: true, app: 'apps/iphone-suite/index.html', edgeFunctions: functions.length, schemaBytes: sql.length + sql2.length + sql3.length + sql4.length + sql5.length + sql6.length + sql7.length + sql8.length + sql9.length + sql10.length + sql11.length + sql12.length }, null, 2));

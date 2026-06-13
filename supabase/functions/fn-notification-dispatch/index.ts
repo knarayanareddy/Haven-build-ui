@@ -1,8 +1,10 @@
 import { cors, dispatchNotification, json, recordMetric, requireFields } from "../_shared/core.ts";
+import { requireInternalAccess } from "../_shared/internal.ts";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const started = Date.now();
   try {
+    requireInternalAccess(req);
     const body = await req.json();
     requireFields(body, ["recipient_id", "notification_type", "title_nl", "body_nl"]);
     const note = await dispatchNotification(body);

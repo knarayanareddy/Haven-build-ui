@@ -3,23 +3,47 @@
   "private": true,
   "version": "1.1.0",
   "type": "module",
+  "packageManager": "pnpm@9.12.3",
   "scripts": {
     "validate:suite": "node scripts/validate-suite.mjs",
-    "test:edge": "node tests/edge/scam-engine.test.mjs && node tests/edge/screen-schema.test.mjs && node tests/edge/hardening-static.test.mjs",
+    "test:edge": "node tests/edge/scam-engine.test.mjs && node tests/edge/screen-schema.test.mjs && node tests/edge/hardening-static.test.mjs && node tests/edge/data-lifecycle-diff.test.mjs",
     "test:rls": "node tests/rls/rls-policy-audit.mjs && node tests/rls/storage-policy-audit.mjs",
     "test:e2e": "node tests/e2e/iphone-suite-smoke.test.mjs",
     "test:integration:live": "node tests/integration/live-rls.test.mjs",
-    "test": "npm run validate:suite && npm run test:edge && npm run test:rls && npm run test:e2e",
+    "test": "corepack pnpm run validate:suite && corepack pnpm run test:edge && corepack pnpm run test:rls && corepack pnpm run test:e2e",
     "preview:iphone": "python3 -m http.server 4173 --directory apps/iphone-suite",
     "preview:family": "python3 -m http.server 4174 --directory apps/family-dashboard",
     "mock:ai": "node scripts/mock-ai-server.mjs",
+    "sync:scam-rules": "node scripts/export-scam-rules.mjs",
     "test:e2e:browser": "playwright test -c playwright.iphone.config.ts",
-    "test:supabase:local": "./scripts/check-local-supabase.sh && HAVEN_LIVE_RLS=1 npm run test:integration:live"
+    "test:e2e:browser:family": "playwright test -c playwright.family.config.ts",
+    "test:supabase:local": "./scripts/check-local-supabase.sh && HAVEN_LIVE_RLS=1 corepack pnpm run test:integration:live",
+    "typecheck:packages": "corepack pnpm exec tsc -p tsconfig.packages.json --noEmit",
+    "typecheck:elder": "corepack pnpm --dir apps/elder exec tsc -p tsconfig.json --noEmit",
+    "typecheck:grandchild": "corepack pnpm --dir apps/grandchild exec tsc -p tsconfig.json --noEmit",
+    "typecheck": "corepack pnpm run typecheck:packages && corepack pnpm run typecheck:elder && corepack pnpm run typecheck:grandchild",
+    "lint": "corepack pnpm exec eslint . --max-warnings=0",
+    "build:family": "corepack pnpm --dir apps/family build",
+    "test:e2e:browser:all": "playwright test -c playwright.family.config.ts && playwright test -c playwright.iphone.config.ts",
+    "quality:check": "corepack pnpm run lint && corepack pnpm run typecheck && corepack pnpm run build:family",
+    "verify:core": "./scripts/ci/verify-core.sh",
+    "verify:browser": "./scripts/ci/verify-browser.sh",
+    "verify:supabase:local": "./scripts/ci/verify-local-supabase.sh",
+    "build": "corepack pnpm run build:family"
   },
   "workspaces": [
+    "apps/*",
     "packages/*"
   ],
   "devDependencies": {
-    "@playwright/test": "latest"
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.60.0",
+    "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^10.5.0",
+    "globals": "^17.6.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.0"
   }
 }

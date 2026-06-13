@@ -16,7 +16,8 @@ export function enqueueOfflineAction(type: OfflineActionType, payload: Record<st
 
 export function listOfflineActions(): OfflineAction[] {
   initOfflineQueueDb();
-  return db.getAllSync<{ idempotency_key: string; type: OfflineActionType; payload: string; created_at: string; retry_count: number }>('select * from offline_actions order by created_at asc').map((row) => ({ idempotencyKey: row.idempotency_key, type: row.type, payload: JSON.parse(row.payload), createdAt: row.created_at, retryCount: row.retry_count }));
+  const rows = db.getAllSync('select * from offline_actions order by created_at asc') as Array<{ idempotency_key: string; type: OfflineActionType; payload: string; created_at: string; retry_count: number }>;
+  return rows.map((row) => ({ idempotencyKey: row.idempotency_key, type: row.type, payload: JSON.parse(row.payload), createdAt: row.created_at, retryCount: row.retry_count }));
 }
 
 export function completeOfflineAction(idempotencyKey: string) {

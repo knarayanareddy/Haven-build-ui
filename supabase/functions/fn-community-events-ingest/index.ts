@@ -1,8 +1,11 @@
 import { admin, cors, json, recordMetric, requireFields } from "../_shared/core.ts";
+import { requireInternalAccess, requireVendorSecretHeader } from "../_shared/internal.ts";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const started = Date.now();
   try {
+    if (req.headers.get('x-haven-internal-key') || req.headers.get('x-internal-key')) requireInternalAccess(req);
+    else requireVendorSecretHeader(req, 'HAVEN_EVENT_INGEST_SECRET', ['x-haven-event-secret', 'x-haven-vendor-secret']);
     const body = await req.json();
     requireFields(body, ["source_key", "events"]);
     const db = admin();
@@ -22,6 +25,6 @@ Deno.serve(async (req) => {
     return json({ success: true, events_inserted: inserted });
   } catch (e) {
     await recordMetric('fn-community-events-ingest', started, 'error');
-    return json({ error: String(e.message ?? e) }, 400);
+    return json({ error: String((e as Error).message ?? e) }, 400);
   }
 });

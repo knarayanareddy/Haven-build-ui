@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { alertLevelFromScore, scoreScamText } from "../../../packages/scam-engine/src/catalog.mjs";
 
 export const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -13,10 +14,34 @@ export function json(body: unknown, status = 200) {
   });
 }
 
+function requireEnv(name: string) {
+  const value = Deno.env.get(name);
+  if (!value) throw new Error(`${name} is not configured`);
+  return value;
+}
+
 export function admin() {
-  const url = Deno.env.get("SUPABASE_URL");
-  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!url || !key) throw new Error("Supabase service configuration is missing");
+  const url = requireEnv("SUPABASE_URL");
+  const key = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+export function userClient(req: Request) {
+  const url = requireEnv("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+  const authorization = req.headers.get("authorization");
+  if (!key) throw new Error("SUPABASE_ANON_KEY is not configured");
+  if (!authorization) throw new Error("Missing bearer token");
+  return createClient(url, key, {
+    auth: { persistSession: false },
+    global: { headers: { Authorization: authorization } },
+  });
+}
+
+export function publicClient() {
+  const url = requireEnv("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+  if (!key) throw new Error("SUPABASE_ANON_KEY is not configured");
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
@@ -32,33 +57,21 @@ export function requireFields<T extends Record<string, unknown>>(body: T, fields
 }
 
 export function scoreScam(raw: string) {
-  const text = raw.toLowerCase();
-  const rules = [
-    { key: "bank", score: 14, type: "bankhelpdeskfraude" },
-    { key: "pin", score: 18, type: "bankhelpdeskfraude" },
-    { key: "code", score: 14, type: "phishing" },
-    { key: "urgent", score: 14, type: "andere" },
-    { key: "meteen", score: 14, type: "andere" },
-    { key: "gift card", score: 28, type: "phishing" },
-    { key: "cadeaukaart", score: 28, type: "phishing" },
-    { key: "do not tell", score: 24, type: "andere" },
-    { key: "vertel niemand", score: 24, type: "andere" },
-    { key: "remote", score: 20, type: "phishing" },
-    { key: "anydesk", score: 28, type: "phishing" },
-  ];
-  const hits = rules.filter((r) => text.includes(r.key));
-  const score = Math.min(100, hits.reduce((sum, r) => sum + r.score, 0));
-  const threatTypes = [...new Set(hits.map((h) => h.type))];
-  const level = score >= 90 ? "zwart" : score >= 70 ? "rood" : score >= 40 ? "amber" : "none";
+  const result = scoreScamText(raw);
+  const threatTypes = result.hits.length ? result.hits.map((hit) => {
+    if (hit.id.startsWith('NL_BANK')) return 'bankhelpdeskfraude';
+    if (hit.id.startsWith('NL_PAYMENT') || hit.id.startsWith('NL_REMOTE')) return 'phishing';
+    return 'andere';
+  }) : ['andere'];
   return {
-    score,
-    alert_level: level,
-    threat_types: threatTypes.length ? threatTypes : ["andere"],
+    score: result.score,
+    alert_level: alertLevelFromScore(result.score),
+    threat_types: [...new Set(threatTypes)],
     layer_scores: {
-      reputation: Math.min(100, Math.round(score * 0.55)),
-      pattern: Math.min(100, Math.round(score * 0.95)),
-      nlp_intent: Math.min(100, Math.round(score * 0.75)),
-      longitudinal: Math.min(100, Math.round(score * 0.35)),
+      reputation: Math.min(100, Math.round(result.score * 0.55)),
+      pattern: Math.min(100, Math.round(result.score * 0.95)),
+      nlp_intent: Math.min(100, Math.round(result.score * 0.75)),
+      longitudinal: Math.min(100, Math.round(result.score * 0.35)),
     },
   };
 }

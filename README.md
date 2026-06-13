@@ -26,7 +26,7 @@ Validation currently passes with:
 Full test command:
 
 ```bash
-npm test
+corepack pcorepack pnpm test
 ```
 
 Current test coverage includes:
@@ -340,16 +340,16 @@ docs/release/ACCESSIBILITY_AUDIT_PROTOCOL.md
 Run all current tests:
 
 ```bash
-npm test
+corepack pnpm test
 ```
 
 Individual test groups:
 
 ```bash
-npm run validate:suite
-npm run test:edge
-npm run test:rls
-npm run test:e2e
+corepack pnpm run validate:suite
+corepack pnpm run test:edge
+corepack pnpm run test:rls
+corepack pnpm run test:e2e
 ```
 
 What these cover:
@@ -382,26 +382,80 @@ playwright.config.ts
 Install runtime dependencies from the monorepo root:
 
 ```bash
-npm install
+corepack pnpm install --frozen-lockfile
 ```
 
 Run validation:
 
 ```bash
-npm run validate:suite
+corepack pcorepack pnpm run validate:suite
+```
+
+Run lint coverage:
+
+```bash
+corepack pnpm run lint
+```
+
+Run typecheck coverage:
+
+```bash
+corepack pnpm run typecheck
+```
+
+This currently checks:
+- shared packages
+- Expo elder app scaffold
+- Expo grandchild app scaffold
+
+The Next.js family app gets its TypeScript validation through the production build step:
+
+```bash
+corepack pnpm run build:family
 ```
 
 Preview the static app surfaces:
 
 ```bash
-npm run preview:iphone
-npm run preview:family
+corepack pnpm run preview:iphone
+corepack pnpm run preview:family
+```
+
+Build the Next.js family dashboard:
+
+```bash
+corepack pnpm run build:family
+```
+
+Run the combined quality gate locally:
+
+```bash
+corepack pnpm run quality:check
+```
+
+Run the root engineering orchestration locally:
+
+```bash
+corepack pnpm run verify:core
+```
+
+Optional browser E2E coverage:
+
+```bash
+corepack pnpm exec playwright install chromium
+corepack pnpm run verify:browser
+```
+
+Optional local Supabase orchestration:
+
+```bash
+corepack pnpm run verify:supabase:local
 ```
 
 Run all tests:
 
 ```bash
-npm test
+corepack pcorepack pnpm test
 ```
 
 ### Supabase local reset
@@ -528,6 +582,11 @@ docs/implementation/FEATURE_IMPLEMENTATION_MATRIX.md
 docs/implementation/FEATURE_IMPLEMENTATION_MATRIX.json
 docs/implementation/PHASE_COVERAGE_AUDIT.md
 docs/implementation/HARDENING_CLOSURE_REPORT.md
+docs/implementation/RELEASE_CANDIDATE_SUMMARY.md
+docs/implementation/PRIORITIZED_REMAINING_ISSUES.md
+docs/implementation/NEXT_10_GITHUB_ISSUES.md
+docs/implementation/RESIDUAL_HARDENING_REPORT.md
+docs/implementation/SESSION_HANDOFF_CHANGELOG.md
 ```
 
 The feature matrix currently tracks all major features from the design document and their implementation status.

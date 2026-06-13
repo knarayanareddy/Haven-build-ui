@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "types": ["node"]
+  },
+  "include": [
+    "packages/contracts/src/**/*.ts",
+    "packages/database/src/**/*.ts",
+    "packages/i18n/src/**/*.ts",
+    "packages/scam-engine/src/**/*.ts",
+    "packages/schema/src/**/*.ts",
+    "packages/ui/src/**/*.ts"
+  ]
+}

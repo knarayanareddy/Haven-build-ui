@@ -1,4 +1,6 @@
-import { admin, cors, json, recordMetric, requireFields } from "../_shared/core.ts";
+import { admin, cors, json, recordMetric } from "../_shared/core.ts";
+import { assertActorMatches, assertElderOrFamilyCan, getJwtUserId } from "../_shared/authz.ts";
+import { validateBody } from "../_shared/validation.ts";
 
 function parseMedication(text: string) {
   const lower = text.toLowerCase();
@@ -13,12 +15,16 @@ Deno.serve(async (req) => {
   const started = Date.now();
   try {
     const body = await req.json();
-    requireFields(body, ["elder_id", "uploaded_by_id", "storage_path"]);
+    validateBody(body, { elder_id: 'uuid', uploaded_by_id: 'uuid', storage_path: 'string' }, { allowUnknown: true });
+    const userId = await getJwtUserId(req);
+    assertActorMatches(userId, String(body.uploaded_by_id), 'uploaded_by_id');
+    await assertElderOrFamilyCan(userId, String(body.elder_id), 'medications');
+
     const parsed = parseMedication(String(body.ocr_text ?? "Metformine 500mg 2x daily"));
     const db = admin();
     const { data: job, error: jobError } = await db.from("medication_ocr_jobs").insert({
       elder_id: body.elder_id,
-      uploaded_by_id: body.uploaded_by_id,
+      uploaded_by_id: userId,
       storage_path: body.storage_path,
       status: "processing",
       extracted_name_nl: parsed.name_nl,
@@ -48,12 +54,14 @@ Deno.serve(async (req) => {
     if (medError) throw medError;
 
     const rows = parsed.times.map((t) => ({ medication_id: med.id, elder_id: body.elder_id, scheduled_time: `${new Date().toISOString().slice(0, 10)}T${t}:00+01:00`, status: "gepland" }));
-    await db.from("medication_reminders").insert(rows);
-    await db.from("medication_ocr_jobs").update({ status: "completed", created_medication_id: med.id }).eq("id", job.id);
+    const { error: reminderError } = await db.from("medication_reminders").insert(rows);
+    if (reminderError) throw reminderError;
+    const { error: updateError } = await db.from("medication_ocr_jobs").update({ status: "completed", created_medication_id: med.id }).eq("id", job.id);
+    if (updateError) throw updateError;
     await recordMetric("fn-medication-ocr", started, "success");
-    return json({ success: true, job_id: job.id, medication_id: med.id, review_required: true, extracted: parsed });
+    return json({ success: true, job_id: job.id, medication_id: med.id, review_required: true, extracted: parsed, uploaded_by_id: userId });
   } catch (e) {
     await recordMetric("fn-medication-ocr", started, "error");
-    return json({ error: String(e.message ?? e) }, 400);
+    return json({ error: String((e as Error).message ?? e) }, 400);
   }
 });

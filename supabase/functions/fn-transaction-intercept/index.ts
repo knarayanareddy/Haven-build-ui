@@ -1,15 +1,20 @@
 import { admin, cors, dispatchNotification, json, recordMetric, requireFields, sha256 } from "../_shared/core.ts";
-import { verifyHmacSha256 } from "../_shared/webhook.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
+import { requireInternalAccess } from "../_shared/internal.ts";
 import { captureException } from "../_shared/sentry.ts";
+import { verifyHmacSha256 } from "../_shared/webhook.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const started = Date.now();
   try {
     const raw = await req.text();
-    const secret = Deno.env.get('PSD2_WEBHOOK_SECRET');
-    if (secret) {
+    const internalHeader = req.headers.get('x-haven-internal-key') ?? req.headers.get('x-internal-key');
+    if (internalHeader) {
+      requireInternalAccess(req);
+    } else {
+      const secret = Deno.env.get('PSD2_WEBHOOK_SECRET');
+      if (!secret) throw new Error('PSD2_WEBHOOK_SECRET must be configured for transaction webhooks');
       const valid = await verifyHmacSha256(raw, req.headers.get('x-haven-signature') ?? req.headers.get('x-tink-signature'), secret);
       await admin().from('webhook_receipts').insert({ integration_key: 'psd2', signature_valid: valid, body_hash: await sha256(raw), event_type: 'transaction' });
       if (!valid) throw new Error('Invalid PSD2 webhook signature');
@@ -42,6 +47,6 @@ Deno.serve(async (req) => {
   } catch (e) {
     await captureException(e, { fn: 'fn-transaction-intercept' });
     await recordMetric("fn-transaction-intercept", started, "error");
-    return json({ error: String(e.message ?? e) }, 400);
+    return json({ error: String((e as Error).message ?? e) }, 400);
   }
 });

@@ -4,9 +4,8 @@
 
 ```bash
 cd Haven-build
-npm run validate:suite
-supabase start
-supabase db reset
+corepack pnpm run verify:core
+corepack pnpm run verify:supabase:local
 supabase functions serve --env-file supabase/functions/.env.local
 ```
 
@@ -26,6 +25,10 @@ supabase functions serve --env-file supabase/functions/.env.local
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `HAVEN_ENV`
+- `HAVEN_INTERNAL_KEY`
+- `HAVEN_EVENT_INGEST_SECRET`
+- `MEDMIJ_IMPORT_SECRET`
+- `PSD2_WEBHOOK_SECRET`
 - `OPENAI_API_KEY`
 - `ELEVENLABS_API_KEY`
 - `EXPO_ACCESS_TOKEN`

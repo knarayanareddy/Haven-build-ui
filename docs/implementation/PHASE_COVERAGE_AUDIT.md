@@ -20,7 +20,7 @@ All phases in the design document have engineering implementation coverage in th
 
 ## Validation snapshot
 
-`npm test` passes with:
+`corepack pnpm test` passes with:
 
 ```json
 {

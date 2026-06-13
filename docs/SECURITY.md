@@ -48,8 +48,8 @@ DigiD authentication is deferred and not implemented.
 Run:
 
 ```bash
-npm run test:rls
-npm run test:edge
+corepack pnpm run test:rls
+corepack pnpm run test:edge
 ```
 
 External pentest scope:

@@ -51,7 +51,7 @@ verify_jwt = true
 [functions.fn-weekly-digest]
 verify_jwt = false
 [functions.fn-companion-memory]
-verify_jwt = false
+verify_jwt = true
 [functions.fn-buurt-discover]
 verify_jwt = true
 [functions.fn-buurt-match]
@@ -71,7 +71,7 @@ verify_jwt = false
 [functions.fn-transaction-intercept]
 verify_jwt = false
 [functions.fn-right-to-erasure]
-verify_jwt = false
+verify_jwt = true
 [functions.fn-health-log]
 verify_jwt = true
 [functions.fn-telehealth-transport]

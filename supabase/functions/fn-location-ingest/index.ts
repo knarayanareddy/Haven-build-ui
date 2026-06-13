@@ -1,4 +1,6 @@
-import { admin, cors, dispatchNotification, json, recordMetric, requireFields } from "../_shared/core.ts";
+import { admin, cors, dispatchNotification, json, recordMetric } from "../_shared/core.ts";
+import { assertSelf, getJwtUserId } from "../_shared/authz.ts";
+import { validateBody } from "../_shared/validation.ts";
 
 function fuzz(n: number) {
   return n + (Math.sin(n * 1000) * 0.0009);
@@ -9,7 +11,10 @@ Deno.serve(async (req) => {
   const started = Date.now();
   try {
     const body = await req.json();
-    requireFields(body, ["elder_id", "latitude", "longitude", "accuracy_metres", "timestamp"]);
+    validateBody(body, { elder_id: 'uuid', latitude: 'number', longitude: 'number', accuracy_metres: 'number', timestamp: 'string' }, { allowUnknown: true });
+    const userId = await getJwtUserId(req);
+    assertSelf(userId, String(body.elder_id), 'location event');
+
     const db = admin();
     const lat = Number(body.latitude);
     const lng = Number(body.longitude);
@@ -17,7 +22,7 @@ Deno.serve(async (req) => {
     const eventType = outside ? "veilige_zone_verlaten" : "check_in";
 
     const { data: eventId, error } = await db.rpc("insert_location_event", {
-      p_elder_id: body.elder_id,
+      p_elder_id: userId,
       p_event_type: eventType,
       p_longitude: lng,
       p_latitude: lat,
@@ -32,13 +37,13 @@ Deno.serve(async (req) => {
       const { data: family } = await db
         .from("family_relationships")
         .select("family_member_id")
-        .eq("elder_id", body.elder_id)
+        .eq("elder_id", userId)
         .eq("elder_consented", true)
         .eq("is_active", true)
         .eq("notify_on_safe_zone_exit", true);
       await Promise.all((family ?? []).map((f) => dispatchNotification({
         recipient_id: f.family_member_id,
-        elder_id: body.elder_id,
+        elder_id: userId,
         notification_type: "veilige_zone_verlaten",
         title_nl: "Veilige zone verlaten",
         title_en: "Safe zone left",
@@ -52,6 +57,6 @@ Deno.serve(async (req) => {
     return json({ success: true, location_event_id: eventId, precise_location_ttl_hours: outside ? 24 : 0 });
   } catch (e) {
     await recordMetric("fn-location-ingest", started, "error");
-    return json({ error: String(e.message ?? e) }, 400);
+    return json({ error: String((e as Error).message ?? e) }, 400);
   }
 });

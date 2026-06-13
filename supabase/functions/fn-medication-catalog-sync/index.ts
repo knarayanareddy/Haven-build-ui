@@ -1,8 +1,10 @@
 import { admin, cors, json, recordMetric, requireFields } from "../_shared/core.ts";
+import { requireInternalAccess } from "../_shared/internal.ts";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const started = Date.now();
   try {
+    requireInternalAccess(req);
     const body = await req.json();
     requireFields(body, ["provider"]);
     const legal = Boolean(body.legal_basis_confirmed);

@@ -4,7 +4,7 @@
 
 - Review dependencies weekly for security updates.
 - Apply critical security patches immediately.
-- Run `npm test` after every update.
+- Run `corepack pnpm test` after every update.
 
 ## Database maintenance
 

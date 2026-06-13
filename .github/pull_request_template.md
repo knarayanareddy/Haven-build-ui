@@ -17,7 +17,7 @@ Describe the change and the feature/pillar it affects.
 ## Validation
 
 ```bash
-npm test
+corepack pnpm test
 ```
 
 ## Data/compliance impact

@@ -1,21 +1,25 @@
-import { admin, cors, json, recordMetric, requireFields } from "../_shared/core.ts";
+import { admin, cors, json, recordMetric, userClient } from "../_shared/core.ts";
+import { assertSelf, getJwtUserId } from "../_shared/authz.ts";
+import { validateBody } from "../_shared/validation.ts";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const started = Date.now();
   try {
     const body = await req.json();
-    requireFields(body, ["elder_id", "action"]);
-    const db = admin();
+    validateBody(body, { elder_id: 'uuid', action: 'string' }, { allowUnknown: true });
+    const userId = await getJwtUserId(req);
+    assertSelf(userId, String(body.elder_id), 'skill exchange');
     if (body.action === 'offer') {
-      requireFields(body, ['title_nl']);
-      const { data, error } = await db.from('skill_offerings').insert({ elder_id: body.elder_id, title_nl: body.title_nl, title_en: body.title_en, description_nl: body.description_nl, description_en: body.description_en, category: body.category, format: body.format ?? 'family_mediated', family_visible: Boolean(body.family_visible) }).select().single();
+      if (!body.title_nl) throw new Error('title_nl is required');
+      const { data, error } = await userClient(req).from('skill_offerings').insert({ elder_id: userId, title_nl: body.title_nl, title_en: body.title_en, description_nl: body.description_nl, description_en: body.description_en, category: body.category, format: body.format ?? 'family_mediated', family_visible: Boolean(body.family_visible) }).select().single();
       if (error) throw error;
       await recordMetric('fn-skill-exchange', started, 'success');
       return json({ success: true, skill_offering_id: data.id });
     }
     if (body.action === 'match') {
-      requireFields(body, ['skill_offering_id', 'matched_partner_label']);
-      const { data, error } = await db.from('skill_exchange_matches').insert({ elder_id: body.elder_id, skill_offering_id: body.skill_offering_id, matched_partner_label: body.matched_partner_label, scheduled_at: body.scheduled_at }).select().single();
+      if (!body.skill_offering_id || !body.matched_partner_label) throw new Error('skill_offering_id and matched_partner_label are required');
+      const { data, error } = await admin().from('skill_exchange_matches').insert({ elder_id: userId, skill_offering_id: body.skill_offering_id, matched_partner_label: body.matched_partner_label, scheduled_at: body.scheduled_at }).select().single();
       if (error) throw error;
       await recordMetric('fn-skill-exchange', started, 'success');
       return json({ success: true, skill_exchange_match_id: data.id });
@@ -23,6 +27,6 @@ Deno.serve(async (req) => {
     throw new Error('Unsupported skill exchange action');
   } catch (e) {
     await recordMetric('fn-skill-exchange', started, 'error');
-    return json({ error: String(e.message ?? e) }, 400);
+    return json({ error: String((e as Error).message ?? e) }, 400);
   }
 });

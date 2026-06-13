@@ -1,8 +1,10 @@
 import { admin, cors, json, recordMetric, requireFields } from "../_shared/core.ts";
+import { requireInternalAccess } from "../_shared/internal.ts";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const started = Date.now();
   try {
+    requireInternalAccess(req);
     const body = await req.json().catch(() => ({}));
     const db = admin();
     let query = db.from("medications").select("id, elder_id, schedule_times").eq("is_active", true).is("deleted_at", null);

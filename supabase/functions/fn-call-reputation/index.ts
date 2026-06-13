@@ -1,10 +1,19 @@
-import { admin, cors, json, recordMetric, requireFields, sha256 } from "../_shared/core.ts";
+import { admin, cors, json, recordMetric, sha256 } from "../_shared/core.ts";
+import { assertElderOrFamilyCan, assertSelf, getJwtUserId } from "../_shared/authz.ts";
+import { validateBody } from "../_shared/validation.ts";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const started = Date.now();
   try {
     const body = await req.json();
-    requireFields(body, ["phone", "provider"]);
+    validateBody(body, { phone: 'string', provider: 'string' }, { allowUnknown: true });
+    const userId = await getJwtUserId(req);
+    if (body.elder_id) {
+      if (String(body.elder_id) === userId) assertSelf(userId, String(body.elder_id), 'call reputation lookup');
+      else await assertElderOrFamilyCan(userId, String(body.elder_id), 'alerts');
+    }
+
     const db = admin();
     const phoneHash = await sha256(String(body.phone));
     const { data: cached } = await db.from('phone_reputation_cache').select('*').eq('phone_hashed', phoneHash).gt('expires_at', new Date().toISOString()).maybeSingle();
@@ -17,6 +26,6 @@ Deno.serve(async (req) => {
     return json({ success: true, lookup_id: lookup.id, reputation_score: score, report_count: reportCount, cache_hit: Boolean(cached) });
   } catch (e) {
     await recordMetric('fn-call-reputation', started, 'error');
-    return json({ error: String(e.message ?? e) }, 400);
+    return json({ error: String((e as Error).message ?? e) }, 400);
   }
 });

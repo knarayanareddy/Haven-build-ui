@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/e2e',
   webServer: {
-    command: 'npm run preview:family',
+    command: 'corepack pnpm run preview:family',
     port: 4174,
     reuseExistingServer: true,
   },

@@ -1,8 +1,10 @@
 import { admin, cors, dispatchNotification, json, recordMetric } from "../_shared/core.ts";
+import { requireInternalAccess } from "../_shared/internal.ts";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const started = Date.now();
   try {
+    requireInternalAccess(req);
     const db = admin();
     const { data: vitals, error } = await db.from("vital_signs").select("id,elder_id,vital_type,value,unit").eq("threshold_flag", true).is("family_notified_at", null).gte("recorded_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
     if (error) throw error;

@@ -1,20 +1,27 @@
-import { admin, cors, json, recordMetric, requireFields } from "../_shared/core.ts";
+import { cors, json, recordMetric, userClient } from "../_shared/core.ts";
+import { assertSelf, getJwtUserId } from "../_shared/authz.ts";
+import { validateBody } from "../_shared/validation.ts";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const started = Date.now();
   try {
     const body = await req.json();
-    requireFields(body, ["elder_id", "consent_type", "granted"]);
-    const db = admin();
-    const { data: consent, error } = await db.from("consent_records").insert({ elder_id: body.elder_id, consent_type: body.consent_type, granted: Boolean(body.granted), channel: body.channel ?? "elder_app", consent_version: body.consent_version ?? "1.2.1", withdrawn_at: body.granted ? null : new Date().toISOString() }).select().single();
+    validateBody(body, { elder_id: 'uuid', consent_type: 'string', granted: 'boolean' }, { allowUnknown: true });
+    const userId = await getJwtUserId(req);
+    assertSelf(userId, String(body.elder_id), 'consent update');
+
+    const db = userClient(req);
+    const { data: consent, error } = await db.from("consent_records").insert({ elder_id: userId, consent_type: body.consent_type, granted: Boolean(body.granted), channel: body.channel ?? "elder_app", consent_version: body.consent_version ?? "1.2.1", withdrawn_at: body.granted ? null : new Date().toISOString() }).select().single();
     if (error) throw error;
     if (body.relationship_id && body.relationship_kind === "family") {
-      await db.from("family_relationships").update({ elder_consented: Boolean(body.granted), elder_consented_at: body.granted ? new Date().toISOString() : null, is_active: Boolean(body.granted) }).eq("id", body.relationship_id).eq("elder_id", body.elder_id);
+      const { error: relError } = await db.from("family_relationships").update({ elder_consented: Boolean(body.granted), elder_consented_at: body.granted ? new Date().toISOString() : null, is_active: Boolean(body.granted) }).eq("id", body.relationship_id).eq("elder_id", userId);
+      if (relError) throw relError;
     }
     await recordMetric("fn-consent-update", started, "success");
     return json({ success: true, consent_record_id: consent.id });
   } catch (e) {
     await recordMetric("fn-consent-update", started, "error");
-    return json({ error: String(e.message ?? e) }, 400);
+    return json({ error: String((e as Error).message ?? e) }, 400);
   }
 });

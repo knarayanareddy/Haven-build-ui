@@ -4,7 +4,7 @@ Use this checklist before any real elder household launch.
 
 ## Engineering
 
-- [ ] `npm test` passes.
+- [ ] `corepack pnpm test` passes.
 - [ ] Supabase CLI and Docker DB reset passes.
 - [ ] Supabase DB types generated from the live local database.
 - [ ] RLS positive and negative tests pass with real JWTs.

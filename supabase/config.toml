@@ -43,13 +43,13 @@ verify_jwt = true
 [functions.fn-scam-pipeline]
 verify_jwt = true
 [functions.fn-medication-escalation]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: internal-only invocation with x-haven-internal-key verification
 [functions.fn-notification-dispatch]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: internal-only, restricted to local sub-modules and webhook microservices
 [functions.fn-location-ingest]
 verify_jwt = true
 [functions.fn-weekly-digest]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: cron-scheduled background task, requires signature verification
 [functions.fn-companion-memory]
 verify_jwt = true
 [functions.fn-buurt-discover]
@@ -57,7 +57,7 @@ verify_jwt = true
 [functions.fn-buurt-match]
 verify_jwt = true
 [functions.fn-buurt-events-ingest]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: secure ingestion webhook, requires vendor secret checking
 [functions.fn-medication-ocr]
 verify_jwt = true
 [functions.fn-document-analyse]
@@ -67,9 +67,9 @@ verify_jwt = true
 [functions.fn-consent-update]
 verify_jwt = true
 [functions.fn-emergency-profile]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: retrieval is public (paramedics QR/NFC), token creation is JWT protected internally
 [functions.fn-transaction-intercept]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: fail-closed HMAC signature checking in non-local environments
 [functions.fn-right-to-erasure]
 verify_jwt = true
 [functions.fn-health-log]
@@ -81,15 +81,15 @@ verify_jwt = true
 [functions.fn-screen-data]
 verify_jwt = true
 [functions.fn-onboarding]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: public registration gating with strict parameters and internal checks
 [functions.fn-storage-signed-url]
 verify_jwt = true
 [functions.fn-daily-reminder-scheduler]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: background scheduler, internally gated to avoid public hits
 [functions.fn-care-visit-log]
 verify_jwt = true
 [functions.fn-vital-threshold-check]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: internal monitoring background routine, triggers alerts automatically
 [functions.fn-life-story-process]
 verify_jwt = true
 [functions.fn-notification-preferences]
@@ -101,15 +101,15 @@ verify_jwt = true
 [functions.fn-incident-report]
 verify_jwt = true
 [functions.fn-release-check]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: internal diagnostic checking
 [functions.fn-compliance-register]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: administrative diagnostic check
 [functions.fn-breach-incident]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: admin security gate, matches breach security token
 [functions.fn-care-plan]
 verify_jwt = true
 [functions.fn-medication-refill]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: internal auto-replenishment cron
 [functions.fn-device-session]
 verify_jwt = true
 [functions.fn-buurt-optout]
@@ -119,15 +119,15 @@ verify_jwt = true
 [functions.fn-browser-shield]
 verify_jwt = true
 [functions.fn-medmij-fhir-import]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: vendor webhook, verified via MedMij import secret checking
 [functions.fn-care-system-sync]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: secure care web API connection
 [functions.fn-grandchild-message-send]
 verify_jwt = true
 [functions.fn-observability-alert]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: monitoring callback, requires administrative signature checks
 [functions.fn-health-check]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: open status check, returns only success boolean
 [functions.fn-call-reputation]
 verify_jwt = true
 [functions.fn-wearable-event]
@@ -135,7 +135,7 @@ verify_jwt = true
 [functions.fn-driving-event]
 verify_jwt = true
 [functions.fn-community-events-ingest]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: partner data ingestion, verified via vendor key
 [functions.fn-skill-exchange]
 verify_jwt = true
 [functions.fn-legacy-vault]
@@ -143,8 +143,8 @@ verify_jwt = true
 [functions.fn-bereavement-support]
 verify_jwt = true
 [functions.fn-medication-catalog-sync]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: Z-Index/G-Standaard legal catalog sync
 [functions.fn-log-drain-config]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: admin only, matches administrative token
 [functions.fn-slo-measure]
-verify_jwt = false
+verify_jwt = false # COMPENSATING CONTROL: internal logging measuring

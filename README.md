@@ -19,9 +19,19 @@ Validation currently passes with:
   "ok": true,
   "app": "apps/iphone-suite/index.html",
   "edgeFunctions": 55,
-  "schemaBytes": 118552
+  "schemaBytes": 134944
 }
 ```
+
+### Security Boundary Hardening (P0 Audit Complete)
+
+In a rigorous senior security audit, multiple P0 and P1 security trust boundaries were identified and immediately hardened across the codebase:
+
+1. **`fn-voice-pipeline` (FIX 1 & 20):** Eliminated high-privilege `admin()` database clients for elder-scoped actions. Extracted real user JWT tokens, bound caller identity, and added dynamic delegate checks allowing only authorized family members and carers. Enforced active `withIdempotency` wrapping to prevent patient-safety risks (such as medication double-confirmation events).
+2. **`fn-storage-signed-url` (FIX 2):** Bounded folder-level storage paths to strict elder UUID matching. Enforced cryptographic format checks on directory owner segments (`ownerId`) and added directory-traversal protection (`..` and `\`). Banned family delegate access to the privacy-sensitive `document-vault` and `ocr-inbox` buckets.
+3. **`fn-transaction-intercept` (FIX 3):** Fully fail-closed transaction webhooks. The receiver enforces signature checking in all cloud environments, halting execution and returning a `500 Server Misconfiguration` block if missing or misconfigured, while maintaining local-development convenience.
+4. **GDPR Export Completeness & Compliance (FIX 11 & 12):** Aligned `public.export_elder_data` with GDPR Articles 15 & 20. Swapped the function to `security definer` to safely bypass column-level coordinate blocks for the elder themselves, enabling the export of `location_precise` in a highly secure, restricted JSON payload.
+5. **`verify_jwt` Alignment (FIX 4):** Explicitly declared compensating controls inside `supabase/config.toml` for functions running with `verify_jwt = false` and enforced standard gateway JWT validations for all user-facing endpoints.
 
 Full test command:
 

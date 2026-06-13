@@ -4,9 +4,14 @@ Last updated: 2026-06-13
 
 ## Summary
 
-The repository has undergone multiple hardening passes across:
+The repository has undergone multiple intensive security and architectural hardening passes. On **June 13, 2026**, the primary **P0 trust-boundary vulnerabilities** (including the voice pipeline IDOR, storage signed URL path traversal, transaction webhook fail-open mode, and GDPR location coordinate omissions) were successfully and comprehensively closed.
 
-- Edge Function authorization
+Hardening areas covered:
+- Edge Function authorization (JWT binding and caller identity verification)
+- Delegated family and carer access controls
+- Fail-closed signature checking for Tink/PSD2 transactions
+- Storage folder namespace enforcement and UUID validation
+- GDPR-complete portability exports and S3 lifecycle erasure
 - internal/admin/vendor trust boundaries
 - storage and lifecycle handling
 - reproducible installs and pinned dependencies
@@ -14,7 +19,7 @@ The repository has undergone multiple hardening passes across:
 - browser E2E CI wiring
 - local and live Supabase CI strategy
 
-The project is materially safer and more operationally coherent than the original scaffold. It is still **not a fully production-cleared system**.
+The project is now structurally secure and operationally coherent. It remains a design package, requiring live-environment hardware checks before final production certification.
 
 ## Residual risks
 

@@ -5,10 +5,13 @@ This document is the top-level index for the HAVEN production-shaped package.
 ## Start here
 
 1. `README.md` — complete project overview and usage.
-2. `designdoc.md` — original single source of truth design document.
+2. `designdoc.md` — original single source of truth design document (v1.2.1).
 3. `docs/implementation/DESIGN_DOC_DIFF.md` — design-doc-to-build coverage diff.
 4. `docs/implementation/PHASE_COVERAGE_AUDIT.md` — phase-by-phase implementation audit.
-5. `docs/implementation/HARDENING_CLOSURE_REPORT.md` — hardening status and remaining external gates.
+5. `docs/implementation/HARDENING_CLOSURE_REPORT.md` — v1.2.1 P0 hardening closure.
+6. `docs/implementation/VNEXT_PATCH_DESIGN.md` — vNext Well-Rounded Patch directive.
+7. `docs/implementation/VNEXT_IMPLEMENTATION_REPORT.md` — vNext acceptance criteria + honest remaining gaps.
+8. `docs/implementation/GAP_CLOSURE_REPORT.md` — earlier scaffold→real gap closure.
 
 ## App surfaces
 
@@ -17,7 +20,7 @@ This document is the top-level index for the HAVEN production-shaped package.
 | iPhone suite | `apps/iphone-suite/index.html` | Full product preview in an iPhone frame |
 | Family dashboard preview | `apps/family-dashboard/index.html` | Consent-scoped family dashboard preview |
 | Admin console | `apps/admin-console/index.html` | Compliance/release/admin view |
-| Carer portal | `apps/carer-portal/index.html` | WACHT professional care surface |
+| Carer portal | `apps/carer-portal/index.html` | WACHT professional care surface (handover notes + MAR-light + offline queue per vNext) |
 | Browser Shield | `apps/browser-shield` | Manifest V3 browser protection scaffold |
 | Elder app | `apps/elder` | Expo app scaffold |
 | Family app | `apps/family` | Next.js dashboard scaffold |
@@ -27,12 +30,23 @@ This document is the top-level index for the HAVEN production-shaped package.
 
 | Area | Path |
 |---|---|
-| Supabase migrations | `supabase/migrations` |
-| Edge Functions | `supabase/functions` |
+| Supabase migrations (13 total) | `supabase/migrations` |
+| Edge Functions (72 total) | `supabase/functions` |
 | Local seed data | `supabase/seed.sql` |
 | Supabase local config | `supabase/config.toml` |
 | Function catalog | `docs/api/EDGE_FUNCTION_CATALOG.md` |
 | OpenAPI | `docs/api/openapi.yaml` |
+| Trust-boundary matrix | `docs/implementation/EDGE_FUNCTION_TRUST_BOUNDARY_MATRIX.md` |
+
+## Test pyramid
+
+| Layer | Path |
+|---|---|
+| Suite validation (every required file + 72 functions + 13 migrations) | `corepack pnpm run validate:suite` |
+| Edge / behavioural tests (scam, schema, hardening markers, authz behaviour, vNext RLS) | `corepack pnpm run test:edge` |
+| RLS audits (forced RLS + storage policies) | `corepack pnpm run test:rls` |
+| E2E smoke + Playwright | `corepack pnpm run test:e2e` |
+| Live RLS (secret-gated, against real Supabase) | `HAVEN_LIVE_RLS=1 corepack pnpm run test:integration:live` |
 
 ## Packages
 

@@ -6,7 +6,7 @@
   "packageManager": "pnpm@9.12.3",
   "scripts": {
     "validate:suite": "node scripts/validate-suite.mjs",
-    "test:edge": "node tests/edge/scam-engine.test.mjs && node tests/edge/screen-schema.test.mjs && node tests/edge/hardening-static.test.mjs && node tests/edge/data-lifecycle-diff.test.mjs",
+    "test:edge": "node tests/edge/scam-engine.test.mjs && node tests/edge/screen-schema.test.mjs && node tests/edge/hardening-static.test.mjs && node tests/edge/data-lifecycle-diff.test.mjs && node tests/edge/authz-behavioral.test.mjs && node tests/edge/vnext-rls-audit.test.mjs",
     "test:rls": "node tests/rls/rls-policy-audit.mjs && node tests/rls/storage-policy-audit.mjs",
     "test:e2e": "node tests/e2e/iphone-suite-smoke.test.mjs",
     "test:integration:live": "node tests/integration/live-rls.test.mjs",

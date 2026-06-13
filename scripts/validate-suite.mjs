@@ -22,6 +22,7 @@ const required = [
   'supabase/migrations/20260613000010_edge_authz_hardening.sql',
   'supabase/migrations/20260613000011_voice_interactions_self_write.sql',
   'supabase/migrations/20260613000012_data_lifecycle_expansion.sql',
+  'supabase/migrations/20260614000000_vnext_wellrounded_patch.sql',
   'playwright.family.config.ts',
   'supabase/seed.sql',
   'supabase/config.toml',
@@ -48,6 +49,13 @@ const required = [
   'apps/elder/src/services/documentCamera.ts',
   'apps/elder/src/services/documentCameraView.tsx',
   'apps/elder/src/services/pushRegistration.ts',
+  'apps/elder/src/services/crisis.ts',
+  'apps/elder/src/services/notifications.ts',
+  'apps/elder/src/services/offlineQueue.ts',
+  'apps/elder/src/services/security.ts',
+  'apps/elder/src/state/networkResilience.ts',
+  'apps/elder/src/state/offlineSyncMachine.ts',
+  'apps/elder/src/state/voiceRecordingMachine.ts',
   'apps/elder/src/state/networkResilience.ts',
   'apps/elder/src/state/offlineSyncMachine.ts',
   'apps/elder/src/state/voiceRecordingMachine.ts',
@@ -114,6 +122,7 @@ const required = [
   'scripts/export-scam-rules.mjs',
   'tests/integration/live-rls.test.mjs',
   'tests/edge/data-lifecycle-diff.test.mjs',
+  'tests/edge/authz-behavioral.test.mjs',
   '.github/workflows/supabase-integration.yml',
   'docs/api/openapi.yaml',
   'docs/api/EDGE_FUNCTION_CATALOG.md',
@@ -179,6 +188,26 @@ const required = [
   'supabase/functions/fn-medication-catalog-sync/index.ts',
   'supabase/functions/fn-log-drain-config/index.ts',
   'supabase/functions/fn-slo-measure/index.ts',
+  'supabase/functions/fn-fall-event/index.ts',
+  'supabase/functions/fn-fall-escalation/index.ts',
+  'supabase/functions/fn-wellness-checkin/index.ts',
+  'supabase/functions/fn-scam-coaching/index.ts',
+  'supabase/functions/fn-medication-interactions-check/index.ts',
+  'supabase/functions/fn-medication-ocr-review/index.ts',
+  'supabase/functions/fn-device-health-monitor/index.ts',
+  'supabase/functions/fn-quiet-day-detector/index.ts',
+  'supabase/functions/fn-daily-status-digest/index.ts',
+  'supabase/functions/fn-pending-confirmation-respond/index.ts',
+  'supabase/functions/fn-voice-profile-create/index.ts',
+  'supabase/functions/fn-voice-profile-test/index.ts',
+  'supabase/functions/fn-video-call-create/index.ts',
+  'supabase/functions/fn-video-call-join-token/index.ts',
+  'supabase/functions/fn-video-call-end/index.ts',
+  'supabase/functions/fn-daily-checkin-scheduler/index.ts',
+  'supabase/functions/fn-carer-handover-note/index.ts',
+  'supabase/functions/fn-consent-pack-list/index.ts',
+  'supabase/functions/fn-consent-pack-decide/index.ts',
+  'supabase/functions/fn-voice-profile-revoke/index.ts',
 ];
 for (const rel of required) {
   statSync(join(root, rel));
@@ -201,6 +230,7 @@ const sql9 = readFileSync(join(root, 'supabase/migrations/20260611000009_hardeni
 const sql10 = readFileSync(join(root, 'supabase/migrations/20260613000010_edge_authz_hardening.sql'), 'utf8');
 const sql11 = readFileSync(join(root, 'supabase/migrations/20260613000011_voice_interactions_self_write.sql'), 'utf8');
 const sql12 = readFileSync(join(root, 'supabase/migrations/20260613000012_data_lifecycle_expansion.sql'), 'utf8');
+const sql13 = readFileSync(join(root, 'supabase/migrations/20260614000000_vnext_wellrounded_patch.sql'), 'utf8');
 const checks = [
   [new RegExp(['TO','DO'].join('') + '|' + ['FIX','ME'].join('') + '|' + String.fromCharCode(123,123), 'i'), 'unresolved build token'],
   [/create table profiles/i, 'profiles table'],
@@ -217,6 +247,25 @@ const checks = [
   [/create or replace function public.evaluate_feature_flag/i, 'feature flag RPC'],
   [/create or replace function public.custom_access_token_hook/i, 'auth custom claims hook'],
   [/create or replace function public.export_elder_data/i, 'data export RPC'],
+  [/create table fall_events/i, 'fall_events table'],
+  [/create table device_health_events/i, 'device_health_events table'],
+  [/create table scam_coaching_sessions/i, 'scam_coaching_sessions table'],
+  [/create table voice_profiles/i, 'voice_profiles table'],
+  [/create table elder_voice_preferences/i, 'elder_voice_preferences table'],
+  [/create table video_call_sessions/i, 'video_call_sessions table'],
+  [/create table pending_confirmations/i, 'pending_confirmations table'],
+  [/create table consent_packs/i, 'consent_packs table'],
+  [/create table medication_interaction_alerts/i, 'medication_interaction_alerts table'],
+  [/create table medication_ocr_reviews/i, 'medication_ocr_reviews table'],
+  [/create table elder_baselines/i, 'elder_baselines table'],
+  [/create table carer_handover_notes/i, 'carer_handover_notes table'],
+  [/med_repeatback_confirmation_enabled/i, 'repeat-back confirmation flag'],
+  [/familiar_voice_enabled/i, 'familiar voice flag'],
+  [/fall_detection_enabled/i, 'fall detection flag'],
+  [/daily_status_digest_enabled/i, 'daily status digest flag'],
+  [/med_ocr_review_required/i, 'med ocr review required flag'],
+  [/video_calling_enabled/i, 'video calling flag'],
+
   [/create table vendor_register/i, 'vendor register'],
   [/create table dpia_assessments/i, 'DPIA assessments'],
   [/create table care_plans/i, 'care plans'],
@@ -234,8 +283,8 @@ const checks = [
 ];
 for (const [rx, label] of checks) {
   if (label === 'unresolved build token') {
-    if (rx.test(html) || rx.test(sql) || rx.test(sql2) || rx.test(sql3) || rx.test(sql4) || rx.test(sql5) || rx.test(sql6) || rx.test(sql7) || rx.test(sql8) || rx.test(sql9) || rx.test(sql10) || rx.test(sql11) || rx.test(sql12)) throw new Error(`Found ${label}`);
-  } else if (!rx.test(sql + '\n' + sql2 + '\n' + sql3 + '\n' + sql4 + '\n' + sql5 + '\n' + sql6 + '\n' + sql7 + '\n' + sql8 + '\n' + sql9 + '\n' + sql10 + '\n' + sql11 + '\n' + sql12)) {
+    if (rx.test(html) || rx.test(sql) || rx.test(sql2) || rx.test(sql3) || rx.test(sql4) || rx.test(sql5) || rx.test(sql6) || rx.test(sql7) || rx.test(sql8) || rx.test(sql9) || rx.test(sql10) || rx.test(sql11) || rx.test(sql12) || rx.test(sql13)) throw new Error(`Found ${label}`);
+  } else if (!rx.test(sql + '\n' + sql2 + '\n' + sql3 + '\n' + sql4 + '\n' + sql5 + '\n' + sql6 + '\n' + sql7 + '\n' + sql8 + '\n' + sql9 + '\n' + sql10 + '\n' + sql11 + '\n' + sql12 + '\n' + sql13)) {
     throw new Error(`Missing ${label}`);
   }
 }
@@ -259,4 +308,4 @@ if (!verifyLocalSupabase.includes('HAVEN_LIVE_RLS=1 corepack pnpm run test:integ
 if (!supabaseWorkflow.includes('./scripts/ci/verify-local-supabase.sh')) throw new Error('Supabase workflow is missing local reset orchestration');
 if (!supabaseWorkflow.includes('HAVEN_LIVE_RLS=1 corepack pnpm run test:integration:live')) throw new Error('Supabase workflow is missing live RLS coverage');
 if (!supabaseWorkflow.includes('workflow_dispatch')) throw new Error('Supabase workflow should support manual dispatch');
-console.log(JSON.stringify({ ok: true, app: 'apps/iphone-suite/index.html', edgeFunctions: functions.length, schemaBytes: sql.length + sql2.length + sql3.length + sql4.length + sql5.length + sql6.length + sql7.length + sql8.length + sql9.length + sql10.length + sql11.length + sql12.length }, null, 2));
+console.log(JSON.stringify({ ok: true, app: 'apps/iphone-suite/index.html', edgeFunctions: functions.length, schemaBytes: sql.length + sql2.length + sql3.length + sql4.length + sql5.length + sql6.length + sql7.length + sql8.length + sql9.length + sql10.length + sql11.length + (sql12 + sql13).length }, null, 2));

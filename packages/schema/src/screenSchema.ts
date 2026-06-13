@@ -1,4 +1,4 @@
-export type ScreenId = 'HOME' | 'TODAY' | 'PILLS' | 'SHIELD' | 'FAMILY' | 'BUURT' | 'KOMPAS' | 'STEM' | 'WACHT' | 'SETTINGS';
+export type ScreenId = 'HOME' | 'TODAY' | 'PILLS' | 'SHIELD' | 'FAMILY' | 'BUURT' | 'KOMPAS' | 'STEM' | 'WACHT' | 'SETTINGS' | 'ONBOARDING' | 'INCOMING_CALL';
 
 export interface ScreenSchema {
   screenId: ScreenId;
@@ -24,4 +24,6 @@ export const productionScreens: ScreenSchema[] = [
   { screenId: 'STEM', titleEn: 'Voice', titleNl: 'Stem', depthFromHome: 1, maxPrimaryItems: 2, bottomActions: [], emergencyButton: true, voiceFallbackEn: 'I am listening.', voiceFallbackNl: 'Ik luister.', offlineCacheTtlSeconds: 60 },
   { screenId: 'WACHT', titleEn: 'Care', titleNl: 'Zorg', depthFromHome: 2, maxPrimaryItems: 3, bottomActions: [], emergencyButton: true, voiceFallbackEn: 'Care notes are ready.', voiceFallbackNl: 'Zorgnotities staan klaar.', offlineCacheTtlSeconds: 300 },
   { screenId: 'SETTINGS', titleEn: 'Settings', titleNl: 'Instellingen', depthFromHome: 1, maxPrimaryItems: 3, bottomActions: [], emergencyButton: true, voiceFallbackEn: 'Ask family for help.', voiceFallbackNl: 'Vraag familie om hulp.', offlineCacheTtlSeconds: 86400 },
+  { screenId: 'ONBOARDING', titleEn: 'Welcome', titleNl: 'Welkom', depthFromHome: 0, maxPrimaryItems: 1, bottomActions: [], emergencyButton: true, voiceFallbackEn: 'Welcome to HAVEN.', voiceFallbackNl: 'Welkom bij HAVEN.', offlineCacheTtlSeconds: 3600 },
+  { screenId: 'INCOMING_CALL', titleEn: 'Incoming call', titleNl: 'Inkomende oproep', depthFromHome: 0, maxPrimaryItems: 1, bottomActions: [], emergencyButton: true, voiceFallbackEn: 'Someone is calling.', voiceFallbackNl: 'Er belt iemand.', offlineCacheTtlSeconds: 0 },
 ];

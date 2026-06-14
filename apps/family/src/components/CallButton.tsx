@@ -1,3 +1,5 @@
+"use client";
+
 // ─── Phase 2.1: "Call Grandma" Button ───
 // Family dashboard component that triggers a video call to the elder.
 // Flow: idle → ringing (fn-video-call-create called) → connected/declined/error

@@ -1,4 +1,5 @@
-import type { MedicationReminder, AlertLevel, AlertRow } from '@haven/contracts/src/haven';
+import type { MedicationReminder, AlertLevel } from '@haven/contracts/src/haven';
+import type { AlertRow } from '../components/AlertList';
 
 export interface DashboardFixture {
   elderId: string;

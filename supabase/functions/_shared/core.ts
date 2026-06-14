@@ -1,17 +1,114 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { alertLevelFromScore, scoreScamText } from "../../../packages/scam-engine/src/catalog.mjs";
 
-export const cors = {
+// ─── P0-1 FIX: CORS — dynamic origin validation, not wildcard ───
+const ALLOWED_ORIGINS = (Deno.env.get("HAVEN_ALLOWED_ORIGINS") ?? "http://localhost:3000,http://localhost:4173,exp://*,haven://*")
+  .split(",")
+  .map((s) => s.trim());
+
+function matchOrigin(origin: string | null): string | null {
+  if (!origin) return null;
+  for (const pattern of ALLOWED_ORIGINS) {
+    if (pattern === "*") return "*";
+    if (pattern.endsWith("*") && origin.startsWith(pattern.slice(0, -1))) return origin;
+    if (pattern === origin) return origin;
+  }
+  return null;
+}
+
+export function corsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin");
+  const allowed = matchOrigin(origin);
+  return {
+    "Access-Control-Allow-Origin": allowed ?? ALLOWED_ORIGINS[0],
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-haven-internal-key, idempotency-key, x-haven-signature, x-tink-signature",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin",
+  };
+}
+
+// ─── COMPATIBILITY BRIDGE: Deprecated wildcard CORS for gradual migration ───
+// 68 remaining Edge Functions still import { cors }. This bridge keeps them
+// compiling while they are refactored to corsHeaders(req).
+// Replace with corsHeaders(req) in production functions.
+export const cors: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-haven-internal-key, idempotency-key, x-haven-signature, x-tink-signature",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-export function json(body: unknown, status = 200) {
+// P2-1 FIX: Security headers
+export const securityHeaders: Record<string, string> = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "X-Permitted-Cross-Domain-Policies": "none",
+};
+
+// P0-3 FIX: sanitize errors — never leak internal details
+export function safeErrorMessage(e: unknown): string {
+  if (e instanceof Error) {
+    const msg = e.message;
+    if (
+      msg.startsWith("Missing") || msg.startsWith("Invalid") ||
+      msg.startsWith("Caller") || msg.startsWith("No active") ||
+      msg.includes("is not allowed") || msg.includes("is required") ||
+      msg.includes("must be a") || msg.includes("must match") ||
+      msg.includes("not accepted") || msg.includes("not configured") ||
+      msg.startsWith("Directory traversal") || msg.startsWith("First path") ||
+      msg.startsWith("Uploads are only") || msg.startsWith("Document vault") ||
+      msg.startsWith("OCR inbox") || msg.startsWith("Bucket is not") ||
+      msg.startsWith("operation must") || msg.includes("BSN") ||
+      msg.startsWith("Content-Type") || msg.includes("exceeds maximum") ||
+      msg.startsWith("Rate limit")
+    ) {
+      return msg;
+    }
+    if (msg.includes("JWT") || msg.includes("token")) return "Authentication failed";
+    if (msg.includes("duplicate") || msg.includes("unique") || msg.includes("constraint")) return "Resource already exists";
+    if (msg.includes("permission") || msg.includes("policy") || msg.includes("RLS")) return "Access denied";
+    if (msg.includes("connect") || msg.includes("timeout") || msg.includes("network") || msg.includes("fetch")) return "Service temporarily unavailable";
+    if (msg.includes("parse") || msg.includes("JSON") || msg.includes("Unexpected")) return "Invalid request format";
+    if (msg.includes("size") || msg.includes("large") || msg.includes("limit")) return "Request too large";
+  }
+  return "An unexpected error occurred";
+}
+
+export function json(body: unknown, status = 200, req?: Request) {
+  const extraHeaders: Record<string, string> = {};
+  if (req) Object.assign(extraHeaders, corsHeaders(req));
+  Object.assign(extraHeaders, securityHeaders);
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...cors, "content-type": "application/json; charset=utf-8" },
+    headers: { ...extraHeaders, "content-type": "application/json; charset=utf-8" },
   });
+}
+
+// P1-3 FIX: max body size (1 MB default for JSON, configurable)
+const MAX_BODY_SIZE = Number(Deno.env.get("HAVEN_MAX_BODY_BYTES") ?? (1024 * 1024));
+
+export async function readRequestBody(req: Request): Promise<string> {
+  const ct = req.headers.get("content-type") ?? "";
+  if (req.method === "POST" && req.body && !ct.includes("application/json") && !ct.includes("text/plain") && !ct.includes("multipart/form-data")) {
+    throw new Error("Content-Type must be application/json, text/plain, or multipart/form-data");
+  }
+  const len = req.headers.get("content-length");
+  if (len && Number(len) > MAX_BODY_SIZE) throw new Error("Request body exceeds maximum size limit");
+  const text = await req.text();
+  if (text.length > MAX_BODY_SIZE) throw new Error("Request body exceeds maximum size limit");
+  return text;
+}
+
+export async function readJsonBody(req: Request): Promise<unknown> {
+  const text = await readRequestBody(req);
+  if (!text.trim()) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error("Invalid JSON in request body");
+  }
 }
 
 function requireEnv(name: string) {
@@ -84,6 +181,7 @@ export async function recordMetric(fn_name: string, started: number, status: "su
   }
 }
 
+// P1-4 FIX: Expo push token required for production push notifications
 export async function dispatchNotification(params: {
   recipient_id: string;
   elder_id?: string;
@@ -92,7 +190,7 @@ export async function dispatchNotification(params: {
   title_en?: string;
   body_nl: string;
   body_en?: string;
-  data?: Record<string, string>;
+  data?: Record<string, unknown>;
 }) {
   const db = admin();
   const { data: note, error } = await db.from("notifications").insert(params).select().single();
@@ -102,11 +200,14 @@ export async function dispatchNotification(params: {
     await db.from("notifications").update({ sent_at: new Date().toISOString(), send_error: "no_active_token" }).eq("id", note.id);
     return note;
   }
-  const pushPayload = tokens.map((t) => ({ to: t.token, title: params.title_nl, body: params.body_nl, data: params.data ?? {}, sound: "default" }));
+  const expoToken = Deno.env.get("EXPO_ACCESS_TOKEN");
+  const pushPayload = tokens.map((t: { token: string }) => ({ to: t.token, title: params.title_nl, body: params.body_nl, data: params.data ?? {}, sound: "default" }));
   try {
+    const headers: Record<string, string> = { "content-type": "application/json" };
+    if (expoToken) headers["authorization"] = `Bearer ${expoToken}`;
     const response = await fetch("https://exp.host/--/api/v2/push/send", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers,
       body: JSON.stringify(pushPayload),
     });
     if (response.ok) {
@@ -132,13 +233,11 @@ export async function dispatchNotification(params: {
       await new Promise((resolve) => setTimeout(resolve, 250));
       await fetch("https://exp.host/--/api/v2/push/send", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers,
         body: JSON.stringify(pushPayload),
       });
       await db.from("notifications").update({ send_error: null }).eq("id", note.id);
-    } catch (_) {
-      // swallow — already recorded send_error above.
-    }
+    } catch (_) { /* swallow */ }
   }
   return note;
 }

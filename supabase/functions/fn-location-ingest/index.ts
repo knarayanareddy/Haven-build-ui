@@ -1,4 +1,4 @@
-import { admin, cors, dispatchNotification, json, recordMetric } from "../_shared/core.ts";
+import { admin, cors, corsHeaders, dispatchNotification, json, readJsonBody, recordMetric, safeErrorMessage } from "../_shared/core.ts";
 import { assertSelf, getJwtUserId } from "../_shared/authz.ts";
 import { validateBody } from "../_shared/validation.ts";
 
@@ -7,10 +7,10 @@ function fuzz(n: number) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
-    const body = await req.json();
+    const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, { elder_id: 'uuid', latitude: 'number', longitude: 'number', accuracy_metres: 'number', timestamp: 'string' }, { allowUnknown: true });
     const userId = await getJwtUserId(req);
     assertSelf(userId, String(body.elder_id), 'location event');
@@ -57,6 +57,6 @@ Deno.serve(async (req) => {
     return json({ success: true, location_event_id: eventId, precise_location_ttl_hours: outside ? 24 : 0 });
   } catch (e) {
     await recordMetric("fn-location-ingest", started, "error");
-    return json({ error: String((e as Error).message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

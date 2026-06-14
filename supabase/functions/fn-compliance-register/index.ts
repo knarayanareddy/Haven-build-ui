@@ -1,12 +1,12 @@
-import { cors, json, recordMetric, requireFields, userClient } from "../_shared/core.ts";
+import { cors, corsHeaders, json, readJsonBody, recordMetric, requireFields, safeErrorMessage, userClient } from "../_shared/core.ts";
 import { requireAdminBearer } from "../_shared/internal.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
     await requireAdminBearer(req);
-    const body = await req.json();
+    const body = await readJsonBody(req) as Record<string, unknown>;
     const db = userClient(req);
     if (body.kind === "vendor") {
       requireFields(body, ["vendor_name", "purpose", "data_shared", "storage_region"]);
@@ -28,6 +28,6 @@ Deno.serve(async (req) => {
     return json({ success: true, vendors: data });
   } catch (e) {
     await recordMetric("fn-compliance-register", started, "error");
-    return json({ error: String((e as Error).message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

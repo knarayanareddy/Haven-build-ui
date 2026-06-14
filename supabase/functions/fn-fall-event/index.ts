@@ -1,13 +1,13 @@
-import { cors, json, recordMetric, userClient } from "../_shared/core.ts";
+import { cors, corsHeaders, json, readJsonBody, recordMetric, safeErrorMessage, userClient } from "../_shared/core.ts";
 import { assertCarerCan, assertSelf, getJwtUserId } from "../_shared/authz.ts";
 import { validateBody } from "../_shared/validation.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
-    const body = await req.json();
+    const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, {
       elder_id: "uuid",
       detection_source: "string",
@@ -56,9 +56,9 @@ Deno.serve(async (req) => {
     });
 
     await recordMetric("fn-fall-event", started, "success");
-    return json(result.body, result.status ?? 200);
+    return json(result.body, result.status ?? 200, req);
   } catch (e) {
     await recordMetric("fn-fall-event", started, "error");
-    return json({ error: String((e as Error).message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

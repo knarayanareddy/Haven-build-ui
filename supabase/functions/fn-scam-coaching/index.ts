@@ -1,7 +1,9 @@
-import { admin, cors, dispatchNotification, json, recordMetric, sha256, userClient } from "../_shared/core.ts";
+import { admin, corsHeaders, dispatchNotification, json, readJsonBody, recordMetric, safeErrorMessage, sha256, userClient } from "../_shared/core.ts";
 import { assertSelf, getJwtUserId } from "../_shared/authz.ts";
-import { validateBody } from "../_shared/validation.ts";
+import { validateBody, assertMaxLength, MAX_STRING_FIELD } from "../_shared/validation.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
+import { captureException } from "../_shared/sentry.ts";
 import { scoreScam } from "../_shared/core.ts";
 
 const RED_FLAGS_NL = [
@@ -39,7 +41,7 @@ const RECOVERY_CHECKLIST_EN = [
   "Change passwords if you shared any.",
 ];
 
-function classify(text: string) {
+function classify(text: string): { score: number; intent: string } {
   const lower = text.toLowerCase();
   let score = 0;
   let intent = "general";
@@ -51,21 +53,25 @@ function classify(text: string) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
-    const body = await req.json();
+    // P0-4 FIX: rate limit scam coaching
+    rateLimit(req, "fn-scam-coaching");
+    const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, {
       elder_id: "uuid",
       channel: "string",
       elder_prompt: "string",
     }, { allowUnknown: true });
+    // P1-3 FIX: cap prompt length
+    assertMaxLength(body.elder_prompt, MAX_STRING_FIELD, 'elder_prompt');
     const userId = await getJwtUserId(req);
     assertSelf(userId, String(body.elder_id), "elder");
 
     const prompt = String(body.elder_prompt ?? "").slice(0, 800);
     const promptHash = await sha256(prompt);
-    const idem = req.headers.get("idempotency-key") ?? body.idempotency_key ?? promptHash;
+    const idem = (req.headers.get("idempotency-key") ?? body.idempotency_key ?? promptHash) as string | undefined;
     const locale: "nl-NL" | "en-GB" = body.locale === "en-GB" ? "en-GB" : "nl-NL";
     const redFlags = locale === "nl-NL" ? RED_FLAGS_NL : RED_FLAGS_EN;
     const safeScript = locale === "nl-NL" ? SAFE_SCRIPT_NL : SAFE_SCRIPT_EN;
@@ -76,14 +82,14 @@ Deno.serve(async (req) => {
     const result = await withIdempotency({
       key: idem,
       functionName: "fn-scam-coaching",
-      elderId: body.elder_id,
+      elderId: body.elder_id as string,
       profileId: userId,
       requestBody: body,
       run: async () => {
         const db = userClient(req);
         const summary = locale === "nl-NL"
-          ? `Ik denk dat dit voorzichtig behandeld moet worden. Risicoscore ${scamEngine.score}, patroon: ${intent}.`
-          : `I think this needs to be handled carefully. Risk score ${scamEngine.score}, pattern: ${intent}.`;
+          ? `Ik denk dat dit voorzichtig behandeld moet worden. Risicoscore ${scamEngine.score}, patroon: ${intent.intent}.`
+          : `I think this needs to be handled carefully. Risk score ${scamEngine.score}, pattern: ${intent.intent}.`;
         const recommended_actions = {
           red_flags: redFlags,
           safe_script: safeScript,
@@ -92,7 +98,7 @@ Deno.serve(async (req) => {
             ? "Bel uw familie en wacht op hulp voordat u iets doet."
             : "Call your family and wait for help before doing anything.",
           scam_engine: scamEngine,
-          pattern: intent,
+          pattern: intent.intent,
         };
 
         const { data: session, error } = await db.from("scam_coaching_sessions").insert({
@@ -113,27 +119,28 @@ Deno.serve(async (req) => {
           for (const f of family ?? []) {
             await dispatchNotification({
               recipient_id: f.family_member_id,
-              elder_id: body.elder_id,
+              elder_id: body.elder_id as string,
               notification_type: scamEngine.score >= 70 ? "scam_rood" : "scam_amber",
               title_nl: "Heeft u hier even tijd voor?",
               title_en: "Do you have a moment for this?",
               body_nl: "Er is een coaching-gesprek geweest over een mogelijk verdacht contact. Bel rustig even.",
               body_en: "A coaching conversation was held about a possibly suspicious contact. Please call calmly.",
-              data: { scam_coaching_session_id: session.id, score: scamEngine.score, intent },
+              data: { scam_coaching_session_id: session.id, score: scamEngine.score, intent: intent.intent },
             });
           }
           family_notified = true;
           await db.from("scam_coaching_sessions").update({ family_notified_at: new Date().toISOString() }).eq("id", session.id);
         }
 
-        return { body: { scam_coaching_session_id: session.id, summary, recommended_actions, family_notified, scam_engine: scamEngine, pattern: intent } };
+        return { body: { scam_coaching_session_id: session.id, summary, recommended_actions, family_notified, scam_engine: scamEngine, pattern: intent.intent } };
       },
     });
 
     await recordMetric("fn-scam-coaching", started, "success");
-    return json(result.body, result.status ?? 200);
+    return json(result.body, result.status ?? 200, req);
   } catch (e) {
+    await captureException(e, { fn: 'fn-scam-coaching' });
     await recordMetric("fn-scam-coaching", started, "error");
-    return json({ error: String((e as Error).message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

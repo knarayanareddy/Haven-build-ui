@@ -1,4 +1,4 @@
-import { admin, cors, dispatchNotification, json, recordMetric, requireInternalAccess } from "../_shared/core.ts";
+import { admin, cors, corsHeaders, dispatchNotification, json, recordMetric, requireInternalAccess, safeErrorMessage } from "../_shared/core.ts";
 
 type Status = "green" | "amber" | "red";
 
@@ -22,7 +22,7 @@ function computeStatus(opts: {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
     requireInternalAccess(req);
@@ -95,6 +95,6 @@ Deno.serve(async (req) => {
     return json({ ok: true, digests_generated: digests.length });
   } catch (e) {
     await recordMetric("fn-daily-status-digest", started, "error");
-    return json({ error: String((e as Error).message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

@@ -1,7 +1,7 @@
-import { admin, cors, json, recordMetric, requireFields } from "../_shared/core.ts";
+import { admin, cors, corsHeaders, json, recordMetric, requireFields, safeErrorMessage } from "../_shared/core.ts";
 import { requireInternalAccess } from "../_shared/internal.ts";
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
     requireInternalAccess(req);
@@ -26,6 +26,6 @@ Deno.serve(async (req) => {
     return json({ success: true, reminders_scheduled: rows.length });
   } catch (e) {
     await recordMetric("fn-daily-reminder-scheduler", started, "error");
-    return json({ error: String(e.message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

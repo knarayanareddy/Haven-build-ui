@@ -1,23 +1,26 @@
-import { admin, cors, json, recordMetric, scoreScam, sha256, dispatchNotification } from "../_shared/core.ts";
+import { admin, corsHeaders, dispatchNotification, json, recordMetric, readJsonBody, safeErrorMessage, scoreScam, sha256, userClient } from "../_shared/core.ts";
 import { getJwtUserId, assertElderOrFamilyCan } from "../_shared/authz.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
-import { assertNoBsnText, validateBody } from "../_shared/validation.ts";
+import { assertNoBsnText, assertMaxLength, MAX_STRING_FIELD, validateBody } from "../_shared/validation.ts";
 import { captureException } from "../_shared/sentry.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  // P0-1+P2-1 FIX: dynamic CORS + security headers via corsHeaders(req)
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
-    const body = await req.json();
+    const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, { elder_id: 'uuid', channel: 'string', signal_reference: 'string', raw_content: 'string' }, { allowUnknown: true });
     assertNoBsnText(body.raw_content);
+    // P1-3 FIX: cap input size
+    assertMaxLength(body.raw_content, MAX_STRING_FIELD, 'raw_content');
     const userId = await getJwtUserId(req);
-    await assertElderOrFamilyCan(userId, body.elder_id, 'alerts');
-    const idem = req.headers.get('idempotency-key') ?? body.idempotency_key;
+    await assertElderOrFamilyCan(userId, body.elder_id as string, 'alerts');
+    const idem = (req.headers.get('idempotency-key') ?? body.idempotency_key) as string | undefined;
     const result = await withIdempotency({
       key: idem,
       functionName: 'fn-scam-pipeline',
-      elderId: body.elder_id,
+      elderId: body.elder_id as string,
       profileId: userId,
       requestBody: body,
       run: async () => {
@@ -46,16 +49,16 @@ Deno.serve(async (req) => {
         if (error) throw error;
         if (["rood", "zwart"].includes(scored.alert_level)) {
           const { data: family } = await db.from("family_relationships").select("family_member_id").eq("elder_id", body.elder_id).eq("elder_consented", true).eq("is_active", true).eq("notify_on_scam_rood", true);
-          await Promise.all((family ?? []).map((f) => dispatchNotification({ recipient_id: f.family_member_id, elder_id: body.elder_id, notification_type: scored.alert_level === "zwart" ? "scam_zwart" : "scam_rood", title_nl: "HAVEN veiligheidsmelding", title_en: "HAVEN safety alert", body_nl: "Er is een mogelijk fraudepatroon gezien. Bel rustig even mee.", body_en: "A possible scam pattern was seen. Please calmly check in.", data: { scam_event_id: event.id } })));
+          await Promise.all((family ?? []).map((f) => dispatchNotification({ recipient_id: f.family_member_id, elder_id: body.elder_id as string, notification_type: scored.alert_level === "zwart" ? "scam_zwart" : "scam_rood", title_nl: "HAVEN veiligheidsmelding", title_en: "HAVEN safety alert", body_nl: "Er is een mogelijk fraudepatroon gezien. Bel rustig even mee.", body_en: "A possible scam pattern was seen. Please calmly check in.", data: { scam_event_id: event.id } })));
         }
         return { body: { scam_event_id: event.id, alert_level: scored.alert_level, composite_score: scored.score, layer_scores: scored.layer_scores, explanation_nl: event.explanation_nl, explanation_en: event.explanation_en, family_notified: event.family_notified } };
       },
     });
     await recordMetric("fn-scam-pipeline", started, "success");
-    return json(result.body, result.status ?? 200);
+    return json(result.body, result.status ?? 200, req);
   } catch (e) {
     await captureException(e, { fn: 'fn-scam-pipeline' });
     await recordMetric("fn-scam-pipeline", started, "error");
-    return json({ error: String(e.message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

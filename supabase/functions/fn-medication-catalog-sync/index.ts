@@ -1,11 +1,11 @@
-import { admin, cors, json, recordMetric, requireFields } from "../_shared/core.ts";
+import { admin, cors, corsHeaders, json, readJsonBody, recordMetric, requireFields, safeErrorMessage } from "../_shared/core.ts";
 import { requireInternalAccess } from "../_shared/internal.ts";
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
     requireInternalAccess(req);
-    const body = await req.json();
+    const body = await readJsonBody(req) as Record<string, unknown>;
     requireFields(body, ["provider"]);
     const legal = Boolean(body.legal_basis_confirmed);
     const db = admin();
@@ -23,6 +23,6 @@ Deno.serve(async (req) => {
     return json({ success: true, catalog_sync_job_id: job.id, status: legal ? 'completed' : 'disabled_until_legal_basis_confirmed', records_updated: updated });
   } catch (e) {
     await recordMetric('fn-medication-catalog-sync', started, 'error');
-    return json({ error: String(e.message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

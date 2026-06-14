@@ -25,9 +25,23 @@ export function validateBody(body: Record<string, unknown>, spec: Record<string,
   return body;
 }
 
+// P0-3 FIX: enhance BSN detection with more robust patterns
 export function assertNoBsnText(value: unknown) {
   const text = typeof value === 'string' ? value : JSON.stringify(value ?? '');
-  if (/\b\d{9}\b/.test(text) || /burgerservicenummer|\bbsn\b/i.test(text)) {
+  // Dutch BSN: exactly 9 digits, often written with dots or spaces
+  if (/\b\d{9}\b/.test(text.replace(/[.\-\s]/g, '')) && /\d{9}/.test(text.replace(/[.\-\s]/g, ''))) {
     throw new Error('BSN-like content is not accepted by HAVEN');
   }
+  if (/burgerservicenummer|burgerservice.?nummer|\bbsn\b/i.test(text)) {
+    throw new Error('BSN-like content is not accepted by HAVEN');
+  }
+}
+
+// P1-3 FIX: String length cap for user-provided text fields
+export const MAX_STRING_FIELD = 10_000;
+export const MAX_AUDIO_BASE64 = 10 * 1024 * 1024; // ~10 MB for base64 audio (~7.5 MB raw)
+
+export function assertMaxLength(value: unknown, maxLen: number, fieldName: string) {
+  const str = typeof value === 'string' ? value : JSON.stringify(value ?? '');
+  if (str.length > maxLen) throw new Error(`${fieldName} exceeds maximum length of ${maxLen} characters`);
 }

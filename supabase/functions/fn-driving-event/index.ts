@@ -1,12 +1,12 @@
-import { admin, cors, dispatchNotification, json, recordMetric, userClient } from "../_shared/core.ts";
+import { admin, cors, corsHeaders, dispatchNotification, json, readJsonBody, recordMetric, safeErrorMessage, userClient } from "../_shared/core.ts";
 import { assertSelf, getJwtUserId } from "../_shared/authz.ts";
 import { validateBody } from "../_shared/validation.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
-    const body = await req.json();
+    const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, { elder_id: 'uuid', event_type: 'string' }, { allowUnknown: true });
     const userId = await getJwtUserId(req);
     assertSelf(userId, String(body.elder_id), 'driving event');
@@ -26,6 +26,6 @@ Deno.serve(async (req) => {
     return json({ success: true, driving_event_id: event.id, family_notified: share && score >= 70 });
   } catch (e) {
     await recordMetric('fn-driving-event', started, 'error');
-    return json({ error: String((e as Error).message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

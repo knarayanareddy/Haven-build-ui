@@ -1,12 +1,12 @@
-import { admin, cors, dispatchNotification, json, recordMetric, userClient } from "../_shared/core.ts";
+import { admin, cors, corsHeaders, dispatchNotification, json, readJsonBody, recordMetric, safeErrorMessage, userClient } from "../_shared/core.ts";
 import { assertActorMatches, assertCarerPermission, getJwtUserId } from "../_shared/authz.ts";
 import { validateBody } from "../_shared/validation.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
-    const body = await req.json();
+    const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, { elder_id: 'uuid', reported_by_id: 'uuid', incident_type: 'string', description_nl: 'string', severity: 'string' }, { allowUnknown: true });
     const userId = await getJwtUserId(req);
     assertActorMatches(userId, String(body.reported_by_id), 'reported_by_id');
@@ -22,6 +22,6 @@ Deno.serve(async (req) => {
     return json({ success: true, incident_id: data.id });
   } catch (e) {
     await recordMetric("fn-incident-report", started, "error");
-    return json({ error: String((e as Error).message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

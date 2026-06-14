@@ -1,12 +1,12 @@
-import { admin, cors, json, recordMetric, requireFields, sha256 } from "../_shared/core.ts";
+import { admin, cors, corsHeaders, json, readJsonBody, recordMetric, requireFields, safeErrorMessage, sha256 } from "../_shared/core.ts";
 import { requireInternalAccess, requireVendorSecretHeader } from "../_shared/internal.ts";
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
     if (req.headers.get('x-haven-internal-key') || req.headers.get('x-internal-key')) requireInternalAccess(req);
     else requireVendorSecretHeader(req, 'MEDMIJ_IMPORT_SECRET', ['x-medmij-secret', 'x-haven-vendor-secret']);
-    const body = await req.json();
+    const body = await readJsonBody(req) as Record<string, unknown>;
     requireFields(body, ["elder_id", "resources"]);
     const db = admin();
     const { data: job, error: jobError } = await db.from('fhir_import_jobs').insert({ elder_id: body.elder_id, provider: body.provider ?? 'medmij', status: 'running', resource_type: 'Bundle', resource_count: body.resources.length, started_at: new Date().toISOString() }).select().single();
@@ -36,6 +36,6 @@ Deno.serve(async (req) => {
     return json({ success: true, fhir_job_id: job.id, resources_received: body.resources.length, resources_mapped: mapped });
   } catch (e) {
     await recordMetric('fn-medmij-fhir-import', started, 'error');
-    return json({ error: String((e as Error).message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

@@ -1,12 +1,12 @@
-import { admin, cors, dispatchNotification, json, recordMetric, userClient } from "../_shared/core.ts";
+import { admin, cors, corsHeaders, dispatchNotification, json, readJsonBody, recordMetric, safeErrorMessage, userClient } from "../_shared/core.ts";
 import { assertActorMatches, assertElderOrFamilyCan, getJwtUserId, getProfileRole } from "../_shared/authz.ts";
 import { validateBody } from "../_shared/validation.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
-    const body = await req.json();
+    const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, { elder_id: 'uuid', message_type: 'string' }, { allowUnknown: true });
     const userId = await getJwtUserId(req);
     assertActorMatches(userId, typeof body.sender_id === 'string' ? body.sender_id : undefined, 'sender_id');
@@ -56,6 +56,6 @@ Deno.serve(async (req) => {
     return json({ success: true, message_id: msg.id, sender_id: userId, sender_role: senderRole });
   } catch (e) {
     await recordMetric("fn-family-message-send", started, "error");
-    return json({ error: String((e as Error).message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

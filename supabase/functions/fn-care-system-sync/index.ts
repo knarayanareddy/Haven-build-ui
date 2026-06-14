@@ -1,11 +1,11 @@
-import { admin, cors, json, recordMetric, requireFields } from "../_shared/core.ts";
+import { admin, cors, corsHeaders, json, readJsonBody, recordMetric, requireFields, safeErrorMessage } from "../_shared/core.ts";
 import { requireInternalAccess } from "../_shared/internal.ts";
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
     requireInternalAccess(req);
-    const body = await req.json();
+    const body = await readJsonBody(req) as Record<string, unknown>;
     requireFields(body, ["elder_id", "organisation_nl", "system_name"]);
     const db = admin();
     const { data: job, error } = await db.from('external_care_sync_jobs').insert({ elder_id: body.elder_id, organisation_nl: body.organisation_nl, system_name: body.system_name, status: 'running', started_at: new Date().toISOString() }).select().single();
@@ -17,6 +17,6 @@ Deno.serve(async (req) => {
     return json({ success: true, sync_job_id: job.id, records_pushed: (visits ?? 0) + (incidents ?? 0) });
   } catch (e) {
     await recordMetric('fn-care-system-sync', started, 'error');
-    return json({ error: String(e.message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

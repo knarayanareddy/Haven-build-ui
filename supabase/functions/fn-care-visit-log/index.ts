@@ -1,12 +1,12 @@
-import { cors, json, recordMetric, userClient } from "../_shared/core.ts";
+import { cors, corsHeaders, json, readJsonBody, recordMetric, safeErrorMessage, userClient } from "../_shared/core.ts";
 import { assertActorMatches, assertCarerPermission, getJwtUserId } from "../_shared/authz.ts";
 import { validateBody } from "../_shared/validation.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
-    const body = await req.json();
+    const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, { elder_id: 'uuid', carer_id: 'uuid', visit_date: 'string' }, { allowUnknown: true });
     const userId = await getJwtUserId(req);
     assertActorMatches(userId, String(body.carer_id), 'carer_id');
@@ -17,6 +17,6 @@ Deno.serve(async (req) => {
     return json({ success: true, visit_log_id: data.id });
   } catch (e) {
     await recordMetric("fn-care-visit-log", started, "error");
-    return json({ error: String((e as Error).message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

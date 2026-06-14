@@ -1,14 +1,14 @@
-import { admin, cors, dispatchNotification, json, recordMetric, scoreScam, sha256 } from "../_shared/core.ts";
+import { admin, cors, corsHeaders, dispatchNotification, json, readJsonBody, recordMetric, safeErrorMessage, scoreScam, sha256 } from "../_shared/core.ts";
 import { assertSelf, getJwtUserId } from "../_shared/authz.ts";
 import { validateBody } from "../_shared/validation.ts";
 
 function domainFromUrl(url: string) { try { return new URL(url).hostname.toLowerCase(); } catch { return url.toLowerCase().split('/')[0]; } }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
-    const body = await req.json();
+    const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, { elder_id: 'uuid', url: 'string' }, { allowUnknown: true });
     const userId = await getJwtUserId(req);
     assertSelf(userId, String(body.elder_id), 'browser shield event');
@@ -36,6 +36,6 @@ Deno.serve(async (req) => {
     return json({ success: true, browser_event_id: event.id, risk_level: risk, risk_score: riskScore, detected_patterns: patterns });
   } catch (e) {
     await recordMetric('fn-browser-shield', started, 'error');
-    return json({ error: String((e as Error).message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

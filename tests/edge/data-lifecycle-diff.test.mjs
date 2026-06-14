@@ -37,7 +37,7 @@ for (const match of allSql.matchAll(/create table\s+(\w+)\s*\((.*?)\n\);/gis)) {
 
 const exportedTables = new Set([...exportSql.matchAll(/from\s+(\w+)\s+\w+/g)].map((m) => m[1]));
 const erasureTables = new Set([...erasureCode.matchAll(/from\("(\w+)"\)/g)].map((m) => m[1]));
-for (const blockName of ['softDeleteTables']) {
+for (const blockName of ['softDeleteTables', 'SOFT_DELETE_TABLES', 'DIRECT_DELETE_TABLES']) {
   const block = erasureCode.match(new RegExp(`const ${blockName} = \\[(.*?)\\];`, 's'))?.[1] ?? '';
   for (const match of block.matchAll(/"(\w+)"/g)) erasureTables.add(match[1]);
 }

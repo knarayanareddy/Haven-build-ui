@@ -1,8 +1,10 @@
-import { admin, cors, dispatchNotification, json, recordMetric, userClient } from "../_shared/core.ts";
+import { admin, corsHeaders, dispatchNotification, json, readJsonBody, recordMetric, safeErrorMessage, userClient } from "../_shared/core.ts";
 import { companionReply, generateEmbedding, synthesizeSpeechToStorage, transcribeDutchAudio } from "../_shared/ai.ts";
 import { assertSelf, getJwtUserId, assertElderOrFamilyCan, assertCarerCan } from "../_shared/authz.ts";
-import { validateBody } from "../_shared/validation.ts";
+import { validateBody, assertMaxLength, MAX_AUDIO_BASE64 } from "../_shared/validation.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
+import { captureException } from "../_shared/sentry.ts";
 
 function classify(transcript: string) {
   const t = transcript.toLowerCase();
@@ -27,14 +29,17 @@ async function selectVoiceConfig(adminClient: ReturnType<typeof admin>, elderId:
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
-    const body = await req.json();
+    rateLimit(req, "fn-voice-pipeline");
+    const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, { elder_id: "uuid", screen_id: "string" }, { allowUnknown: true });
+    // P1-3: cap base64 audio size
+    if (body.audio_base64) assertMaxLength(body.audio_base64, MAX_AUDIO_BASE64, 'audio_base64');
     const userId = await getJwtUserId(req);
 
-    // Support self or delegated access (Family with message permission, or Carer)
+    // Support self or delegated access
     let authorized = false;
     if (userId === String(body.elder_id)) {
       authorized = true;
@@ -43,29 +48,27 @@ Deno.serve(async (req) => {
       const isCarer = await assertCarerCan(userId, String(body.elder_id)).then(() => true).catch(() => false);
       authorized = isFamily || isCarer;
     }
-    if (!authorized) {
-      throw new Error("Caller is not authorized to interact on behalf of this elder");
-    }
+    if (!authorized) throw new Error("Caller is not authorized to interact on behalf of this elder");
 
-    const idem = req.headers.get("idempotency-key") ?? body.idempotency_key;
+    const idem = (req.headers.get("idempotency-key") ?? body.idempotency_key) as string | undefined;
     const result = await withIdempotency({
       key: idem,
       functionName: "fn-voice-pipeline",
-      elderId: body.elder_id,
+      elderId: body.elder_id as string,
       profileId: userId,
       requestBody: body,
       run: async () => {
         const db = userClient(req);
         const dbAdmin = admin();
         const locale = (body.locale === "nl-NL" ? "nl-NL" : "en-GB") as "en-GB" | "nl-NL";
-        const transcript = body.audio_base64 ? await transcribeDutchAudio(String(body.audio_base64)) : String(body.transcript_text ?? (locale === "nl-NL" ? "Ik heb mijn pillen ingenomen en ik voel me rustig." : "I took my pills and I feel calm."));
+        const transcript = body.audio_base64
+          ? await transcribeDutchAudio(String(body.audio_base64))
+          : String(body.transcript_text ?? (locale === "nl-NL" ? "Ik heb mijn pillen ingenomen en ik voel me rustig." : "I took my pills and I feel calm."));
         const c = classify(transcript);
         const distress = c.intent === "crisis";
 
-        // Repeat-back confirmation for medication intake when flag is on.
         const repeatBackOn = await isRepeatBackEnabled(dbAdmin);
         if (c.intent === "bevestig_ingenomen" && repeatBackOn) {
-          // Insert a pending_confirmation instead of immediately marking the reminder taken.
           const expiresAt = new Date(Date.now() + 90 * 1000).toISOString();
           const { data: reminders } = await db.from("medication_reminders").select("id, medication_id").eq("elder_id", body.elder_id).in("status", ["gepland", "herinnerd", "gesnoozed_1", "gesnoozed_2", "geëscaleerd"]).order("scheduled_time", { ascending: true }).limit(1);
           const reminder = reminders?.[0];
@@ -78,7 +81,6 @@ Deno.serve(async (req) => {
           const askBack = locale === "nl-NL"
             ? `Ik hoorde u zeggen dat u uw medicijn heeft ingenomen. Klopt dat? Zeg ja of nee.`
             : `I heard you say you took your medicine. Is that correct? Please say yes or no.`;
-          // Persist the interaction in "awaiting confirmation" mode.
           await db.from("voice_interactions").insert({
             elder_id: body.elder_id,
             screen_id: body.screen_id,
@@ -92,8 +94,8 @@ Deno.serve(async (req) => {
             action_taken: "AWAIT_REPEAT_BACK",
             duration_ms: Date.now() - started,
           });
-          const voice = await selectVoiceConfig(dbAdmin, body.elder_id, locale);
-          const audioUrl = await synthesizeSpeechToStorage({ elderId: body.elder_id, interactionId: `await-${Date.now()}`, text: askBack, locale }).catch(() => null);
+          const voice = await selectVoiceConfig(dbAdmin, body.elder_id as string, locale);
+          const audioUrl = await synthesizeSpeechToStorage({ elderId: body.elder_id as string, interactionId: `await-${Date.now()}`, text: askBack, locale }).catch(() => null);
           return { body: { intent: c.intent, action_taken: "AWAIT_REPEAT_BACK", awaiting_confirmation: true, confirmation_prompt: askBack, audio_url: audioUrl, voice_profile: voice } };
         }
 
@@ -104,8 +106,8 @@ Deno.serve(async (req) => {
         const responseText = distress
           ? (locale === "nl-NL" ? "Ik ben bij u. Ik waarschuw uw familie en toon de hulpknop." : "I am with you. I will notify your family and show the help button.")
           : c.intent === "bevestig_ingenomen"
-            ? (locale === "nl-NL" ? "Goed gedaan. Ik heb het genoteerd." : "Well done. I recorded it.")
-            : await companionReply({ locale, transcript, memories, screenId: body.screen_id });
+          ? (locale === "nl-NL" ? "Goed gedaan. Ik heb het genoteerd." : "Well done. I recorded it.")
+          : await companionReply({ locale, transcript, memories, screenId: body.screen_id as string });
 
         const embedding = await generateEmbedding(transcript).catch(() => null);
 
@@ -130,43 +132,28 @@ Deno.serve(async (req) => {
           const { data: reminders, error: remindersError } = await db.from("medication_reminders").select("id").eq("elder_id", body.elder_id).in("status", ["gepland", "herinnerd", "gesnoozed_1", "gesnoozed_2", "geëscaleerd"]).order("scheduled_time", { ascending: true }).limit(1);
           if (remindersError) throw remindersError;
           if (reminders?.[0]) {
-            const { error: markError } = await db.rpc("mark_reminder_taken", { p_reminder_id: reminders[0].id, p_elder_id: body.elder_id });
+            const { error: markError } = await db.rpc("mark_reminder_taken", { p_reminder_id: reminders[0].id });
             if (markError) throw markError;
           }
         }
 
-        if (c.intent === "companion" && transcript.length > 12) {
-          const { error: memoryError } = await db.from("companion_memory").insert({ elder_id: body.elder_id, memory_type: "emotional_state", content_nl: locale === "nl-NL" ? transcript.slice(0, 240) : "Gesprek in Engels opgeslagen.", content_en: locale === "en-GB" ? transcript.slice(0, 240) : null, importance_score: 4, embedding, source: "voice_interaction", source_id: interaction.id });
-          if (memoryError) throw memoryError;
-        }
-
         if (distress) {
-          const { data: family, error: familyError } = await db.from("family_relationships").select("family_member_id").eq("elder_id", body.elder_id).eq("elder_consented", true).eq("is_active", true).eq("notify_on_crisis", true);
-          if (familyError) throw familyError;
-          await Promise.all((family ?? []).map((f) => dispatchNotification({ recipient_id: f.family_member_id, elder_id: body.elder_id, notification_type: "crisis_gedetecteerd", title_nl: "HAVEN hulpvraag", title_en: "HAVEN help request", body_nl: "Er is een mogelijke hulpvraag uitgesproken. Bel rustig meteen even.", body_en: "A possible help request was spoken. Please calmly call now.", data: { interaction_id: interaction.id } })));
+          const { data: family } = await db.from("family_relationships").select("family_member_id").eq("elder_id", body.elder_id).eq("elder_consented", true).eq("is_active", true).eq("notify_on_crisis", true);
+          await Promise.all((family ?? []).map((f) => dispatchNotification({ recipient_id: f.family_member_id, elder_id: body.elder_id as string, notification_type: "crisis", title_nl: "HAVEN crisis-signaal", body_nl: "Er is een zorgwekkend bericht gehoord. Check rustig in.", data: { interaction_id: interaction.id } })));
         }
 
-        // Voice selection: crisis → neutral voice; otherwise prefer Familiar Voice if configured.
-        let voice = await selectVoiceConfig(dbAdmin, body.elder_id, locale);
-        if (distress) voice = { ...voice, crisisOverride: true, useFamiliar: false };
-        let speakText = responseText;
-        if (voice.useFamiliar && voice.disclosure === "always") {
-          speakText = (locale === "nl-NL" ? "Dit is HAVEN, met de stem van uw familielid. " : "This is HAVEN, using your family member's voice. ") + responseText;
-        }
+        const voice = await selectVoiceConfig(dbAdmin, body.elder_id as string, locale);
+        const audioUrl = await synthesizeSpeechToStorage({ elderId: body.elder_id as string, interactionId: interaction.id, text: responseText, locale }).catch(() => null);
 
-        const audioUrl = await synthesizeSpeechToStorage({ elderId: body.elder_id, interactionId: interaction.id, text: speakText, locale }).catch(() => null);
-        if (audioUrl) {
-          await db.from("voice_interactions").update({ response_audio_path: `tts-cache/${body.elder_id}/${interaction.id}.mp3` }).eq("id", interaction.id);
-        }
-
-        await recordMetric("fn-voice-pipeline", started, "success");
-        return { body: { transcript, intent: c.intent, entities: body.entities ?? {}, response_text: speakText, audio_url: audioUrl, action_taken: c.action, distress_detected: distress, interaction_id: interaction.id, voice_profile: voice } };
+        return { body: { interaction_id: interaction.id, transcript, intent: c.intent, entities: body.entities ?? {}, response_text: responseText, audio_url: audioUrl, action_taken: c.action, distress_detected: distress, voice_profile: voice } };
       },
     });
 
-    return json(result.body, result.status ?? 200);
+    await recordMetric("fn-voice-pipeline", started, "success");
+    return json(result.body, result.status ?? 200, req);
   } catch (e) {
+    await captureException(e, { fn: 'fn-voice-pipeline' });
     await recordMetric("fn-voice-pipeline", started, "error");
-    return json({ error: String((e as Error).message ?? e) }, 400);
+    return json({ error: safeErrorMessage(e) }, 400, req);
   }
 });

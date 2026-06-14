@@ -1,7 +1,7 @@
-import { admin, cors, json, recordMetric } from "../_shared/core.ts";
+import { admin, cors, corsHeaders, json, recordMetric, safeErrorMessage } from "../_shared/core.ts";
 import { requireInternalAccess } from "../_shared/internal.ts";
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
     requireInternalAccess(req);
@@ -15,6 +15,6 @@ Deno.serve(async (req) => {
     return json({ success: true, status: 'ok', checks: { database: profiles.error ? 'error' : 'ok', feature_flags: flags.error ? 'error' : 'ok', recent_metrics_count: metrics.count ?? 0 }, timestamp: new Date().toISOString() });
   } catch (e) {
     await recordMetric('fn-health-check', started, 'error');
-    return json({ success: false, status: 'error', error: String(e.message ?? e) }, 500);
+    return json({ success: false, status: 'error', error: safeErrorMessage(e) }, 500);
   }
 });

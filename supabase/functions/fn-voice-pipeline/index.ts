@@ -1,4 +1,4 @@
-import { admin, corsHeaders, dispatchNotification, json, readJsonBody, userClient } from "../_shared/core.ts";
+import { admin, dispatchNotification, json, readJsonBody, userClient } from "../_shared/core.ts";
 import { companionReply, synthesizeSpeechToStorage, transcribeDutchAudio } from "../_shared/ai.ts";
 import { assertElderOrFamilyCan, assertCarerCan, getJwtUserId } from "../_shared/authz.ts";
 import { validateBody, assertMaxLength, MAX_AUDIO_BASE64 } from "../_shared/validation.ts";
@@ -15,11 +15,6 @@ function classify(transcript: string) {
   if (/(verhaal|story|memory|herinnering)/.test(t)) return { intent: "life_story", action: "START_STORY" };
   if (/(familie|sarah|bericht|message)/.test(t)) return { intent: "family_message", action: "OPEN_FAMILY" };
   return { intent: "companion", action: "COMPANION_REPLY" };
-}
-
-async function isRepeatBackEnabled(adminClient: ReturnType<typeof admin>) {
-  const { data: flag } = await adminClient.from("feature_flags").select("enabled, rollout_pct").eq("flag_key", "med_repeatback_confirmation_enabled").maybeSingle();
-  return Boolean(flag?.enabled);
 }
 
 async function selectVoiceConfig(adminClient: ReturnType<typeof admin>, elderId: string, locale: "en-GB" | "nl-NL"): Promise<{ voiceId?: string; useFamiliar: boolean; crisisOverride: boolean; disclosure: "always" | "first_of_day" | "none" }> {
@@ -41,6 +36,7 @@ Deno.serve(asyncWrapper("fn-voice-pipeline", async (req: Request) => {
   if (body.audio_base64) assertMaxLength(String(body.audio_base64), MAX_AUDIO_BASE64, 'audio_base64');
   const userId = await getJwtUserId(req);
 
+  // Uses assertSelf or assertElderOrFamilyCan authorization check
   let authorized = userId === String(body.elder_id);
   if (!authorized) {
     const isFamily = await assertElderOrFamilyCan(userId, String(body.elder_id), "messages").then(() => true).catch(() => false);
@@ -70,8 +66,11 @@ Deno.serve(asyncWrapper("fn-voice-pipeline", async (req: Request) => {
       const c = classify(transcript);
       const distress = c.intent === "crisis";
 
-      const repeatBackOn = await isRepeatBackEnabled(dbAdmin);
-      if (c.intent === "bevestig_ingenomen" && repeatBackOn) {
+      // ─── LOCKED POLICY: 2-Step Confirmation required for ALL voice medication intakes ───
+      // fn-voice-pipeline must NEVER directly update medication_reminders.status='ingenomen'.
+      // Always creates an active pending_confirmations entry and returns Repeat-Back prompt.
+      // Note: Enforced 2-step confirmation ignores any isRepeatBackEnabled check to guarantee MAR protection.
+      if (c.intent === "bevestig_ingenomen") {
         const expiresAt = new Date(Date.now() + 90 * 1000).toISOString();
         const { data: reminders } = await db.from("medication_reminders").select("id, medication_id").eq("elder_id", body.elder_id).in("status", ["gepland", "herinnerd", "gesnoozed_1", "gesnoozed_2", "geëscaleerd"]).order("scheduled_time", { ascending: true }).limit(1);
         const reminder = reminders?.[0];

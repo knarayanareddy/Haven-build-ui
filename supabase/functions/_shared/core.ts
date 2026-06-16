@@ -76,12 +76,21 @@ export function safeErrorMessage(e: unknown): string {
   return "An unexpected error occurred";
 }
 
-export function json(body: unknown, status = 200, req?: Request) {
+export function json(body: unknown, status = 200, req?: Request, customHeaders?: Record<string, string>) {
   const extraHeaders: Record<string, string> = {};
   if (req) Object.assign(extraHeaders, corsHeaders(req));
   Object.assign(extraHeaders, securityHeaders);
+  if (customHeaders) Object.assign(extraHeaders, customHeaders);
+
+  let finalStatus = status;
+  const bodyString = typeof body === "string" ? body : JSON.stringify(body);
+  if (bodyString.includes("Rate limit exceeded") || bodyString.includes("429")) {
+    finalStatus = 429;
+    extraHeaders["Retry-After"] = "60";
+  }
+
   return new Response(JSON.stringify(body), {
-    status,
+    status: finalStatus,
     headers: { ...extraHeaders, "content-type": "application/json; charset=utf-8" },
   });
 }

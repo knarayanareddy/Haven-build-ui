@@ -13,6 +13,14 @@ interface TelemetryPostBody {
   payload: Record<string, unknown>;
 }
 
+interface SessionRow {
+  id: string;
+  profile_id: string;
+  device_secret: string;
+  revoked_at: string | null;
+  consecutive_auth_failures: number;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
@@ -30,7 +38,6 @@ Deno.serve(async (req: Request) => {
       const signature = req.headers.get("x-haven-device-signature");
       const db = admin();
 
-      // Closure Test 1: Unsigned telemetry -> 403
       if (!signature) {
         await db.from("security_violations").insert({
           error_code: "403_UNSIGNED",
@@ -42,7 +49,6 @@ Deno.serve(async (req: Request) => {
         throw new Error("403_UNSIGNED: Missing cryptographic hardware device attestation signature");
       }
 
-      // Closure Test 5: Spam burst -> rate limit triggers + security log entry
       try {
         await rateLimit(req, `telemetry_burst_${input.device_session_id}`, 10, 60);
       } catch (rateErr) {
@@ -59,12 +65,13 @@ Deno.serve(async (req: Request) => {
         throw err;
       }
 
-      // Closure Test 4: Revoked device_session -> reject telemetry
-      const { data: session } = await db
+      const { data: sessionData } = await db
         .from("device_sessions")
-        .select("id, profile_id, device_secret, revoked_at")
+        .select("id, profile_id, device_secret, revoked_at, consecutive_auth_failures")
         .eq("id", input.device_session_id)
         .maybeSingle();
+
+      const session = sessionData as SessionRow | null;
 
       if (!session) {
         throw new Error("403_SESSION_ERR: Hardware session non-existent");
@@ -73,7 +80,53 @@ Deno.serve(async (req: Request) => {
         throw new Error("403_REVOKED: Device session has been soft-revoked; active telemetry rejected");
       }
 
-      // Closure Test 3: Replay same nonce -> 403
+      // ─── Cryptographic Auth Failure Helper (Enforces R7 Auto-Revoke Policy) ───
+      const handleAuthFailure = async (reason: string) => {
+        const currentFailures = (session.consecutive_auth_failures ?? 0) + 1;
+        await db
+          .from("device_sessions")
+          .update({ consecutive_auth_failures: currentFailures })
+          .eq("id", input.device_session_id);
+
+        if (currentFailures >= 5) {
+          await db.from("device_sessions").update({ revoked_at: new Date().toISOString() }).eq("id", input.device_session_id);
+          
+          await db.from("security_violations").insert({
+            error_code: "AUTO_REVOKE_ATTACK_THRESHOLD",
+            actor_id: input.device_session_id,
+            table_name: "device_sessions",
+            attempted_action: "POST_TELEMETRY",
+            attempted_sql: "Automated session soft-revocation triggered after 5 consecutive cryptographic auth failures",
+            violation_reason: "AUTO_REVOKE_ATTACK_THRESHOLD",
+          });
+
+          const { data: family } = await db.from("family_relationships").select("family_member_id").eq("elder_id", session.profile_id).eq("elder_consented", true).eq("is_active", true);
+          await Promise.all((family ?? []).map((f) => dispatchNotification({
+            recipient_id: String(f.family_member_id),
+            elder_id: String(session.profile_id),
+            notification_type: "crisis_gedetecteerd",
+            title_nl: "Apparaat ingetrokken wegens mogelijke aanval",
+            title_en: "Device revoked due to potential attack",
+            body_nl: "HAVEN heeft de telefoon of het horloge uitgeschakeld na aanhoudende mislukte beveiligingscontroles.",
+            body_en: "HAVEN soft-revoked the phone or watch after continuous failed security attestations.",
+            data: { device_session_id: input.device_session_id, reason: "AUTO_REVOKE_ATTACK_THRESHOLD" },
+          })));
+
+          throw new Error("403_REVOKED: Automated session soft-revocation triggered due to attack detection threshold");
+        } else {
+          await db.from("security_violations").insert({
+            error_code: "403_AUTH_FAILURE",
+            actor_id: input.device_session_id,
+            table_name: "device_health_telemetry",
+            attempted_action: "POST_TELEMETRY",
+            attempted_sql: `Auth failure #${currentFailures}: ${reason}`,
+            violation_reason: reason,
+          });
+          throw new Error("403_AUTH_FAILURE: Cryptographic telemetry attestation failure");
+        }
+      };
+
+      // Replay check
       const { data: existingNonce } = await db
         .from("device_telemetry_nonces")
         .select("nonce")
@@ -81,41 +134,24 @@ Deno.serve(async (req: Request) => {
         .maybeSingle();
 
       if (existingNonce) {
-        await db.from("security_violations").insert({
-          error_code: "403_REPLAY_ATTACK",
-          actor_id: input.device_session_id,
-          table_name: "device_telemetry_nonces",
-          attempted_action: "POST_TELEMETRY",
-          attempted_sql: `Replay of already captured nonce ${input.nonce}`,
-          violation_reason: "Replay protection validation halted execution; identical nonce cannot be reused",
-        });
-        throw new Error("403_REPLAY_ATTACK: Telemetry Replay attack detected");
+        await handleAuthFailure(`Replay attack detected with nonce ${input.nonce}`);
       }
 
-      // Verify temporal window (+/- 5 minutes)
       const reqTime = new Date(input.timestamp).getTime();
       if (Math.abs(Date.now() - reqTime) > 300_000) {
-        throw new Error("403_STALE: Timestamp outside allowed +/- 5 minute execution drift");
+        await handleAuthFailure("Timestamp outside allowed +/- 5 minute execution drift");
       }
 
-      // Closure Test 2: Bad signature -> 403
+      // HMAC check
       const payloadString = typeof input.payload === "string" ? input.payload : JSON.stringify(input.payload);
       const expectedRaw = `${input.device_session_id}:${input.nonce}:${input.timestamp}:${payloadString}`;
       const expectedSig = await sha256(`${expectedRaw}:${session.device_secret}`);
 
       if (signature !== expectedSig) {
-        await db.from("security_violations").insert({
-          error_code: "403_BAD_SIGNATURE",
-          actor_id: input.device_session_id,
-          table_name: "device_health_telemetry",
-          attempted_action: "POST_TELEMETRY",
-          attempted_sql: `HMAC verification failed for payload hash ${await sha256(payloadString)}`,
-          violation_reason: "Cryptographic HMAC device attestation signature mismatch",
-        });
-        throw new Error("403_BAD_SIGNATURE: Invalid hardware device signature");
+        await handleAuthFailure("HMAC-SHA256 cryptographic attestation signature mismatch");
       }
 
-      // Store nonces for replay rejection with a 15-minute TTL
+      // Capture nonce
       const nonceExp = new Date(Date.now() + 900_000).toISOString();
       await db.from("device_telemetry_nonces").insert({
         nonce: input.nonce,
@@ -123,8 +159,8 @@ Deno.serve(async (req: Request) => {
         expires_at: nonceExp,
       });
 
-      // Flawlessly update operational session status
-      await db.from("device_sessions").update({ last_seen_at: new Date().toISOString() }).eq("id", input.device_session_id);
+      // Reset failure counter on verified successful authentications
+      await db.from("device_sessions").update({ consecutive_auth_failures: 0, last_seen_at: new Date().toISOString() }).eq("id", input.device_session_id);
 
       await recordMetric("fn-device-health-monitor", started, "success");
       return json({ ok: true, status: "telemetry_verified", device_session_id: session.id }, 200, req);
@@ -194,8 +230,8 @@ Deno.serve(async (req: Request) => {
           .select("family_member_id").eq("elder_id", elder.id).eq("elder_consented", true).eq("is_active", true).eq("notify_on_crisis", true);
         for (const f of family ?? []) {
           await dispatchNotification({
-            recipient_id: f.family_member_id,
-            elder_id: elder.id,
+            recipient_id: String(f.family_member_id),
+            elder_id: String(elder.id),
             notification_type: "welzijnscheck",
             title_nl: "HAVEN heeft al twee dagen geen contact",
             title_en: "HAVEN has been offline for 2 days",
@@ -204,8 +240,8 @@ Deno.serve(async (req: Request) => {
             data: { device_session_id: session.id, severity: "p0" },
           });
         }
-        escalations.push(elder.id);
-        familyNotified.push(...(family ?? []).map((f) => f.family_member_id));
+        escalations.push(String(elder.id));
+        familyNotified.push(...(family ?? []).map((f) => String(f.family_member_id)));
         continue;
       }
 
@@ -225,8 +261,8 @@ Deno.serve(async (req: Request) => {
           .select("family_member_id").eq("elder_id", elder.id).eq("elder_consented", true).eq("is_active", true);
         for (const f of family ?? []) {
           await dispatchNotification({
-            recipient_id: f.family_member_id,
-            elder_id: elder.id,
+            recipient_id: String(f.family_member_id),
+            elder_id: String(elder.id),
             notification_type: "welzijnscheck",
             title_nl: "HAVEN heeft vandaag niet gecheckt",
             title_en: "HAVEN hasn't checked in today",
@@ -235,7 +271,7 @@ Deno.serve(async (req: Request) => {
             data: { device_session_id: session.id, severity: "p1" },
           });
         }
-        familyNotified.push(...(family ?? []).map((f) => f.family_member_id));
+        familyNotified.push(...(family ?? []).map((f) => String(f.family_member_id)));
         continue;
       }
 

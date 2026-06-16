@@ -1,5 +1,6 @@
 import { admin, corsHeaders, json, readRequestBody, recordMetric, safeErrorMessage } from "../_shared/core.ts";
 import { captureException } from "../_shared/sentry.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 const REDIS_URL = Deno.env.get("UPSTASH_REDIS_URL");
 const REDIS_TOKEN = Deno.env.get("UPSTASH_REDIS_TOKEN");
@@ -9,6 +10,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
+    await rateLimit(req, "fn-banking-ingress-buffer", 100, 60);
     const rawPayload = await readRequestBody(req);
     const integrationKey = req.headers.get("x-haven-integration-key") ?? "psd2_default";
 

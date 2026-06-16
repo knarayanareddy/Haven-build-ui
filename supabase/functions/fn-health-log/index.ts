@@ -1,11 +1,13 @@
 import { admin, cors, corsHeaders, dispatchNotification, json, readJsonBody, recordMetric, requireFields, safeErrorMessage, userClient } from "../_shared/core.ts";
 import { assertSelf, getJwtUserId } from "../_shared/authz.ts";
 import { validateBody } from "../_shared/validation.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
+    await rateLimit(req, "fn-health-log");
     const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, { elder_id: 'uuid', kind: 'string' }, { allowUnknown: true });
     const userId = await getJwtUserId(req);
@@ -22,7 +24,7 @@ Deno.serve(async (req) => {
       if (error) throw error;
       result = data;
       if (Number(body.appetite_score ?? 5) <= 2) {
-        const { data: family } = await admin().from("family_relationships").select("family_member_id").eq("elder_id", userId).eq("elder_consented", true).eq("is_active", true).eq("notify_on_crisis", true);
+        const { data: family } = await db.from("family_relationships").select("family_member_id").eq("elder_id", userId).eq("elder_consented", true).eq("is_active", true).eq("notify_on_crisis", true);
         await Promise.all((family ?? []).map((f) => dispatchNotification({ recipient_id: f.family_member_id, elder_id: userId, notification_type: "welzijnscheck", title_nl: "Eetlust laag", title_en: "Low appetite", body_nl: "HAVEN merkte een lage eetlust op. Een rustig telefoontje kan fijn zijn.", body_en: "HAVEN noticed low appetite. A calm call may help.", data: { nutrition_log_id: data.id } })));
       }
     } else if (body.kind === "vital") {

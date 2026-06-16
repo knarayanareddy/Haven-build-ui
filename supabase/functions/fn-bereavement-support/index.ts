@@ -1,4 +1,4 @@
-import { cors, corsHeaders, dispatchNotification, json, readJsonBody, recordMetric, safeErrorMessage, userClient } from "../_shared/core.ts";
+import { admin, cors, corsHeaders, dispatchNotification, json, readJsonBody, recordMetric, safeErrorMessage, userClient } from "../_shared/core.ts";
 import { assertCarerCan, assertElderOrFamilyCan, assertSelf, getJwtUserId } from "../_shared/authz.ts";
 import { validateBody } from "../_shared/validation.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
@@ -21,8 +21,8 @@ Deno.serve(async (req) => {
     }
     if (String(body.logged_by_id) !== userId) throw new Error('logged_by_id must match the authenticated caller');
 
-    // P1-18 FIX: Use userClient(req) — respects RLS for elder_profiles update
-    const db = userClient(req);
+    // P1-18 FIX: Use admin() for writes since carers/family do not own elder_profiles or bereavement_events under RLS
+    const db = admin();
     const until = body.tone_adjustment_until ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
     const { data: event, error } = await db.from('bereavement_events').insert({

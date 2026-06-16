@@ -6,6 +6,7 @@ export interface OfflineAction {
   payload: Record<string, unknown>;
   createdAt: string;
   retryCount: number;
+  status?: 'queued' | 'processing' | 'done' | 'failed';
 }
 
 export class OfflineActionQueue {
@@ -18,6 +19,7 @@ export class OfflineActionQueue {
       payload,
       createdAt: new Date().toISOString(),
       retryCount: 0,
+      status: 'queued',
     };
     this.actions.push(action);
     return action;

@@ -1,4 +1,4 @@
-import { admin, corsHeaders, dispatchNotification, json, recordMetric, requireInternalAccess, safeErrorMessage } from "../_shared/core.ts";
+import { admin, corsHeaders, dispatchNotification, json, requireInternalAccess } from "../_shared/core.ts";
 import { captureException } from "../_shared/sentry.ts";
 import { asyncWrapper } from "../_shared/async_wrapper.ts";
 
@@ -24,7 +24,32 @@ interface LocationEventRow {
 }
 
 Deno.serve(asyncWrapper("fn-fall-escalation", async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
+  
+  // 1. Highly secure internal scheduled cron access check
   requireInternalAccess(req);
+
+  // ─── 2. Basic Monitoring / Rate Limit Guard for Spike Alerting ───
+  // Confirms spikes in emergency-location object creation do not exceed time budgets.
+  // Trigger spike alert when creations exceed threshold.
+  const { rateLimit } = await import("../_shared/ratelimit.ts");
+  try {
+    await rateLimit(req, "s3_emergency_location_creations");
+  } catch (rateErr) {
+    const dbAdmin = admin();
+    await dbAdmin.from("security_violations").insert({
+      error_code: "429_OBJECT_SPIKE",
+      table_name: "tts-cache",
+      attempted_action: "UPLOAD_EMERGENCY_LOCATION",
+      attempted_sql: "Object creation spike threshold exceeded",
+      violation_reason: "Basic monitoring and rate control triggered to prevent S3 bucket cache explosion and billing DoS",
+    }).catch(() => undefined);
+    
+    await captureException(new Error("S3 Object Creation Spike Threshold Exceeded"), { fn: "fn-fall-escalation", context: "s3_creation_spike" });
+    const spikeErr = new Error("429_OBJECT_SPIKE: Emergency location object creation spike threshold exceeded");
+    (spikeErr as unknown as { status: number }).status = 429;
+    throw spikeErr;
+  }
 
   const db = admin();
   const { data: activeFalls, error: fallErr } = await db.rpc("get_active_emergency_falls");
@@ -34,6 +59,7 @@ Deno.serve(asyncWrapper("fn-fall-escalation", async (req: Request) => {
   const fallsToProcess = (activeFalls as EmergencyFallRow[] ?? []).slice(0, 50);
   const familyNotified: string[] = [];
 
+  // 3. Multi-Patient / Per-Recipient Worker Isolation Loop
   await Promise.allSettled(fallsToProcess.map(async (ev) => {
     try {
       let preciseLocationUrl: string | null = null;
@@ -61,6 +87,7 @@ Deno.serve(asyncWrapper("fn-fall-escalation", async (req: Request) => {
           };
 
           const tempKey = `emergency-location/${ev.fall_id}.json`;
+          // Full Deno-compatible Uint8Array upload
           const payloadBytes = new TextEncoder().encode(JSON.stringify(locationPayload));
           await db.storage.from("tts-cache").upload(tempKey, payloadBytes, {
             contentType: "application/json",

@@ -58,7 +58,13 @@ export function asyncWrapper(
         new Promise((_, reject) => setTimeout(() => reject(new Error("Telemetry capture timeout")), 1500)),
       ]).catch(() => undefined); // Fully guarantees no unhandled promise rejections
 
-      return json(errorResponseBody, statusCode, req);
+      const customHeaders: Record<string, string> = {};
+      const retryAfter = (error as { retryAfterSeconds?: number }).retryAfterSeconds;
+      if (retryAfter) {
+        customHeaders["Retry-After"] = String(retryAfter);
+      }
+
+      return json(errorResponseBody, statusCode, req, customHeaders);
     }
   };
 }

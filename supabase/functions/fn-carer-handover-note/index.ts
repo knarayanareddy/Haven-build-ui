@@ -43,14 +43,37 @@ Deno.serve(async (req: Request) => {
     rawBodyPayload = body;
 
     // ─── Authoritative Server-Side BSN Guard ───
-    // Directly blocks BSN variants (digits, delimited, spaces, zero-width)
-    // with 422 before any processing or relational writing.
     assertNoBsnInPayload(body); // Enforces assertNoBsnText properties fundamentally
 
     validateBody(body, { elder_id: "uuid", appetite: "number", mood: "number" }, { allowUnknown: true });
 
     const userId = await getJwtUserId(req);
     await assertCarerCan(userId, String(body.elder_id));
+
+    // ─── Scope R6 Fix: Post-Erasure Identity Check ───
+    // Query profiles.status for the elder_id in the request body
+    // If status != 'active' -> return 403 immediately; no DB write
+    // Log rejection to audit_log
+    const dbAdmin = admin();
+    const { data: targetProfile } = await dbAdmin
+      .from("profiles")
+      .select("status")
+      .eq("id", body.elder_id)
+      .maybeSingle();
+
+    if (targetProfile?.status !== "active") {
+      await dbAdmin.from("audit_log").insert({
+        actor_id: userId,
+        actor_role: "carer_professional",
+        action: "POST_ERASURE_WRITE_REJECTION",
+        table_name: "carer_handover_notes",
+        elder_id: String(body.elder_id),
+        extra: { reason: "Attempted to sync offline capture entries for an already erased or suspended older adult entity", profile_status: targetProfile?.status },
+      }).catch(() => undefined);
+      const err = new Error("403 Forbidden: Targeted older adult entity has been erased or suspended; write rejected");
+      (err as unknown as { status: number }).status = 403;
+      throw err;
+    }
 
     if (body.notes_nl || body.notes_en) {
       assertMaxLength(String(body.notes_nl ?? ""), MAX_STRING_FIELD, "notes_nl");
@@ -79,7 +102,6 @@ Deno.serve(async (req: Request) => {
 
         const db = userClient(req);
         if (administeredMedicationId) {
-          const dbAdmin = admin();
           const { data: adminMed } = await dbAdmin
             .from("medications")
             .select("name_nl")
@@ -169,10 +191,10 @@ Deno.serve(async (req: Request) => {
     return json(result.body, result.status ?? 200, req);
   } catch (error) {
     const isBsnErr = (error as { isBsnViolation?: boolean }).isBsnViolation;
-    const status = (error as { status?: number }).status ?? 400;
+    const isR6Err = String((error as Error).message ?? error).includes("403 Forbidden: Targeted older adult");
+    const status = (error as { status?: number }).status ?? (isR6Err ? 403 : 400);
     const cleanErr = isBsnErr ? "422: Prohibited Dutch Citizen Service Number (BSN) detected." : safeErrorMessage(error);
 
-    // Scrubber helper absolutely removes 9-digit BSN candidates from logged items
     const scrubbedBody = scrubBsnFromLogs(rawBodyPayload);
     await captureException(new Error(cleanErr), { fn: "fn-carer-handover-note", payload: scrubbedBody });
     await recordMetric("fn-carer-handover-note", started, "error");

@@ -4,10 +4,9 @@ import { assertElderOrFamilyCan, assertCarerCan, getJwtUserId } from "../_shared
 import { validateBody, assertMaxLength, MAX_AUDIO_BASE64 } from "../_shared/validation.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
-import { assertNoBsnInPayload } from "../_shared/bsn_guard.ts";
+import { assertNoBsnInPayload, scrubBsnFromLogs } from "../_shared/bsn_guard.ts";
 import { asyncWrapper } from "../_shared/async_wrapper.ts";
 
-// Uses assertSelf or assertElderOrFamilyCan authorization check
 function classify(transcript: string) {
   const t = transcript.toLowerCase();
   if (/(ingenomen|taken|done|klaar)/.test(t)) return { intent: "bevestig_ingenomen", action: "CONFIRM_MEDICATION_TAKEN" };
@@ -63,11 +62,47 @@ Deno.serve(asyncWrapper("fn-voice-pipeline", async (req: Request) => {
 
       assertNoBsnInPayload({ transcript });
 
+      // ─── COMPENSATING CONTROL — full fix tracked in R2 (NeMo/Llama-Guard) ───
+      // Dutch negative keyword/phrase list check filtering adversarial STT audio overrides
+      // BEFORE intent classification executes.
+      const BANNED_STT_PHRASES = [
+        "negeer", "vergeet vorige", "ignore", "forget previous", 
+        "bevestig direct", "confirm immediately", "override", 
+        "system prompt", "negeer eerdere", "vergeet alles",
+        "altijd ingenomen", "log direct"
+      ];
+      
+      const lowerTrans = transcript.toLowerCase();
+      const hasBannedPhrase = BANNED_STT_PHRASES.some((phrase) => lowerTrans.includes(phrase));
+      const hasUnusualMarCommand = /(medicatie|pillen|furosemide|insuline).*(direct|altijd|negeer|forceer)/.test(lowerTrans);
+
+      if (hasBannedPhrase || hasUnusualMarCommand) {
+        await dbAdmin.from("audit_log").insert({
+          actor_id: userId,
+          actor_role: "elder",
+          action: "VOICE_STT_HIJACKING_REJECTION",
+          table_name: "medication_reminders",
+          elder_id: String(body.elder_id),
+          extra: { transcript, rejection_reason: "Adversarial STT prompt injection or override pattern intercepted" },
+        }).catch(() => undefined);
+
+        return { 
+          body: { 
+            transcript, 
+            intent: "hijacking_attempt", 
+            response_text: locale === "nl-NL" ? "Ik kan dit verzoek niet uitvoeren om de medische veiligheid te waarborgen." : "I cannot fulfill this request to guarantee medical safety.", 
+            action_taken: "PIPELINE_HALTED", 
+            audio_url: null, 
+            distress_detected: false 
+          } 
+        };
+      }
+      // ────────────────────────────────────────────────────────────────────────
+
       const c = classify(transcript);
       const distress = c.intent === "crisis";
 
       // ─── LOCKED POLICY: 2-Step Confirmation required for ALL voice medication intakes ───
-      // fn-voice-pipeline must NEVER directly update medication_reminders.status='ingenomen'.
       // Always creates an active pending_confirmations entry and returns Repeat-Back prompt.
       // Note: Enforced 2-step confirmation ignores any isRepeatBackEnabled check to guarantee MAR protection.
       if (c.intent === "bevestig_ingenomen") {

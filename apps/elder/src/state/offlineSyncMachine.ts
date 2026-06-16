@@ -1,5 +1,5 @@
 import { HavenClient } from '../services/havenClient';
-import { completeOfflineAction, incrementOfflineRetry, listOfflineActions } from '../services/sqliteOfflineQueue';
+import { claimNextOfflineAction, completeOfflineAction, markOfflineActionFailed } from '../services/sqliteOfflineQueue';
 import { resilientCall } from './networkResilience';
 
 export type SyncState = 'idle' | 'syncing' | 'paused_offline' | 'failed';
@@ -10,18 +10,22 @@ export class OfflineSyncMachine {
 
   async sync(client: HavenClient) {
     this.state = 'syncing';
-    const actions = listOfflineActions();
-    for (const action of actions) {
+    let action = claimNextOfflineAction();
+
+    while (action !== null) {
       try {
+        // Enforce idempotency_key usage on backend server submissions
+        const payloadWithIdem = { ...(action.payload as any), idempotency_key: action.idempotencyKey };
         await resilientCall(async () => {
-          if (action.type === 'CONFIRM_MEDICATION') return client.voice({ ...(action.payload as any), transcript_text: 'I took it' });
-          if (action.type === 'SEND_MESSAGE') return client.sendFamilyMessage(action.payload);
-          if (action.type === 'WELLNESS_CHECKIN') return client.healthLog(action.payload);
-          return client.screenData(action.payload);
+          if (action!.type === 'CONFIRM_MEDICATION') return client.voice({ ...payloadWithIdem, transcript_text: 'I took it' });
+          if (action!.type === 'SEND_MESSAGE') return client.sendFamilyMessage(payloadWithIdem);
+          if (action!.type === 'WELLNESS_CHECKIN') return client.healthLog(payloadWithIdem);
+          return client.screenData(payloadWithIdem);
         });
         completeOfflineAction(action.idempotencyKey);
+        action = claimNextOfflineAction();
       } catch (_) {
-        incrementOfflineRetry(action.idempotencyKey);
+        markOfflineActionFailed(action.idempotencyKey);
         this.state = 'failed';
         return;
       }

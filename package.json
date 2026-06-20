@@ -31,6 +31,7 @@
     "verify:supabase:local": "./scripts/ci/verify-local-supabase.sh",
     "staging:mint-jwts": "node scripts/ci/mint-staging-auth-jwts.mjs --write",
     "smoke:hosted": "./scripts/ci/smoke-hosted-integrations.sh",
+    "smoke:vendors:staging": "node scripts/ci/smoke-vendors-staging.mjs",
     "build": "corepack pnpm run build:family"
   },
   "workspaces": [

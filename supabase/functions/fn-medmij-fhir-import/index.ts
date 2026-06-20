@@ -21,6 +21,7 @@ interface ImportRequestBody {
 
 Deno.serve(asyncWrapper("fn-medmij-fhir-import", async (req: Request) => {
   const started = Date.now();
+  let requestElderId: string | null = null;
   try {
     if (req.headers.get('x-haven-internal-key') || req.headers.get('x-internal-key')) {
       requireInternalAccess(req);
@@ -30,6 +31,7 @@ Deno.serve(asyncWrapper("fn-medmij-fhir-import", async (req: Request) => {
 
     const body = await readJsonBody(req) as Record<string, unknown>;
     const input = body as unknown as ImportRequestBody;
+    requestElderId = typeof body.elder_id === "string" ? body.elder_id : null;
 
     requireFields(body, ["elder_id", "resources"]);
 
@@ -61,7 +63,7 @@ Deno.serve(asyncWrapper("fn-medmij-fhir-import", async (req: Request) => {
         const medText = resource.medicationCodeableConcept?.text ?? resource.medicationReference?.display ?? 'Medicijn uit MedMij';
         const dosage = resource.dosageInstruction?.[0]?.text ?? 'Controleer dosering';
 
-        await db.from("fhir_medication_staging").insert({
+        const { error: stagingError } = await db.from("fhir_medication_staging").upsert({
           elder_id: input.elder_id,
           fhir_job_id: job.id,
           resource_id_hash: resourceHash,
@@ -70,7 +72,9 @@ Deno.serve(asyncWrapper("fn-medmij-fhir-import", async (req: Request) => {
           extracted_dosage_nl: dosage,
           proposed_schedule_times: ["08:00"],
           status: "pending_review",
-        }).catch(() => undefined); // Upsert / dedupe best effort
+        }, { onConflict: "elder_id,resource_id_hash" });
+
+        if (stagingError) throw stagingError;
 
         stagedMeds++;
       }
@@ -114,6 +118,15 @@ Deno.serve(asyncWrapper("fn-medmij-fhir-import", async (req: Request) => {
       appointments_mapped: mappedAppts 
     }, 200, req);
   } catch (error) {
+    try {
+      if (requestElderId) {
+        await admin().from("fhir_import_jobs")
+          .update({ status: "failed", error_message: safeErrorMessage(error), completed_at: new Date().toISOString() })
+          .eq("elder_id", requestElderId)
+          .eq("status", "running")
+          .is("completed_at", null);
+      }
+    } catch (_) { /* best-effort failure ledger */ }
     await recordMetric('fn-medmij-fhir-import', started, 'error');
     return json({ error: safeErrorMessage(error) }, 400, req);
   }

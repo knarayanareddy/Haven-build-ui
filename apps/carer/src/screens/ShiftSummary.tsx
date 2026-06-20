@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { useTranslation } from '@haven/i18n';
@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { useResponsiveLayout } from '../services/platform';
 import { useAccessibilityInfo } from '../services/accessibility';
 import { FloatingVoiceButton } from '../components/FloatingVoiceButton';
+import { CarerClient } from '../services/havenClient';
 
 interface SummaryEntry {
   elder_id: string;
@@ -21,20 +22,65 @@ interface SummaryEntry {
 export function ShiftSummary() {
   const { session } = useAuth();
   const { locale, t } = useTranslation();
-  
-  const DEMO_SUMMARY: SummaryEntry[] = [
-    { elder_id: '00000000-0000-0000-0000-000000000001', elder_name: 'Margreet Bakker', visits: 1, meds_given: 3, meds_missed: 0, incidents: 0, recommendation: { level: 'rustig', label_key: 'summary.rec.calm' }, last_note: 'Stemming rustig. Medicatie afgerond.' },
-    { elder_id: '11111111-0000-0000-0000-000000000002', elder_name: 'Jan de Vries', visits: 1, meds_given: 2, meds_missed: 1, incidents: 0, recommendation: { level: 'aandacht', label_key: 'summary.rec.attention' }, last_note: 'Mobiliteit verminderd.' },
-    { elder_id: '22222222-0000-0000-0000-000000000003', elder_name: 'Ans Smit', visits: 0, meds_given: 0, meds_missed: 0, incidents: 1, recommendation: { level: 'urgent', label_key: 'summary.rec.urgent' }, last_note: 'Val gemeld in badkamer.' },
-  ];
 
-  const [summary, setSummary] = useState<SummaryEntry[]>(DEMO_SUMMARY);
+  const elderIds = useMemo(() => (process.env.EXPO_PUBLIC_CARER_ELDER_IDS ?? '').split(',').map((id) => id.trim()).filter(Boolean), []);
+  const [summary, setSummary] = useState<SummaryEntry[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [shareReady, setShareReady] = useState(false);
-  const [selectedElderId, setSelectedElderId] = useState<string>(DEMO_SUMMARY[0].elder_id);
+  const [selectedElderId, setSelectedElderId] = useState<string | null>(null);
 
   const { isIpad, isLandscape } = useResponsiveLayout();
   const { textMultiplier } = useAccessibilityInfo();
-  void session;
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadSummary() {
+      if (!session || elderIds.length === 0) {
+        setSummary([]);
+        setSelectedElderId(null);
+        return;
+      }
+      try {
+        const client = new CarerClient({ supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!, accessToken: session.access_token });
+        const shiftEnd = new Date().toISOString();
+        const shiftStart = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
+        const rows = await Promise.all(elderIds.map(async (elderId) => {
+          const result = await client.shiftSummary(elderId, shiftStart, shiftEnd);
+          const live = result.summary as {
+            visits_completed?: number;
+            medications_administered?: number;
+            incidents_reported?: number;
+            outstanding_tasks?: unknown[];
+            recommendation?: { level?: string };
+            handover_notes?: Array<{ concerns_nl: string | null }>;
+          };
+          const level = live.recommendation?.level ?? 'rustig';
+          return {
+            elder_id: elderId,
+            elder_name: elderId,
+            visits: Number(live.visits_completed ?? 0),
+            meds_given: Number(live.medications_administered ?? 0),
+            meds_missed: live.outstanding_tasks?.length ?? 0,
+            incidents: Number(live.incidents_reported ?? 0),
+            recommendation: {
+              level,
+              label_key: level === 'urgent' ? 'summary.rec.urgent' : level === 'aandacht' ? 'summary.rec.attention' : 'summary.rec.calm',
+            },
+            last_note: live.handover_notes?.[0]?.concerns_nl ?? null,
+          };
+        }));
+        if (mounted) {
+          setSummary(rows);
+          setSelectedElderId(rows[0]?.elder_id ?? null);
+          setLoadError(null);
+        }
+      } catch (error) {
+        if (mounted) setLoadError(String((error as Error).message ?? error));
+      }
+    }
+    loadSummary();
+    return () => { mounted = false; };
+  }, [elderIds, session]);
 
   const formatNum = (num: number) => new Intl.NumberFormat(locale).format(num);
 
@@ -47,6 +93,20 @@ export function ShiftSummary() {
   const selectedEntry = summary.find((s) => s.elder_id === selectedElderId) ?? summary[0];
 
   const isSplitView = isIpad && isLandscape;
+
+  if (summary.length === 0) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.linen, padding: 20, justifyContent: 'center' }}>
+        <View style={{ borderRadius: 22, padding: 20, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 10 }}>
+          <Text accessibilityRole="header" style={{ fontSize: 28 * textMultiplier, fontWeight: '900', color: colors.ink }}>{t('summary.title')}</Text>
+          <Text style={{ fontSize: 16 * textMultiplier, color: colors.graphite, fontWeight: '700' }}>
+            {!session ? 'Log in om de live dienstsamenvatting te laden.' : elderIds.length === 0 ? 'Configureer EXPO_PUBLIC_CARER_ELDER_IDS om toegewezen ouderen te laden.' : loadError ?? 'Geen dienstgegevens gevonden.'}
+          </Text>
+        </View>
+        <FloatingVoiceButton />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.linen }}>

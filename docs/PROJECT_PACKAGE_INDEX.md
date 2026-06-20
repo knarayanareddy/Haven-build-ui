@@ -9,8 +9,8 @@ This document is the top-level index for the HAVEN production-shaped package.
 3. `docs/implementation/DESIGN_DOC_DIFF.md` — design-doc-to-build coverage diff.
 4. `docs/implementation/PHASE_COVERAGE_AUDIT.md` — phase-by-phase implementation audit.
 5. `docs/implementation/HARDENING_CLOSURE_REPORT.md` — v1.2.1 P0 hardening closure.
-6. `docs/implementation/VNEXT_PATCH_DESIGN.md` — vNext Well-Rounded Patch directive.
-7. `docs/implementation/VNEXT_IMPLEMENTATION_REPORT.md` — vNext acceptance criteria + honest remaining gaps.
+6. `docs/implementation/VNEXT_IMPLEMENTATION_REPORT.md` — vNext acceptance criteria + June 20 current-state addendum.
+7. `docs/PRODUCTION_READINESS_CHECKLIST.md` — current production readiness gates.
 8. `docs/implementation/GAP_CLOSURE_REPORT.md` — earlier scaffold→real gap closure.
 
 ## App surfaces
@@ -22,16 +22,17 @@ This document is the top-level index for the HAVEN production-shaped package.
 | Admin console | `apps/admin-console/index.html` | Compliance/release/admin view |
 | Carer portal | `apps/carer-portal/index.html` | WACHT professional care surface (handover notes + MAR-light + offline queue per vNext) |
 | Browser Shield | `apps/browser-shield` | Manifest V3 browser protection scaffold |
-| Elder app | `apps/elder` | Expo app scaffold |
-| Family app | `apps/family` | Next.js dashboard scaffold |
-| Grandchild app | `apps/grandchild` | Child-friendly companion scaffold |
+| Elder app | `apps/elder` | Expo elder app |
+| Carer app | `apps/carer` | Expo carer app |
+| Family app | `apps/family` | Next.js dashboard |
+| Grandchild app | `apps/grandchild` | Child-friendly companion app |
 
 ## Backend
 
 | Area | Path |
 |---|---|
-| Supabase migrations (13 total) | `supabase/migrations` |
-| Edge Functions (72 total) | `supabase/functions` |
+| Supabase migrations | `supabase/migrations` |
+| Edge Functions (81 total) | `supabase/functions` |
 | Local seed data | `supabase/seed.sql` |
 | Supabase local config | `supabase/config.toml` |
 | Function catalog | `docs/api/EDGE_FUNCTION_CATALOG.md` |
@@ -42,11 +43,12 @@ This document is the top-level index for the HAVEN production-shaped package.
 
 | Layer | Path |
 |---|---|
-| Suite validation (every required file + 72 functions + 13 migrations) | `corepack pnpm run validate:suite` |
+| Suite validation (current required files + 81 functions) | `corepack pnpm run validate:suite` |
 | Edge / behavioural tests (scam, schema, hardening markers, authz behaviour, vNext RLS) | `corepack pnpm run test:edge` |
 | RLS audits (forced RLS + storage policies) | `corepack pnpm run test:rls` |
 | E2E smoke + Playwright | `corepack pnpm run test:e2e` |
 | Live RLS (secret-gated, against real Supabase) | `HAVEN_LIVE_RLS=1 corepack pnpm run test:integration:live` |
+| Hosted smoke (secret-gated, against hosted Supabase) | `corepack pnpm run smoke:hosted` |
 
 ## Packages
 

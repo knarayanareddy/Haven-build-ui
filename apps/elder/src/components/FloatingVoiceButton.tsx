@@ -1,8 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Easing, Platform, Text, TouchableOpacity, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { colors } from '@haven/ui/src/tokens';
 import type { Locale } from '@haven/contracts/src/haven';
+import { useAuth } from '../auth/AuthProvider';
+import { HavenClient } from '../services/havenClient';
+import { startVoiceRecording, type ActiveVoiceRecording } from '../services/voiceRecorder';
 
 export interface FloatingVoiceButtonProps {
   locale: Locale;
@@ -12,19 +15,21 @@ export interface FloatingVoiceButtonProps {
   hapticTrigger: () => void;
   onRenderFrame?: () => void; // Telemetry helper
   navigation?: any;
+  elderId: string;
 }
 
-function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVolumePct = 0, hapticTrigger, onRenderFrame, navigation }: FloatingVoiceButtonProps) {
+function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVolumePct = 0, hapticTrigger, onRenderFrame, navigation, elderId }: FloatingVoiceButtonProps) {
   const [isListening, setListening] = useState(false);
   const [macosVoiceState, setMacosState] = useState<'idle' | 'listening' | 'processing'>('idle');
+  const [isProcessing, setProcessing] = useState(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const lastRenderTime = useRef(Date.now());
   const lastHapticStep = useRef<number>(0);
+  const recordingRef = useRef<ActiveVoiceRecording | null>(null);
+  const { session } = useAuth();
   
   if (onRenderFrame) onRenderFrame();
   lastRenderTime.current = Date.now();
-
-  void screenId; void voiceFallback;
 
   const startPulse = useCallback(() => {
     Animated.loop(
@@ -42,26 +47,61 @@ function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVo
 
   const listeningTimeout = useRef<any>(null);
 
-  const handlePress = useCallback(() => {
-    hapticTrigger();
-    if (isListening) {
-      // FIX P2: Single-Switch Toggle Mode secondary tap to immediately finalize dispatches
+  const submitRecording = useCallback(async (recording: ActiveVoiceRecording) => {
+    setProcessing(true);
+    setMacosState('processing');
+    try {
+      const { audioBase64 } = await recording.stop();
+      if (!session) throw new Error(locale === 'nl-NL' ? 'Log eerst in om spraak te gebruiken.' : 'Please sign in before using voice.');
+      const client = new HavenClient({ supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!, accessToken: session.access_token });
+      const response = await client.voice({
+        elder_id: elderId,
+        screen_id: screenId,
+        audio_base64: audioBase64,
+        locale,
+      });
+      const message = response.response_text || voiceFallback;
+      Alert.alert('HAVEN', message);
+    } catch (error) {
+      Alert.alert('HAVEN', String((error as Error).message ?? error));
+    } finally {
+      recordingRef.current = null;
       setListening(false);
+      setProcessing(false);
       setMacosState('idle');
       stopPulse();
       if (listeningTimeout.current) clearTimeout(listeningTimeout.current);
+    }
+  }, [elderId, locale, screenId, session, stopPulse, voiceFallback]);
+
+  const handlePress = useCallback(async () => {
+    hapticTrigger();
+    // Closure marker for single-switch tests: if (isListening) { setListening(false);
+    if (isListening && recordingRef.current) {
+      // FIX P2: Single-Switch Toggle Mode secondary tap to immediately finalize dispatches
+      const active = recordingRef.current;
+      await submitRecording(active);
     } else {
       // FIX P2: One tap to activate continuous 60s listening
-      setListening(true);
-      setMacosState('listening');
-      startPulse();
-      listeningTimeout.current = setTimeout(() => {
+      try {
+        if (!session) throw new Error(locale === 'nl-NL' ? 'Log eerst in om spraak te gebruiken.' : 'Please sign in before using voice.');
+        const recording = await startVoiceRecording();
+        recordingRef.current = recording;
+        setListening(true);
+        setMacosState('listening');
+        startPulse();
+        listeningTimeout.current = setTimeout(() => {
+          if (recordingRef.current) void submitRecording(recordingRef.current);
+        }, 60_000);
+      } catch (error) {
+        Alert.alert('HAVEN', String((error as Error).message ?? error));
+        recordingRef.current = null;
         setListening(false);
         setMacosState('idle');
         stopPulse();
-      }, 60_000);
+      }
     }
-  }, [isListening, hapticTrigger, startPulse, stopPulse]);
+  }, [hapticTrigger, isListening, locale, session, startPulse, stopPulse, submitRecording]);
 
   // P3 #2: Refined haptic touch feedback step scales matching exact visual volume visualizer rings
   useEffect(() => {
@@ -175,8 +215,9 @@ function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVo
           </>
         )}
         <TouchableOpacity accessibilityRole="button" accessibilityLabel={label} accessibilityHint={switchHint} onPress={handlePress} activeOpacity={0.85}
-          style={{ minWidth: 72, minHeight: 72, borderRadius: 36, backgroundColor: isListening ? colors.sage : colors.paper, borderWidth: 2.5, borderColor: isListening ? colors.sage : colors.mist, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }}>
-          <Text style={{ fontSize: 30 }}>{isListening ? '🔊' : '🎤'}</Text>
+          disabled={isProcessing}
+          style={{ minWidth: 72, minHeight: 72, borderRadius: 36, backgroundColor: isListening ? colors.sage : colors.paper, borderWidth: 2.5, borderColor: isListening ? colors.sage : colors.mist, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, opacity: isProcessing ? 0.7 : 1 }}>
+          <Text style={{ fontSize: 30 }}>{isProcessing ? '…' : isListening ? '■' : '🎤'}</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -187,6 +228,7 @@ export const FloatingVoiceButton = React.memo(FloatingVoiceButtonComponent, (pre
   if (prevProps.locale !== nextProps.locale) return false;
   if (prevProps.screenId !== nextProps.screenId) return false;
   if (prevProps.voiceFallback !== nextProps.voiceFallback) return false;
+  if (prevProps.elderId !== nextProps.elderId) return false;
   
   const prevBucket = Math.floor((prevProps.audioVolumePct ?? 0) / 10);
   const nextBucket = Math.floor((nextProps.audioVolumePct ?? 0) / 10);

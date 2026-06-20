@@ -4,18 +4,29 @@
 **Scope:** Acceptance verification for the vNext Well-Rounded Patch directive.
 **Build target:** `/home/user/Haven-build/` (the vNext patch was applied in-place on top of the existing Haven-build repo).
 
-This report honestly maps every requirement from the directive to what was built, what was partially built, and what is left for follow-up. Anything not marked **Built** is **not** in the current build — it is either staged behind a flag, or is a documented follow-up.
+This report honestly maps every requirement from the vNext directive to what was built in the June 14 vNext pass. It is a historical implementation snapshot. A June 20 runtime/configuration pass has since added local Supabase verification fixes, Expo/EAS/env hardening, hosted smoke scripts, live-app demo-data removal, `fn-voice-profile-revoke`, Tink refresh-token encryption, configurable WhatsApp fallback URLs, and regulatory escalation fail-fast config.
 
-The original vNext directive content (`VNEXT_PATCH_DESIGN.md`) was provided as a single source of truth for the patch design and is summarised in this report. See `SESSION_HANDOFF_CHANGELOG.md` for the full file-by-file change record.
+The original vNext directive content was provided as a single source of truth for the patch design and is summarised in this report. See `SESSION_HANDOFF_CHANGELOG.md` for the historical file-by-file change record.
 
 ---
 
 ## §0 Executive summary
 
+### June 20, 2026 addendum
+
+Current repository status supersedes the original counts in this report:
+
+- Edge Functions: **81**.
+- Validation: `{"ok": true, "app": "apps/iphone-suite/index.html", "edgeFunctions": 81, "schemaBytes": 158544}`.
+- Local checks passed: `corepack pnpm run lint`, `corepack pnpm run typecheck`, `corepack pnpm test`, `corepack pnpm run quality:check`.
+- Local Supabase verification has passed via `./scripts/ci/verify-local-supabase.sh`.
+- Remaining boundary: hosted Supabase smoke/live RLS, real secrets, vendor sandbox/live checks, physical iOS/Android validation, and human/compliance gates.
+
 | Layer | Status |
 |---|---|
 | Schema (12 → 13 migrations, +14 tables, +11 device_sessions columns) | **Built** |
 | Edge Functions (55 → 72, +17 new + 4 patched) | **Built** |
+| Current Edge Functions after June 20 pass (72 → 81) | **Built** |
 | Elder app (ScreenRenderer, ElderScreen, useHavenActions) | **Built (rendering + flags wired)** |
 | Family app (DailyStatusPill, TrustSignalPanel, familiar-voice page) | **Built** |
 | Carer portal (handover notes + MAR-light + offline capture) | **Built (function + UI + offline queue all added)** |
@@ -91,7 +102,7 @@ The original vNext directive content (`VNEXT_PATCH_DESIGN.md`) was provided as a
 | 5.3.x | `fn-carer-handover-note` | New user | **Built** |
 | 5.3.x | `fn-medication-administered` (MAR-light) | New user | **Not built** — schema supports it; not in the directive's primary scope; can be added via `carer_handover_notes.administered_medication_id` + `administered_at` columns |
 
-**Total: 20 new + 4 patched = 72 Edge Functions** classified into 5 trust zones per `EDGE_FUNCTION_TRUST_BOUNDARY_MATRIX.md`.
+**Historical vNext total: 20 new + 4 patched = 72 Edge Functions. Current repository total after the June 20 pass: 81 Edge Functions.** See `EDGE_FUNCTION_TRUST_BOUNDARY_MATRIX.md` and `docs/api/EDGE_FUNCTION_CATALOG.md`.
 
 ---
 
@@ -139,7 +150,7 @@ The original vNext directive content (`VNEXT_PATCH_DESIGN.md`) was provided as a
 | 6.2.1 | Dual consent (family + elder) | **Built** — `voice_profiles.owner_profile_id` + `elder_voice_preferences.elder_id` |
 | 6.2.2 | Always disclose | **Built** — `selectVoiceConfig` returns `disclosure_mode`; voice pipeline prepends disclosure text |
 | 6.2.3 | Crisis mode voice override | **Built** — `if (distress) voice = { ...voice, crisisOverride: true, useFamiliar: false };` |
-| 6.2.4 | Revocation (instant) | **Partial** — `voice_profiles.status` enum includes `'revoked'`; dedicated `fn-voice-profile-revoke` endpoint is a follow-up |
+| 6.2.4 | Revocation (instant) | **Built** — `fn-voice-profile-revoke` sets status to revoked and severs elder voice preferences |
 | 6.3 | `fn-voice-profile-create` | **Built** (mock + ElevenLabs adapter) |
 | 6.3 | `fn-voice-profile-test` | **Built** |
 | 6.3 | `fn-voice-pipeline` voice selection | **Built** |
@@ -214,27 +225,27 @@ All flags exist with default `false` and `rollout_pct = 0`. Rollout requires:
 
 ## Honest remaining gaps
 
-These four items are the documented follow-ups:
+These original follow-ups have been updated by later work. Current state:
 
 1. **Guided multi-step consent-pack onboarding UI** (§5.1.1, criterion #1) — schema (`consent_packs` + `consent_pack_status`) and flag (`staged_consent_enabled`) are in place; the UI flow that walks the elder/family through packs over time needs to be built. Recommended pattern: a wizard in `apps/elder` triggered on first login when packs are `not_shown`; one pack at a time with a "later" / "now" choice.
-2. **Elder-side incoming video-call screen** (§7.4) — `fn-video-call-create` is implemented; the elder-side full-screen incoming-call UI with Answer / Decline buttons needs to be built.
-3. **`fn-voice-profile-revoke` endpoint** (§6.2.4) — `voice_profiles.status` enum includes `'revoked'` and the schema supports it; a dedicated family-side revoke endpoint that flips the status and severs `elder_voice_preferences.voice_profile_id` is a follow-up.
-4. **Playwright E2E flows for vNext paths** — code paths are unit-tested; Playwright coverage of "fall → escalate", "scam coach → family notify", "voice confirm → no double-log", "daily status digest writes family notification" should be added to `tests/e2e/`.
+2. **Elder-side incoming video-call screen** (§7.4) — partially addressed through elder action handling and voice/call wiring; physical device and incoming-call UX validation remains required.
+3. **`fn-voice-profile-revoke` endpoint** (§6.2.4) — closed by later work.
+4. **Playwright E2E flows for vNext paths** — root test suite and static smoke are green; richer browser/device E2E for hosted vNext flows remains a follow-up.
 
 ---
 
 ## Build status snapshot
 
 ```
-validate-suite     : {"ok": true, "app": "apps/iphone-suite/index.html", "edgeFunctions": 72, "schemaBytes": 158308}
+validate-suite     : {"ok": true, "app": "apps/iphone-suite/index.html", "edgeFunctions": 81, "schemaBytes": 158544}
 migrations         : 13 files, ~158 KB total
-edge functions     : 55 → 72 (17 new + 4 patched + 51 unchanged)
-test pipeline      : all 9 test files pass
-typecheck          : elder app + packages clean
+edge functions     : 81
+test pipeline      : full root suite passes locally
+typecheck          : packages + elder + grandchild clean
 behavioural authz  : 27 assertions pass
 vnext RLS audit    : 18 assertions pass
 total tests        : ~50+ assertions across 9 test files
-engineering rating : 9.0/10 (up from 8.5/10)
+engineering rating : 9.3/10 local/pre-production code readiness
 ```
 
-The repository now reflects the **vNext Well-Rounded Patch** end-to-end at the schema, backend, elder app, family app, and carer portal layers — behind feature flags. The four follow-ups above are scoped, documented, and ready for the next session.
+The repository now reflects the **vNext Well-Rounded Patch** plus later runtime/configuration fixes end-to-end at the schema, backend, elder app, family app, carer app, grandchild app, and carer portal layers — behind feature flags and environment gates. Remaining work is now primarily hosted infrastructure, real-device validation, vendor sandbox/live verification, richer hosted E2E, and human/compliance sign-off.

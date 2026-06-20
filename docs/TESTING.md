@@ -10,6 +10,14 @@ corepack pnpm run test:e2e
 corepack pnpm test
 ```
 
+Current local status as of the June 20, 2026 runtime/configuration pass:
+
+- `corepack pnpm run lint` passes.
+- `corepack pnpm run typecheck` passes.
+- `corepack pnpm test` passes.
+- `corepack pnpm run quality:check` passes.
+- `./scripts/ci/verify-local-supabase.sh` has passed in this working tree with local Supabase and live local RLS checks.
+
 ## Quality and build checks
 
 ```bash
@@ -18,6 +26,29 @@ corepack pnpm run typecheck
 corepack pnpm run build:family
 corepack pnpm run quality:check
 ```
+
+## Supabase checks
+
+Local Supabase verification:
+
+```bash
+corepack pnpm run verify:supabase:local
+```
+
+This starts local Supabase, clears poisoned local temp state when needed, resets the database, parses `supabase db lint --level warning`, and runs the live RLS harness with local JWTs.
+
+Hosted smoke verification, after staging/production secrets are available:
+
+```bash
+SUPABASE_URL=... \
+SUPABASE_ANON_KEY=... \
+HAVEN_INTERNAL_KEY=... \
+HAVEN_TEST_ELDER_ID=... \
+HAVEN_TEST_ELDER_JWT=... \
+corepack pnpm run smoke:hosted
+```
+
+The hosted smoke calls `fn-health-check`, exercises storage signed upload/read URL creation, and can check Expo push receipts when `EXPO_ACCESS_TOKEN` is present.
 
 ## Browser E2E
 
@@ -59,6 +90,8 @@ docs/release/ELDER_USABILITY_PROTOCOL.md
 
 - Real iOS/Android device tests.
 - Vendor sandbox tests.
+- Hosted Supabase smoke test with real staging/production secrets.
+- Physical push/camera/mic/TTS/background behavior validation.
 
 ## Live Supabase RLS tests
 

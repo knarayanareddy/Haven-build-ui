@@ -19,7 +19,8 @@
       },
       "env": {
         "EXPO_PUBLIC_HAVEN_ENV": "development",
-        "EXPO_PUBLIC_SUPABASE_URL": "http://127.0.0.1:54321"
+        "EXPO_PUBLIC_SUPABASE_URL": "http://127.0.0.1:54321",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "REPLACE_WITH_LOCAL_SUPABASE_ANON_KEY"
       }
     },
     "preview": {
@@ -36,7 +37,8 @@
       },
       "env": {
         "EXPO_PUBLIC_HAVEN_ENV": "staging",
-        "EXPO_PUBLIC_SUPABASE_URL": "https://haven-staging.supabase.co"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://haven-staging.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "REPLACE_WITH_STAGING_SUPABASE_ANON_KEY"
       }
     },
     "production": {
@@ -56,7 +58,8 @@
       },
       "env": {
         "EXPO_PUBLIC_HAVEN_ENV": "production",
-        "EXPO_PUBLIC_SUPABASE_URL": "https://haven-prod-99x1.supabase.co"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://haven-prod-99x1.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "REPLACE_WITH_PRODUCTION_SUPABASE_ANON_KEY"
       }
     }
   },

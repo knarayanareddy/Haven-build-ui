@@ -69,8 +69,8 @@ The second production pass added the remaining non-visual domain surfaces requir
 - Appointment, telehealth and transport coordination.
 - Feature-flag evaluation service.
 - Screen-data service for schema-driven apps.
-- Expo app scaffold for elder app.
-- Next app scaffold for family dashboard.
+- Expo elder app.
+- Next.js family dashboard.
 - Shared contracts, i18n copy and scam-engine packages.
 
 The machine-readable implementation status is tracked in:
@@ -78,4 +78,4 @@ The machine-readable implementation status is tracked in:
 - `docs/implementation/FEATURE_IMPLEMENTATION_MATRIX.json`
 - `docs/implementation/FEATURE_IMPLEMENTATION_MATRIX.md`
 
-`corepack pnpm run validate:suite` now verifies the full function inventory, expanded migrations, app scaffold files and feature matrix.
+`corepack pnpm run validate:suite` now verifies the full function inventory, expanded migrations, app files and feature matrix.

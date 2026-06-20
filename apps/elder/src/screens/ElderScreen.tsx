@@ -11,9 +11,20 @@ import { initializeAndroidDozeGuard } from '../services/dozeGuard';
 
 type Props = NativeStackScreenProps<ElderStackParamList>;
 
-const DEMO_ELDER_ID = '00000000-0000-0000-0000-000000000001';
+function sessionUserId(session: { access_token?: string } | null): string | null {
+  const directUser = (session as unknown as { user?: { id?: string } } | null)?.user?.id;
+  if (directUser) return directUser;
+  const token = session?.access_token;
+  if (!token) return null;
+  try {
+    const [, payload] = token.split('.');
+    return JSON.parse(atob(payload))?.sub ?? null;
+  } catch {
+    return null;
+  }
+}
 
-function loadSeed(locale: Locale, t: any): {
+function loadShell(elderId: string, locale: Locale, t: any): {
   profile: ElderProfile;
   family: FamilyMember[];
   medications: MedicationRow[];
@@ -25,51 +36,25 @@ function loadSeed(locale: Locale, t: any): {
 } {
   return {
     profile: {
-      id: DEMO_ELDER_ID,
-      preferredName: 'Margreet',
+      id: elderId,
+      preferredName: t('elder.defaultName'),
       locale: locale,
-      postCode4: '1072',
+      postCode4: '',
       safeZoneLabel: t('seed.safeZone'),
     },
-    family: [
-      { id: 'fm-sarah', name: 'Sarah Bakker', relation: 'kind', isPrimary: true },
-      { id: 'fm-lucas', name: 'Lucas Bakker', relation: 'kleinkind' },
-      { id: 'fm-eva', name: 'Nurse Eva de Boer', relation: 'andere' },
-    ],
-    medications: [
-      { id: 'med-1', name: 'Metformine', dose: '500 mg', descriptionNl: 'Witte ovale pil voor bloedsuiker', descriptionEn: 'White oval pill for blood sugar', time: '08:00', status: 'planned', stock: 18 },
-      { id: 'med-2', name: 'Lisinopril', dose: '10 mg', descriptionNl: 'Kleine perzikkleurige pil voor bloeddruk', descriptionEn: 'Small peach pill for blood pressure', time: '08:00', status: 'planned', stock: 23 },
-      { id: 'med-3', name: 'Vitamine D', dose: '20 mcg', descriptionNl: 'Kleine gele tablet voor botten', descriptionEn: 'Tiny yellow tablet for bones', time: '18:00', status: 'planned', stock: 42 },
-    ],
-    tasks: [
-      { id: 'task-1', icon: '🏥', title: t('seed.task1.title'), subtitle: '14:00 · Sarah', done: false },
-      { id: 'task-2', icon: '🚶', title: t('seed.task2.title'), subtitle: '13:15 · HAVEN', done: false },
-      { id: 'task-3', icon: '📞', title: t('seed.task3.title'), subtitle: t('seed.task3.subtitle'), done: false },
-    ],
-    messages: [
-      { id: 'msg-1', from: 'Sarah', kind: 'text', body: t('seed.msg1.body'), unread: true },
-      { id: 'msg-2', from: 'Lucas', kind: 'video', body: t('seed.msg2.body'), unread: true },
-      { id: 'msg-3', from: 'Sarah', kind: 'voice', body: t('seed.msg3.body'), unread: false },
-      { id: 'msg-4', from: 'Margreet', kind: 'text', body: t('seed.msg4.body'), unread: false },
-    ],
-    scamEvents: [
-      { id: 'scam-1', level: 'amber', channel: 'phone', score: 52, explanation: t('seed.scam1.explanation'), notified: true },
-      { id: 'scam-2', level: 'rood', channel: 'whatsapp', score: 82, explanation: t('seed.scam2.explanation'), notified: true },
-    ],
+    family: [],
+    medications: [],
+    tasks: [],
+    messages: [],
+    scamEvents: [],
     buurt: {
-      active: true,
-      nearbyCount: 3,
-      tags: [t('seed.buurt.tag1'), t('seed.buurt.tag2'), t('seed.buurt.tag3'), t('seed.buurt.tag4'), t('seed.buurt.tag5')],
-      walkBuddyCount: 2,
-      events: [
-        { id: 'evt-1', title: t('seed.buurt.evt1.title'), distanceLabel: '600 m', date: t('seed.buurt.evt1.date') },
-        { id: 'evt-2', title: t('seed.buurt.evt2.title'), distanceLabel: '1.2 km', date: t('seed.buurt.evt2.date') },
-      ],
+      active: false,
+      nearbyCount: 0,
+      tags: [],
+      walkBuddyCount: 0,
+      events: [],
     },
-    visits: [
-      { date: t('seed.visit1.date'), carer: 'Nurse Eva de Boer (Buurtzorg)', note: t('seed.visit1.note') },
-      { date: t('seed.visit2.date'), carer: 'Nurse Eva de Boer (Buurtzorg)', note: t('seed.visit2.note') },
-    ],
+    visits: [],
   };
 }
 
@@ -81,7 +66,8 @@ export function ElderScreen({ route, navigation }: Props) {
   const actions = useHavenActions(schema.screenId);
   const { session } = useAuth();
   const { locale, t } = useTranslation();
-  const seed = useMemo(() => loadSeed(locale, t), [locale, t]);
+  const elderId = sessionUserId(session) ?? 'signed-out';
+  const seed = useMemo(() => loadShell(elderId, locale, t), [elderId, locale, t]);
   const ctx: ScreenContext = {
     locale: seed.profile.locale,
     now: new Date(),

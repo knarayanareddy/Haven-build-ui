@@ -642,6 +642,7 @@ export function ScreenRenderer({ schema, context }: ScreenRendererProps) {
       {schema.showFloatingVoice ? (
         <FloatingVoiceButton
           locale={locale}
+          elderId={context.profile.id}
           screenId={schema.screenId}
           voiceFallback={locale === 'nl-NL' ? schema.voiceFallbackNl : schema.voiceFallbackEn}
           hapticTrigger={hapticTrigger}

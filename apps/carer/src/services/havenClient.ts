@@ -48,6 +48,10 @@ export class CarerClient {
 
   async visitLog(input: {
     elder_id: string;
+    carer_id?: string;
+    visit_date?: string;
+    check_in_time?: string;
+    check_out_time?: string;
     started_at?: string;
     completed_at?: string;
     notes_nl?: string;

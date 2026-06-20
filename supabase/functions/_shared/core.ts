@@ -333,9 +333,14 @@ export async function dispatchNotification(params: {
     if (params.notification_type === "crisis_gedetecteerd" || params.notification_type === "scam_zwart") {
       let fallbackOutcome = "failure";
       try {
-        const res = await fetch("https://haven.internal/functions/v1/fn-whatsapp-webhook", {
+        const internalFunctionsUrl = Deno.env.get("HAVEN_INTERNAL_FUNCTIONS_URL") ?? Deno.env.get("SUPABASE_URL");
+        if (!internalFunctionsUrl) {
+          throw new Error("HAVEN_INTERNAL_FUNCTIONS_URL or SUPABASE_URL must be configured for WhatsApp fallback dispatch", { cause: error });
+        }
+
+        const res = await fetch(`${internalFunctionsUrl.replace(/\/$/, "")}/functions/v1/fn-whatsapp-webhook`, {
           method: "POST",
-          headers: { "content-type": "application/json", "x-haven-internal-key": "haven_internal_cron_secret_2026" },
+          headers: { "content-type": "application/json", "x-haven-internal-key": Deno.env.get("HAVEN_INTERNAL_KEY") ?? "" },
           body: JSON.stringify({
             action: "send_fallback",
             recipient_id: params.recipient_id,

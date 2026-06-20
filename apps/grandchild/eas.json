@@ -62,19 +62,5 @@
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "REPLACE_WITH_PRODUCTION_SUPABASE_ANON_KEY"
       }
     }
-  },
-  "submit": {
-    "production": {
-      "ios": {
-        "appleId": "ci@haven.nl",
-        "ascAppId": "6472026112",
-        "appleTeamId": "NLHAVEN99"
-      },
-      "android": {
-        "serviceAccountKeyPath": "./google-api-key.json",
-        "track": "production",
-        "releaseStatus": "completed"
-      }
-    }
   }
 }

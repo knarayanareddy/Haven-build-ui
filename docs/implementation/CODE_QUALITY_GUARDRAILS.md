@@ -1,6 +1,6 @@
 # HAVEN Code Quality Guardrails
 
-Last updated: 2026-06-13
+Last updated: 2026-06-20
 
 ## Enforced checks
 
@@ -33,15 +33,15 @@ Current enforced rules focus on low-noise, high-signal failures:
 - prefer `const`
 - `eqeqeq`
 
-The lint layer is intentionally lightweight for this scaffold so it can be enforced consistently without generating large volumes of churn.
+The lint layer is intentionally lightweight so it can be enforced consistently without generating large volumes of churn.
 
 ## Typecheck coverage
 
 TypeScript coverage currently includes:
 
 - shared packages (`tsconfig.packages.json`)
-- Expo elder scaffold (`apps/elder/tsconfig.json`)
-- Expo grandchild scaffold (`apps/grandchild/tsconfig.json`)
+- Expo elder app (`apps/elder/tsconfig.json`)
+- Expo grandchild app (`apps/grandchild/tsconfig.json`)
 
 The Next.js family app is validated through its production build, which already runs the framework's TypeScript pass.
 

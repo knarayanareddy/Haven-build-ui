@@ -1,6 +1,6 @@
 # HAVEN Residual Hardening Report
 
-Last updated: 2026-06-13
+Last updated: 2026-06-20
 
 ## Summary
 
@@ -19,7 +19,7 @@ Hardening areas covered:
 - browser E2E CI wiring
 - local and live Supabase CI strategy
 
-The project is now structurally secure and operationally coherent. It remains a design package, requiring live-environment hardware checks before final production certification.
+The project is now structurally secure, locally green, and operationally coherent. It remains pre-production, requiring hosted-environment smoke checks, vendor sandbox/live checks, and physical-device validation before final production certification.
 
 ## Residual risks
 
@@ -27,8 +27,12 @@ The project is now structurally secure and operationally coherent. It remains a 
 
 Many guarantees are verified by static tests rather than full infrastructure execution.
 
+Current state:
+- Local Supabase verification and live local RLS checks have passed.
+
 Remaining gap:
-- Edge Function code paths are better hardened, but many are not exercised against a live Supabase project in CI by default.
+- Hosted Supabase staging/production Edge Function and Storage paths must still be exercised with real project secrets and JWTs.
+- `corepack pnpm run smoke:hosted` exists but is secret-gated.
 
 ### 2. Browser E2E depends on CI environment
 
@@ -37,9 +41,9 @@ Playwright coverage is wired into CI, but the local Arena sandbox may lack syste
 Implication:
 - browser E2E should be treated as CI-backed, not universally sandbox-local.
 
-### 3. Expo/mobile scaffolds are typechecked, not device-certified
+### 3. Expo/mobile apps are typechecked, not device-certified
 
-The elder and grandchild apps now have scaffold-level TypeScript coverage, but production readiness still requires:
+The elder, carer, and grandchild apps now have TypeScript coverage and EAS/native configuration, but production readiness still requires:
 - physical iOS and Android runs
 - permissions behavior validation
 - push notification validation
@@ -81,4 +85,4 @@ Still external to the repository:
 
 Treat the repository as:
 
-> a substantially hardened, production-shaped engineering package that now has credible authz, lifecycle, and CI guardrails, but still requires real infrastructure and operational sign-off before launch.
+> a substantially hardened, locally green, production-shaped engineering package that now has credible authz, lifecycle, CI guardrails, and local Supabase verification, but still requires hosted infrastructure smoke, real devices, vendor validation, and operational sign-off before launch.

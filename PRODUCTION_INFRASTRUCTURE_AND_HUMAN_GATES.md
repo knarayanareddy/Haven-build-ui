@@ -1,12 +1,12 @@
 # HAVEN — Production Infrastructure & Human Gates Checklist
 
 **Version**: 1.0.0  
-**Date**: 2026-06-19  
+**Date**: 2026-06-20
 **Status**: Required before any production deployment or public beta  
 **Owner**: CTO + DPO + Legal + Release Manager  
 **Reference**: README.md (Production-launch note), designdoc.md (Addenda J, K, L), VNEXT_IMPLEMENTATION_REPORT.md, RESIDUAL_HARDENING_REPORT.md
 
-This document expands on the **remaining 1.0 engineering rating gap** identified in the repository. It details every infrastructure component, credential, configuration file, and human gate that must be completed before HAVEN can be considered production-ready.
+This document expands on the remaining external gates identified in the repository. The local build currently passes lint, typecheck, tests, quality check, and local Supabase verification; production readiness still depends on hosted infrastructure, real secrets, device validation, vendor/compliance evidence, and release approvals.
 
 ---
 
@@ -14,7 +14,7 @@ This document expands on the **remaining 1.0 engineering rating gap** identified
 
 ### 1.1 Supabase Production Project
 
-**Current state**: All code assumes a local Supabase instance (`supabase start`) or placeholder project.
+**Current state**: Local Supabase verification is wired and has passed in this working tree. Hosted staging/production Supabase still needs real project provisioning, secrets, deployed functions, storage buckets, and hosted smoke verification.
 
 **Actions required**:
 
@@ -25,7 +25,7 @@ This document expands on the **remaining 1.0 engineering rating gap** identified
    - Database password: Store in 1Password / Vault (minimum 32 chars)
    - **Files to update**:
      - `supabase/config.toml` → update `project_id`, `api` keys, `db` connection strings
-     - `.env.production` (new file) and `apps/elder/.env.production`
+     - Supabase secrets, `.env.production` templates, and `apps/elder/.env.production`
      - `apps/family/.env.production.local`
 
 2. **Generate Production Database Types**
@@ -43,7 +43,7 @@ This document expands on the **remaining 1.0 engineering rating gap** identified
    - Run `supabase db lint --level warning` first.
    - Verify with `supabase db diff`.
 
-4. **Deploy All 82 Edge Functions**
+4. **Deploy All 81 Edge Functions**
    ```bash
    supabase functions deploy --all
    ```
@@ -61,6 +61,7 @@ This document expands on the **remaining 1.0 engineering rating gap** identified
 **Verification**:
 - Run `pnpm run validate:suite` against production project.
 - Run full test suite with `HAVEN_LIVE_RLS=1 pnpm run test:integration:live`.
+- Run `corepack pnpm run smoke:hosted` with `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `HAVEN_INTERNAL_KEY`, `HAVEN_TEST_ELDER_ID`, and `HAVEN_TEST_ELDER_JWT`.
 
 ---
 
@@ -72,18 +73,23 @@ This document expands on the **remaining 1.0 engineering rating gap** identified
 |---------------------|--------------------------------|-----------------------------------------------|-----------------------------------------------|--------------------|-------|
 | **OpenAI**          | Whisper STT + Embeddings       | `OPENAI_API_KEY`                              | `supabase/functions/.env`, Edge Functions     | Required + SCC     | EU DPA needed |
 | **ElevenLabs**      | TTS (nl-NL "Hanna" voice)      | `ELEVENLABS_API_KEY`, voice_id                | `supabase/functions/.env`, `fn-voice-pipeline` | Required + SCC     | Custom voice cloning |
-| **Expo**            | Push Notifications + EAS Build | `EXPO_TOKEN`, projectId                       | `apps/elder/app.json`, EAS config             | Review             | Already partially configured |
+| **Expo**            | Push Notifications + EAS Build | `EXPO_TOKEN`, project IDs, EAS remote env/secrets | `apps/elder`, `apps/carer`, `apps/grandchild` EAS config | Review | Config exists; real credentials and remote env/secrets still required |
 | **Sentry**          | Error tracking (EU)            | `SENTRY_DSN` (EU endpoint)                    | All apps + Edge Functions                     | ✅ EU available    | PII scrubbing mandatory |
 | **Vercel**          | Family dashboard hosting       | `VERCEL_TOKEN`, project IDs                   | `apps/family/vercel.json`                     | Review             | EU region preferred |
 | **Supabase**        | Backend                        | Service role key, project ref                 | All deployment scripts                        | ✅ EU DPA          | Primary backend |
 | **Apple APNs**      | iOS Push                       | APNs key (.p8) + Team ID                      | Expo dashboard / EAS                          | Review             | Via Expo |
 | **Google FCM**      | Android Push                   | `google-services.json`                        | `apps/elder/android/app`                      | Review             | Via Expo |
+| **Tink / PSD2**     | Bank connect + transaction intercept | `PSD2_WEBHOOK_SECRET`, `TINK_CLIENT_ID`, `TINK_CLIENT_SECRET`, `TINK_REDIRECT_URI`, `TINK_TOKEN_ENCRYPTION_KEY` | Supabase secrets, Edge Functions | Required | Refresh tokens are encrypted; sandbox/live credentials still required |
+| **WhatsApp**        | Critical notification fallback | `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_BUSINESS_PHONE_ID`, `WHATSAPP_ACCESS_TOKEN`, `HAVEN_INTERNAL_FUNCTIONS_URL` | Supabase secrets, Edge Functions | Review | Fallback URL is configurable |
 
 **Actions**:
 - Create `.env.production` files in:
   - `supabase/functions/.env`
   - `apps/elder/.env.production`
+  - `apps/carer/.env.production`
+  - `apps/grandchild/.env.production`
   - `apps/family/.env.production.local`
+- Set EAS remote env/secrets for elder, carer, and grandchild. The app config now fails fast if required public Supabase values are missing or left as `REPLACE_WITH_*`.
 - Never commit secrets. Use GitHub Secrets + Supabase Vault.
 - Update `docs/addenda/K-vendor-register.md` with actual DPA signing dates and document links.
 
@@ -127,7 +133,8 @@ This document expands on the **remaining 1.0 engineering rating gap** identified
    - Test scenarios: offline mode, low battery, poor network, VoiceOver/TalkBack, high contrast, font scaling 200%
 
 2. **EAS Build Configuration**
-   - Update `apps/elder/eas.json` with production profiles
+   - Verify `apps/elder/eas.json`, `apps/carer/eas.json`, and `apps/grandchild/eas.json`
+   - Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` in EAS remote env/secrets for every profile
    - Generate production builds:
      ```bash
      eas build --platform ios --profile production
@@ -244,8 +251,9 @@ This document expands on the **remaining 1.0 engineering rating gap** identified
 2. Generate DB types
 3. Configure all vendor credentials in production environments
 4. Deploy Edge Functions + Storage policies
-5. Set up Sentry + Logflare drains
-6. Update all `.env*` and config files
+5. Run hosted smoke and live RLS/API tests
+6. Set up Sentry + Logflare drains
+7. Update all `.env*`, EAS, Supabase secret, and hosting config records
 
 ### Phase 2: Compliance & Human Gates (4–6 weeks, parallel)
 
@@ -267,16 +275,17 @@ This document expands on the **remaining 1.0 engineering rating gap** identified
 
 1. Full test suite against production Supabase
 2. End-to-end flows on physical devices
-3. Security retest after pentest fixes
-4. DPO final sign-off
-5. Production launch
+3. `corepack pnpm run smoke:hosted`
+4. Security retest after pentest fixes
+5. DPO final sign-off
+6. Production launch
 
 ---
 
 ## 4. File Inventory — What Needs to Change or Be Created
 
 **New files to create**:
-- `.env.production` (root + apps)
+- `.env.production` / secret-manager entries for Supabase functions, apps, EAS, and hosting
 - `docs/runbooks/production-monitoring.md`
 - `docs/runbooks/incident-response-runbook.md`
 - Production Supabase project reference document (internal)
@@ -290,6 +299,8 @@ This document expands on the **remaining 1.0 engineering rating gap** identified
 - `docs/release/ELDER_USABILITY_PROTOCOL.md`
 - All `.github/workflows/*.yml` (add production secrets)
 - `apps/elder/eas.json`
+- `apps/carer/eas.json`
+- `apps/grandchild/eas.json`
 - `apps/elder/app.json` (production bundle identifiers)
 - `README.md` (update production status section)
 

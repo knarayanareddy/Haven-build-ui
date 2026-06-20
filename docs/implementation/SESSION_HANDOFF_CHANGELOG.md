@@ -317,7 +317,7 @@ If another engineer picks this up next, the best starting points are:
 
 ### High-level outcome
 
-Applied the vNext Well-Rounded Patch directive (`docs/implementation/VNEXT_PATCH_DESIGN.md`) on top of the v1.2.1 hardening closure. The repository now has:
+Historical entry: applied the vNext Well-Rounded Patch directive on top of the v1.2.1 hardening closure. The current build has since advanced; see `README.md` and `docs/implementation/VNEXT_IMPLEMENTATION_REPORT.md` for the June 20 addendum.
 
 - **+1 schema migration** with 14 new tables, 11 telemetry columns on `device_sessions`, 6 seeded consent packs, 10 new feature flags, forced RLS on every new user-data table.
 - **+17 Edge Functions** (16 new + 1 closing the carer-handover gap) and **+4 patches** to existing functions.
@@ -351,7 +351,6 @@ Applied the vNext Well-Rounded Patch directive (`docs/implementation/VNEXT_PATCH
 - `apps/family/src/components/TrustSignalPanel.tsx`
 - `apps/family/src/app/dashboard/familiar-voice/page.tsx`
 - `tests/edge/vnext-rls-audit.test.mjs`
-- `docs/implementation/VNEXT_PATCH_DESIGN.md`
 - `docs/implementation/VNEXT_IMPLEMENTATION_REPORT.md`
 
 ### Files materially updated
@@ -360,7 +359,7 @@ Applied the vNext Well-Rounded Patch directive (`docs/implementation/VNEXT_PATCH
 - `apps/elder/src/screens/ElderScreen.tsx` (new context fields for check-in card, pending confirmation, voice preferences)
 - `apps/elder/src/hooks/useHavenActions.ts` (new action IDs: CHECKIN, FALL_OK/HELP, CONFIRM_MED/DENY_MED, SCAM_COACH, VOICE_TOGGLE, VIDEO_CALL)
 - `apps/family/src/app/dashboard/page.tsx` (DailyStatusPill, TrustSignalPanel, action buttons)
-- `apps/family/src/services/dashboard-fixtures.ts` (extended with dailyStatus, trustDevices, trustEvents, familiarVoice, actionButtons)
+- `apps/family/src/services/dashboard-fixtures.ts` (historical; removed in the June 20 pass when dashboard loading moved to the live RPC path)
 - `apps/carer-portal/index.html` (handover form + offline queue + MAR-light)
 - `supabase/functions/fn-device-session/index.ts` (telemetry + device_health_events)
 - `supabase/functions/fn-medication-ocr/index.ts` (review-required gating)
@@ -371,7 +370,7 @@ Applied the vNext Well-Rounded Patch directive (`docs/implementation/VNEXT_PATCH
 ### Verification snapshot
 
 ```
-validate-suite     : {"ok": true, "edgeFunctions": 72, "schemaBytes": 158308}
+validate-suite     : {"ok": true, "edgeFunctions": 72, "schemaBytes": 158308}  # historical June 14 snapshot
 test:edge          : all 6 files pass (scam-engine, screen-schema, hardening-static, data-lifecycle, authz-behavioral, vnext-rls-audit)
 test:rls           : rls-policy audit + storage-policy audit pass
 test:e2e           : iphone-suite smoke test passes
@@ -387,4 +386,3 @@ total assertions   : ~50+
 4. Playwright E2E flows for vNext paths (code paths implemented and unit-tested).
 
 These four items are tracked in `docs/implementation/VNEXT_IMPLEMENTATION_REPORT.md`.
-

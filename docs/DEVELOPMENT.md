@@ -53,7 +53,7 @@ corepack pnpm run preview:family
 corepack pnpm run verify:supabase:local
 ```
 
-## Elder app scaffold typecheck
+## Elder app typecheck
 
 ```bash
 corepack pnpm run typecheck:elder

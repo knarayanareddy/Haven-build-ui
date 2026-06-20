@@ -1,6 +1,9 @@
 # HAVEN Gap Closure Report
 
 Date: 2026-06-13
+Current addendum: 2026-06-20
+
+This is a historical gap-closure report for the June 13 pass. Since then, the live app paths have been further hardened: the family dashboard no longer imports `dashboard-fixtures.ts`, elder live actions no longer use a hardcoded demo elder UUID, carer visit/summary screens call live functions for configured elder IDs, and the grandchild button calls `fn-grandchild-message-send`.
 
 This report closes the engineering gaps from the original deep-dive audit. Each gap is rated as `closed`, `partial`, or `human-only`. Compliance / legal gates that cannot be closed in code are listed in §6 with the responsible owner explicitly named.
 
@@ -22,7 +25,7 @@ This report closes the engineering gaps from the original deep-dive audit. Each 
 - `ElderScreen.tsx` now provides a typed `ScreenContext` (locale, profile, family, medications, tasks, messages, scamEvents, buurt, visits) to the renderer using the same seed data shape as `supabase/seed.sql`.
 - `useHavenActions.ts` now handles every action the renderer emits (`TAKE:`, `SNOOZE:`, `NAV_*`, `SEND_HEART`, `RECORD_STORY`, `CRISIS`, `TALK`, `BUURT_MATCH`, `WELLNESS_*`, `CALL_FAMILY`, `EMERGENCY`, etc.) and falls back to the SQLite offline queue when no session is present.
 - `apps/family/src/components/{DashboardCard,HaloStatus,MedicationList,AlertList}.tsx` are reusable, type-safe, EN/NL-aware components.
-- `apps/family/src/services/dashboard-fixtures.ts` exports a typed `DashboardFixture` consumed by all dashboard pages. It mirrors the seed data shape so live RLS / API responses can drop in with one import change.
+- Historical note: `apps/family/src/services/dashboard-fixtures.ts` used to export a typed `DashboardFixture`. It has since been removed; the family dashboard now uses `family_dashboard_summary` via `apps/family/src/services/dashboard.ts` and shows a setup-required state when server env is missing.
 - Each `/dashboard/*` page now renders the consent-gated surface (`can_view_medications`, `can_view_alerts`, etc.) using the typed components, with consistent navigation back to the main dashboard.
 - Typecheck: `apps/elder` and the shared packages both `tsc --noEmit` cleanly under TS 6.0.3 + `@types/react@19` + `@types/node@22`. The `apps/family` project needs the `next` workspace dependency which is pinned in `pnpm-lock.yaml` and resolved by `pnpm install`.
 
@@ -87,7 +90,7 @@ This report closes the engineering gaps from the original deep-dive audit. Each 
 | `apps/family/src/components/HaloStatus.tsx` | Halo axis component with tone-aware colours. |
 | `apps/family/src/components/MedicationList.tsx` | Typed medication list rendering Dutch reminder statuses. |
 | `apps/family/src/components/AlertList.tsx` | Typed alert list rendering SCHILD alert levels. |
-| `apps/family/src/services/dashboard-fixtures.ts` | Typed dashboard fixture consumed by all dashboard pages. |
+| `apps/family/src/services/dashboard-fixtures.ts` | Historical file; removed in the June 20 pass when dashboard loading moved to the live RPC path. |
 | `apps/family/src/app/dashboard/page.tsx` | Real home dashboard with halo + cards + nav. |
 | `apps/family/src/app/dashboard/meldingen/page.tsx` | Real alerts page with typed AlertList. |
 | `apps/family/src/app/dashboard/medicijnen/page.tsx` | Real medications page with typed MedicationList. |
@@ -118,7 +121,7 @@ The following are correctly engineered surfaces that **cannot** be completed in 
 | 4 | **No named DPO.** | `dpia_assessments.dpo_profile_id` references a profile row, but no admin user has been appointed to that role. | **Founder/CEO** |
 | 5 | **Older-adult usability sessions not performed.** | Per `M-accessibility.md`, 5 sessions with 68+ year-old Dutch users are required before closed beta. The `app_release_checks.elder-usability` row is `pending`. | **UX research lead + recruitment partner** |
 | 6 | **App Store / Play Store submissions not approved.** | Requires the binary to pass Apple/Google review with real vendor credentials and a completed privacy nutrition label. | **App store ops** |
-| 7 | **Real Supabase + Expo + vendor credentials not provisioned.** | Live RLS / live JWT validation / live PSD2 / live MedMij sandbox all require real secrets. The repo's `verify:supabase:local` workflow is wired but the actual project is not created. | **Platform engineer** |
+| 7 | **Real Supabase + Expo + vendor credentials not provisioned.** | Local Supabase verification is wired and has passed; hosted Supabase smoke/live RLS, EAS remote env/secrets, live PSD2/Tink, and MedMij sandbox still require real secrets. | **Platform engineer** |
 | 8 | **Browser E2E depends on Playwright system libraries.** | The repo wires Playwright into CI but the local Arena sandbox does not always provide the shared libraries needed for Chromium. The README explicitly says browser E2E is CI-backed, not sandbox-guaranteed. | **CI / GitHub Actions runner** |
 | 9 | **Real physical-device testing of elder + grandchild apps.** | Microphone, camera, push, background location, and accessibility behaviour on real iOS / Android hardware. | **Mobile QA + devices** |
 
@@ -126,4 +129,4 @@ These nine items are exactly the ones the original `RESIDUAL_HARDENING_REPORT.md
 
 ## 6. Recommended next step
 
-Run `corepack pnpm run validate:suite && corepack pnpm run test:edge && corepack pnpm run test:rls && corepack pnpm run test:e2e` on a machine with `pnpm@9.12.3` installed and Docker available. All four commands should now pass without further code work, and the resulting engineering confidence is **8.5/10 → 9.0/10** — the missing half-point still requires the human gates above.
+Run `corepack pnpm run validate:suite && corepack pnpm run test:edge && corepack pnpm run test:rls && corepack pnpm run test:e2e`, plus `corepack pnpm run quality:check`. These pass locally in the current working tree. The remaining confidence gap is hosted Supabase/vendor smoke, physical-device validation, and the human gates above.

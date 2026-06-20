@@ -54,7 +54,8 @@ BEGIN
     'driving_events', (SELECT COALESCE(jsonb_agg(to_jsonb(de)), '[]'::jsonb) FROM driving_events de WHERE de.elder_id = p_elder_id AND de.deleted_at IS NULL),
     'wandering_events', (SELECT COALESCE(jsonb_agg(to_jsonb(we)), '[]'::jsonb) FROM wandering_events we WHERE we.elder_id = p_elder_id AND we.deleted_at IS NULL),
     'fall_events', (SELECT COALESCE(jsonb_agg(to_jsonb(fe)), '[]'::jsonb) FROM fall_events fe WHERE fe.elder_id = p_elder_id),
-    'cognitive_checkins', (SELECT COALESCE(jsonb_agg(to_jsonb(cc)), '[]'::jsonb) FROM cognitive_checkins cc WHERE cc.elder_id = p_elder_id),
+    'cognitive_checkins', (SELECT COALESCE(jsonb_agg(to_jsonb(cc)), '[]'::jsonb) FROM cognitive_checkins cc WHERE cc.elder_id = p_elder_id)
+  ) || jsonb_build_object(
     'voice_interactions', (SELECT COALESCE(jsonb_agg(to_jsonb(vi)), '[]'::jsonb) FROM voice_interactions vi WHERE vi.elder_id = p_elder_id AND vi.deleted_at IS NULL),
 
     -- companion_memory: vectors excluded per GDPR Art. 20; fixed cm.recorded_at → cm.created_at
@@ -81,7 +82,8 @@ BEGIN
     'care_plans', (SELECT COALESCE(jsonb_agg(to_jsonb(cp)), '[]'::jsonb) FROM care_plans cp WHERE cp.elder_id = p_elder_id AND cp.deleted_at IS NULL),
     'care_plan_items', (SELECT COALESCE(jsonb_agg(to_jsonb(cpi)), '[]'::jsonb) FROM care_plan_items cpi WHERE cpi.elder_id = p_elder_id AND cpi.deleted_at IS NULL),
     'carer_visit_logs', (SELECT COALESCE(jsonb_agg(to_jsonb(cvl)), '[]'::jsonb) FROM carer_visit_logs cvl WHERE cvl.elder_id = p_elder_id AND cvl.deleted_at IS NULL),
-    'carer_handover_notes', (SELECT COALESCE(jsonb_agg(to_jsonb(chn)), '[]'::jsonb) FROM carer_handover_notes chn WHERE chn.elder_id = p_elder_id),
+    'carer_handover_notes', (SELECT COALESCE(jsonb_agg(to_jsonb(chn)), '[]'::jsonb) FROM carer_handover_notes chn WHERE chn.elder_id = p_elder_id)
+  ) || jsonb_build_object(
     'incidents', (SELECT COALESCE(jsonb_agg(to_jsonb(i)), '[]'::jsonb) FROM incidents i WHERE i.elder_id = p_elder_id),
     'safeguarding_reports', (SELECT COALESCE(jsonb_agg(to_jsonb(sr)), '[]'::jsonb) FROM safeguarding_reports sr WHERE sr.elder_id = p_elder_id),
     'safety_digests', (SELECT COALESCE(jsonb_agg(to_jsonb(sd)), '[]'::jsonb) FROM safety_digests sd WHERE sd.elder_id = p_elder_id),

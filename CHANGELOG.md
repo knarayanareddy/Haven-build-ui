@@ -1,5 +1,17 @@
 # Changelog
 
+## Current — June 20, 2026 runtime/configuration pass
+
+- Updated documentation to reflect the current locally green build.
+- Validation reports 81 Supabase Edge Functions and 158544 schema bytes.
+- Local checks pass: lint, typecheck, test suite, quality check, and local Supabase verification.
+- Removed hidden demo-data wiring from authenticated elder, family, carer, and grandchild app paths.
+- Added hosted Supabase smoke script documentation for Edge Function and Storage checks.
+- Added EAS/env documentation for elder, carer, and grandchild builds.
+- Added Tink refresh-token encryption and required `TINK_TOKEN_ENCRYPTION_KEY`.
+- Made WhatsApp fallback and regulatory escalation endpoints configurable/fail-fast.
+- Updated production readiness docs to distinguish local code readiness from hosted/device/vendor/human gates.
+
 ## 1.1.0 — Production-shaped package
 
 - Added full README and documentation package.

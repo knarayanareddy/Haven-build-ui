@@ -140,6 +140,9 @@ importers:
       expo-av:
         specifier: 16.0.8
         version: 16.0.8(expo@56.0.11)(react-native@0.86.0(@babel/core@7.29.7)(@react-native-community/cli@12.3.0)(@types/react@19.2.17)(react@19.2.7))(react@19.2.7)
+      expo-calendar:
+        specifier: 56.0.8
+        version: 56.0.8(expo@56.0.11)(react-native@0.86.0(@babel/core@7.29.7)(@react-native-community/cli@12.3.0)(@types/react@19.2.17)(react@19.2.7))
       expo-camera:
         specifier: 56.0.8
         version: 56.0.8(@types/emscripten@1.41.5)(expo@56.0.11)(react-native@0.86.0(@babel/core@7.29.7)(@react-native-community/cli@12.3.0)(@types/react@19.2.17)(react@19.2.7))(react@19.2.7)
@@ -1027,7 +1030,7 @@ packages:
 
   '@expo/bunyan@4.0.1':
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
-    engines: {'0': node >=0.10.0}
+    engines: {node: '>=0.10.0'}
 
   '@expo/cli@0.17.13':
     resolution: {integrity: sha512-n13yxOmI3I0JidzMdFCH68tYKGDtK4XlDFk1vysZX7AIRKeDVRsSbHhma5jCla2bDt25RKmJBHA9KtzielwzAA==}
@@ -2893,6 +2896,12 @@ packages:
     peerDependenciesMeta:
       react-native-web:
         optional: true
+
+  expo-calendar@56.0.8:
+    resolution: {integrity: sha512-gxH+J+teP3CBXPybQHuwzTYrFEmSz4irh2n2KSVzzbIRqjVwgVH42op/BViOqxIkMlOlx3hmXNVIkB8RiMtIvg==}
+    peerDependencies:
+      expo: '*'
+      react-native: '*'
 
   expo-camera@56.0.8:
     resolution: {integrity: sha512-UDOpUUMisFRmCv1XQV1MJCKGAH2CsIC1Rs6P9Bbc6JLVmbxEKAd5dK68y6cScOdWURxVfJ0PRcjYnSuc8ayyIQ==}
@@ -9370,6 +9379,11 @@ snapshots:
     dependencies:
       expo: 56.0.11(@babel/core@7.29.7)(@expo/dom-webview@56.0.5)(react-dom@19.2.7(react@19.2.7))(react-native@0.86.0(@babel/core@7.29.7)(@react-native-community/cli@12.3.0)(@types/react@19.2.17)(react@19.2.7))(react@19.2.7)(typescript@6.0.3)
       react: 19.2.7
+      react-native: 0.86.0(@babel/core@7.29.7)(@react-native-community/cli@12.3.0)(@types/react@19.2.17)(react@19.2.7)
+
+  expo-calendar@56.0.8(expo@56.0.11)(react-native@0.86.0(@babel/core@7.29.7)(@react-native-community/cli@12.3.0)(@types/react@19.2.17)(react@19.2.7)):
+    dependencies:
+      expo: 56.0.11(@babel/core@7.29.7)(@expo/dom-webview@56.0.5)(react-dom@19.2.7(react@19.2.7))(react-native@0.86.0(@babel/core@7.29.7)(@react-native-community/cli@12.3.0)(@types/react@19.2.17)(react@19.2.7))(react@19.2.7)(typescript@6.0.3)
       react-native: 0.86.0(@babel/core@7.29.7)(@react-native-community/cli@12.3.0)(@types/react@19.2.17)(react@19.2.7)
 
   expo-camera@56.0.8(@types/emscripten@1.41.5)(expo@56.0.11)(react-native@0.86.0(@babel/core@7.29.7)(@react-native-community/cli@12.3.0)(@types/react@19.2.17)(react@19.2.7))(react@19.2.7):

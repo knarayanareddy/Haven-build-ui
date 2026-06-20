@@ -51,7 +51,7 @@ Each issue below is phrased as a suggested GitHub issue title plus a concise acc
 - export behavior and user expectation clearly documented
 - implementation ticket(s) split accordingly
 
-## 8. Validate elder app scaffold on physical iOS and Android devices
+## 8. Validate elder app on physical iOS and Android devices
 **Acceptance target:**
 - checklist completed for:
   - OTP/auth flow

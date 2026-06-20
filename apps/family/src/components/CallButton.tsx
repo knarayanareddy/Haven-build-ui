@@ -43,14 +43,7 @@ export function CallButton({ elderId, elderName, supabaseUrl, accessToken }: Cal
       const json = await response.json();
       if (!response.ok) throw new Error(json.error ?? 'Could not initiate call');
 
-      // Call session created. The elder will receive an INCOMING_CALL push.
-      // For now, simulate ringing until the elder responds or timeout.
-      // In production, subscribe to Supabase Realtime for call status changes.
-
-      // Simulate: after 4 seconds, mark as connected (demo)
-      setTimeout(() => {
-        setCallState((prev) => (prev === 'ringing' ? 'connected' : prev));
-      }, 4000);
+      setCallState(json.status === 'connected' ? 'connected' : 'ringing');
     } catch (error) {
       setCallState('error');
       setError(String((error as Error).message ?? error));

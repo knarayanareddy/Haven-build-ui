@@ -1,5 +1,6 @@
 export interface DashboardClientConfig {
   supabaseUrl: string;
+  supabaseAnonKey?: string;
   accessToken: string;
 }
 
@@ -7,7 +8,7 @@ export async function familyDashboardSummary(config: DashboardClientConfig, elde
   const response = await fetch(`${config.supabaseUrl}/rest/v1/rpc/family_dashboard_summary`, {
     method: 'POST',
     headers: {
-      apikey: config.accessToken,
+      apikey: config.supabaseAnonKey ?? config.accessToken,
       authorization: `Bearer ${config.accessToken}`,
       'content-type': 'application/json',
     },

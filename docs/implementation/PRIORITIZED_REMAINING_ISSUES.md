@@ -1,14 +1,15 @@
 # HAVEN Prioritized Remaining Issues
 
-Last updated: 2026-06-13
+Last updated: 2026-06-20
 
 ## P0 — critical before any real launch
 
-### 1. Validate all hardened authz paths against a real Supabase project
+### 1. Validate all hardened authz paths against hosted Supabase
 **Why:** static checks are no longer enough for the repo’s security claims.
 
 **Needed:**
-- real project reset
+- hosted staging/production project reset or migration deploy
+- `corepack pnpm run smoke:hosted`
 - authenticated Edge Function smoke coverage
 - negative tests for unrelated/family/carer/admin boundaries
 
@@ -20,10 +21,11 @@ Last updated: 2026-06-13
 - add cleanup and audit path
 - verify erasure behavior end to end
 
-### 3. Test signed storage URL paths against real storage objects
+### 3. Test signed storage URL paths against hosted storage objects
 **Why:** current guarantees are mostly code/static-policy based.
 
 **Needed:**
+- run `corepack pnpm run smoke:hosted`
 - upload/read path tests for elder-owned folders
 - negative tests for cross-user path signing
 - family read-path verification where allowed
@@ -39,8 +41,8 @@ Last updated: 2026-06-13
 - notification/self-only path checks
 - export negative/positive permutations
 
-### 5. Add authenticated Edge Function integration smoke tests
-**Why:** there is still a gap between table/RPC visibility and actual function behavior.
+### 5. Expand authenticated Edge Function integration smoke tests
+**Why:** the first hosted smoke script exists, but broader function behavior still needs staged coverage.
 
 **Needed:**
 - function-level happy/negative tests for critical routes
@@ -104,6 +106,6 @@ Last updated: 2026-06-13
 Do not market the repository as production-ready yet.
 
 Use the current state as:
-- hardened engineering RC
+- hardened local/pre-production engineering RC
 - internal diligence package
 - pre-production validation baseline

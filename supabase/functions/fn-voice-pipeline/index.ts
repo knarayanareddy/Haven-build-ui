@@ -33,6 +33,13 @@ function classify(transcript: string, locale: "en-GB" | "nl-NL" = "nl-NL") {
   return { intent: "companion", action: "COMPANION_REPLY" };
 }
 
+function localizedResponse(locale: "en-GB" | "nl-NL", text: string) {
+  return {
+    response_text_nl: locale === "nl-NL" ? text : null,
+    response_text_en: locale === "en-GB" ? text : null,
+  };
+}
+
 async function selectVoiceConfig(adminClient: ReturnType<typeof admin>, elderId: string, locale: "en-GB" | "nl-NL"): Promise<{ voiceId?: string; useFamiliar: boolean; crisisOverride: boolean; disclosure: "always" | "first_of_day" | "none" }> {
   const { data: pref } = await adminClient.from("elder_voice_preferences").select("voice_profile_id, use_familiar_voice, disclosure_mode").eq("elder_id", elderId).maybeSingle();
   if (!pref?.use_familiar_voice || !pref.voice_profile_id) return { useFamiliar: false, crisisOverride: false, disclosure: "none" };
@@ -179,7 +186,7 @@ Deno.serve(asyncWrapper("fn-voice-pipeline", async (req: Request) => {
           transcript_en: locale === "en-GB" ? transcript : null,
           intent: c.intent,
           entities: body.entities ?? {},
-          response_text: askBack,
+          ...localizedResponse(locale, askBack),
           action_taken: "AWAIT_REPEAT_BACK",
           distress_detected: false,
         });
@@ -189,8 +196,9 @@ Deno.serve(asyncWrapper("fn-voice-pipeline", async (req: Request) => {
       if (distress) {
         const { data: family } = await dbAdmin.from("family_relationships").select("family_member_id").eq("elder_id", body.elder_id).eq("elder_consented", true).eq("is_active", true).eq("notify_on_crisis", true);
         await Promise.all((family ?? []).map((f) => dispatchNotification({ recipient_id: String(f.family_member_id), elder_id: String(body.elder_id), notification_type: "crisis_gedetecteerd", title_nl: "Noodoproep via stem", title_en: "Crisis alert via voice", body_nl: `HAVEN hoorde: "${transcript}". Bel meteen.`, body_en: `HAVEN heard: "${transcript}". Please call immediately.`, data: { transcript } })));
-        await db.from("voice_interactions").insert({ elder_id: body.elder_id, screen_id: String(body.screen_id), transcript_nl: locale === "nl-NL" ? transcript : null, transcript_en: locale === "en-GB" ? transcript : null, intent: "crisis", entities: body.entities ?? {}, response_text: "Ik hoor dat er nood is. Ik heb meteen uw familie gewaarschuwd.", action_taken: "CRISIS_ESCALATED", distress_detected: true });
-        return { body: { transcript, intent: "crisis", response_text: "Ik hoor dat er nood is. Ik heb meteen uw familie gewaarschuwd.", action_taken: "CRISIS_ESCALATED", audio_url: null, distress_detected: true } };
+        const crisisText = locale === "nl-NL" ? "Ik hoor dat er nood is. Ik heb meteen uw familie gewaarschuwd." : "I hear this may be urgent. I alerted your family immediately.";
+        await db.from("voice_interactions").insert({ elder_id: body.elder_id, screen_id: String(body.screen_id), transcript_nl: locale === "nl-NL" ? transcript : null, transcript_en: locale === "en-GB" ? transcript : null, intent: "crisis", entities: body.entities ?? {}, ...localizedResponse(locale, crisisText), action_taken: "CRISIS_ESCALATED", distress_detected: true });
+        return { body: { transcript, intent: "crisis", response_text: crisisText, action_taken: "CRISIS_ESCALATED", audio_url: null, distress_detected: true } };
       }
 
       if (c.intent === "life_story") {
@@ -208,7 +216,7 @@ Deno.serve(asyncWrapper("fn-voice-pipeline", async (req: Request) => {
       const vConfig = await selectVoiceConfig(dbAdmin, elderId, locale);
       let audioUrl: string | null = null;
       if (vConfig.useFamiliar && vConfig.voiceId) {
-        audioUrl = await synthesizeSpeechToStorage(responseText, vConfig.voiceId, elderId).catch(() => null);
+        audioUrl = await synthesizeSpeechToStorage({ elderId, interactionId: crypto.randomUUID(), text: responseText, locale, voiceId: vConfig.voiceId }).catch(() => null);
       }
 
       await db.from("voice_interactions").insert({
@@ -218,7 +226,7 @@ Deno.serve(asyncWrapper("fn-voice-pipeline", async (req: Request) => {
         transcript_en: locale === "en-GB" ? transcript : null,
         intent: c.intent,
         entities: body.entities ?? {},
-        response_text: responseText,
+        ...localizedResponse(locale, responseText),
         action_taken: "COMPANION_REPLY",
         distress_detected: false,
       });

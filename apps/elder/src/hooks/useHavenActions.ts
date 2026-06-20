@@ -7,12 +7,24 @@ import { enqueueOfflineAction } from '../services/sqliteOfflineQueue';
 import { classifyNetworkError } from '../state/networkResilience';
 import { translateElderError } from '../services/errorMapper';
 
-const DEMO_ELDER_ID = '00000000-0000-0000-0000-000000000001';
+function sessionUserId(session: { access_token?: string } | null): string | null {
+  const directUser = (session as unknown as { user?: { id?: string } } | null)?.user?.id;
+  if (directUser) return directUser;
+  const token = session?.access_token;
+  if (!token) return null;
+  try {
+    const [, payload] = token.split('.');
+    return JSON.parse(atob(payload))?.sub ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export function useHavenActions(screenId: string) {
   const { session } = useAuth();
   const { t } = useTranslation();
   const client = session ? new HavenClient({ supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!, accessToken: session.access_token }) : null;
+  const elderId = sessionUserId(session);
 
   const handlePrimaryAction = useCallback(async (actionId: string) => {
     if (actionId === 'CALL_FAMILY' || actionId === 'EMERGENCY') {
@@ -111,7 +123,8 @@ export function useHavenActions(screenId: string) {
         return;
       }
       try {
-        const videoCallJoinToken = await client.screenData({ elder_id: DEMO_ELDER_ID, screen_id: 'INCOMING_CALL', locale: 'nl-NL' });
+        if (!elderId) throw new Error('Missing elder profile for signed-in session');
+        await client.screenData({ elder_id: elderId, screen_id: 'INCOMING_CALL', locale: 'nl-NL' });
         Alert.alert('HAVEN', t('actions.call_answered.alert', { sessionId }));
       } catch (error) {
         Alert.alert(t('haven_explanation_title'), translateElderError(error));
@@ -189,7 +202,8 @@ export function useHavenActions(screenId: string) {
         return;
       }
       try {
-        await client.voice({ elder_id: DEMO_ELDER_ID, screen_id: 'PILLS', transcript_text: 'I took it', locale: 'en-GB' });
+        if (!elderId) throw new Error('Missing elder profile for signed-in session');
+        await client.voice({ elder_id: elderId, screen_id: 'PILLS', transcript_text: 'I took it', locale: 'en-GB' });
         Alert.alert('HAVEN', t('actions.take_success.alert'));
       } catch (error) {
         if (classifyNetworkError(error) === 'offline') {
@@ -211,14 +225,15 @@ export function useHavenActions(screenId: string) {
       return;
     }
     try {
-      if (screenId === 'PILLS') await client.voice({ elder_id: DEMO_ELDER_ID, screen_id: 'PILLS', transcript_text: 'I took it', locale: 'en-GB' });
-      else if (screenId === 'TODAY') await client.screenData({ elder_id: DEMO_ELDER_ID, screen_id: 'TODAY', locale: 'en-GB' });
-      else await client.screenData({ elder_id: DEMO_ELDER_ID, screen_id: screenId, locale: 'en-GB' });
+      if (!elderId) throw new Error('Missing elder profile for signed-in session');
+      if (screenId === 'PILLS') await client.voice({ elder_id: elderId, screen_id: 'PILLS', transcript_text: 'I took it', locale: 'en-GB' });
+      else if (screenId === 'TODAY') await client.screenData({ elder_id: elderId, screen_id: 'TODAY', locale: 'en-GB' });
+      else await client.screenData({ elder_id: elderId, screen_id: screenId, locale: 'en-GB' });
       Alert.alert('HAVEN', t('actions.action_completed.alert', { actionId }));
     } catch (error) {
       Alert.alert(t('haven_explanation_title'), translateElderError(error));
     }
-  }, [client, screenId, t]);
+  }, [client, elderId, screenId, t]);
 
   return { handlePrimaryAction };
 }

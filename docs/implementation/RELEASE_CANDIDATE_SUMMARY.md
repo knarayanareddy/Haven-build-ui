@@ -1,12 +1,12 @@
 # HAVEN Release-Candidate Summary
 
-Last updated: 2026-06-13
+Last updated: 2026-06-20
 
 ## Executive summary
 
 HAVEN is now best described as:
 
-> a substantially hardened, production-shaped engineering package with meaningful trust-boundary enforcement, lifecycle coverage, reproducible installs, and CI guardrails — but still requiring real infrastructure validation, device validation, and operational/compliance sign-off before launch.
+> a substantially hardened, locally green, production-shaped engineering package with meaningful trust-boundary enforcement, lifecycle coverage, reproducible installs, CI guardrails, local Supabase verification, and live-app paths that no longer depend on hidden demo fixtures — but still requiring hosted infrastructure validation, device validation, and operational/compliance sign-off before launch.
 
 ## What is now materially stronger
 
@@ -32,7 +32,11 @@ HAVEN is now best described as:
 - The repository now uses a pinned pnpm lockfile strategy.
 - Root install/build/typecheck/lint scripts exist.
 - Family app production build is part of quality validation.
-- Elder and grandchild app scaffolds now typecheck.
+- Elder and grandchild apps now typecheck.
+- Elder, family, carer, and grandchild live paths no longer use hardcoded demo elder data for authenticated operations.
+- Hosted smoke coverage exists via `corepack pnpm run smoke:hosted`.
+- Local Supabase verification has passed, including live local RLS checks.
+- Tink refresh tokens are encrypted with a required `TINK_TOKEN_ENCRYPTION_KEY`.
 - Browser E2E is wired into CI.
 - Supabase-specific CI strategy is documented and split from general engineering CI.
 
@@ -42,7 +46,7 @@ HAVEN is now best described as:
 
 The repository still needs execution and validation against:
 
-- a real Supabase environment
+- a hosted Supabase staging/production environment
 - real storage objects
 - real vendor sandbox integrations
 - real mobile devices
@@ -50,7 +54,7 @@ The repository still needs execution and validation against:
 
 ### Device/runtime gap
 
-The Expo apps are scaffold-typechecked, but not release-certified.
+The Expo apps typecheck and have EAS/native permission configuration, but they are not release-certified.
 
 Remaining work includes:
 - iOS and Android runtime validation
@@ -73,7 +77,7 @@ Remaining external gates include:
 
 If a release label is needed now, the most honest label is:
 
-> `rc-engineering-scaffold-hardened`
+> `rc-preproduction-local-green`
 
 Not:
 - GA
@@ -84,7 +88,7 @@ Not:
 
 The next phase should focus on:
 
-1. richer live Supabase and vendor integration coverage
+1. hosted Supabase smoke/live RLS and vendor integration coverage
 2. device/runtime validation
 3. operational/compliance evidence collection
 4. closing the remaining lifecycle/storage edge cases

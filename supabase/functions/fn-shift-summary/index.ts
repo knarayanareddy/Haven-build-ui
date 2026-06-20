@@ -88,19 +88,19 @@ Deno.serve(async (req) => {
       { data: incidents, error: iErr },
     ] = await Promise.all([
       db.from("carer_visit_logs")
-        .select("id, started_at, completed_at")
+        .select("id, check_in_time, check_out_time")
         .eq("elder_id", elderId)
-        .eq("carer_member_id", userId)
-        .gte("started_at", shiftStart)
-        .lte("started_at", shiftEnd)
+        .eq("carer_id", userId)
+        .gte("check_in_time", shiftStart)
+        .lte("check_in_time", shiftEnd)
         .is("deleted_at", null),
       db.from("carer_handover_notes")
-        .select("recorded_at, appetite, mood, mobility, concerns_nl")
+        .select("created_at, appetite, mood, mobility, concerns_nl, notes_nl")
         .eq("elder_id", elderId)
-        .eq("carer_member_id", userId)
-        .gte("recorded_at", shiftStart)
-        .lte("recorded_at", shiftEnd)
-        .order("recorded_at", { ascending: false })
+        .eq("carer_id", userId)
+        .gte("created_at", shiftStart)
+        .lte("created_at", shiftEnd)
+        .order("created_at", { ascending: false })
         .limit(20),
       db.from("medication_reminders")
         .select("id, medication_id, scheduled_time, status, medications(name_nl)")
@@ -143,11 +143,11 @@ Deno.serve(async (req) => {
       medications_administered: medRows.length - missedMeds,
       incidents_reported: (incidents ?? []).length,
       handover_notes: (notes ?? []).map((n: Record<string, unknown>) => ({
-        recorded_at: String(n.recorded_at ?? ""),
+        recorded_at: String(n.created_at ?? ""),
         appetite: Number(n.appetite ?? 3),
         mood: Number(n.mood ?? 3),
         mobility: n.mobility ? String(n.mobility) : null,
-        concerns_nl: n.concerns_nl ? String(n.concerns_nl) : null,
+        concerns_nl: n.concerns_nl ? String(n.concerns_nl) : n.notes_nl ? String(n.notes_nl) : null,
       })),
       outstanding_tasks: outstanding,
       recommendation: computeRecommendation(missedMeds, (incidents ?? []).length, lowMood),

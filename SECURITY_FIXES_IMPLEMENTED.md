@@ -3,6 +3,7 @@
 **Auditor:** Senior Security Engineer / Open-Source Maintainer  
 **Date:** 2026-06-14  
 **Target:** `knarayanareddy/Haven-build` @ commit `847a103` (vNext Well-Rounded Patch)  
+**Current addendum:** 2026-06-20 runtime/configuration pass removed the live demo elder UUID path, added hosted smoke scripts, encrypted Tink refresh-token storage, and made internal/regulatory fallback URLs fail-fast/configurable.
 **Severity Scale:** P0 (Critical/Immediate) → P1 (High/This Sprint) → P2 (Medium/Backlog)
 
 ---
@@ -15,7 +16,7 @@ HAVEN-build has impressive security architecture on paper (forced RLS, JWT, idem
 
 ## 🔴 P0 — 6 CRITICAL FINDINGS
 
-### P0-1: CORS Wildcard `*` on All 72 Edge Functions
+### P0-1: CORS Wildcard `*` on All Edge Functions
 **File:** `supabase/functions/_shared/core.ts`  
 **Risk:** Any malicious website can make authenticated cross-origin requests using victim's JWT. The `Access-Control-Allow-Origin: *` header allows any origin to call authenticated endpoints with credentials.
 
@@ -32,7 +33,7 @@ HAVEN-build has impressive security architecture on paper (forced RLS, JWT, idem
 ---
 
 ### P0-3: Error Messages Leak Internal Details
-**File:** Every Edge Function (72 instances)  
+**File:** Every Edge Function audited at the time
 **Risk:** Raw catch blocks returned Supabase DB errors, file paths, env variable names, SQL constraint names, internal function names directly to callers.
 
 **Fix:** New `safeErrorMessage(e)` function in `core.ts` classifies errors and returns sanitised messages:
@@ -47,7 +48,7 @@ HAVEN-build has impressive security architecture on paper (forced RLS, JWT, idem
 ---
 
 ### P0-4: No Rate Limiting on Any Endpoint
-**Risk:** All 72 functions had zero rate limiting. Attackers can brute-force JWT tokens, flood `fn-onboarding` to create fake users, exhaust function memory, enumerate elder UUIDs.
+**Risk:** All functions audited at the time had zero rate limiting. Attackers can brute-force JWT tokens, flood `fn-onboarding` to create fake users, exhaust function memory, enumerate elder UUIDs.
 
 **Fix:** New `ratelimit.ts` module implements in-memory sliding-window rate limiting (30 req/min/caller, identified by JWT suffix or IP). Applied to all sensitive endpoints: `fn-right-to-erasure`, `fn-onboarding`, `fn-scam-coaching`, `fn-emergency-profile`, and available via `havenHandler()` wrapper for all functions.
 
@@ -105,7 +106,7 @@ HAVEN-build has impressive security architecture on paper (forced RLS, JWT, idem
 | P2-1 | Missing security headers | `securityHeaders` const in `core.ts` adds `X-Content-Type-Options`, `X-Frame-Options`, `HSTS`, `Referrer-Policy`, `X-Permitted-Cross-Domain-Policies` to all responses |
 | P2-2 | No CORS preflight caching | `Access-Control-Max-Age: 86400` added to all preflight responses |
 | P2-3 | `fn-device-health-monitor` no deduplication | (Documented — needs idempotency wrapping in follow-up PR) |
-| P2-4 | Hardcoded demo elder UUID | (Documented — `DEMO_ELDER_ID` in `useHavenActions.ts` should come from env config) |
+| P2-4 | Hardcoded demo elder UUID | Fixed — live elder actions derive the profile ID from the authenticated Supabase session token |
 | P2-5 | Browser Shield sends full page content | (Documented — consider content filtering before sending) |
 | P2-6 | Voice intent classifier uses brittle regex | (Documented — upgrade to proper NL NLP model recommended) |
 | P2-7 | Storage signed URL TTL max 900s | (Documented — consider longer TTL for voice playback use cases) |

@@ -102,14 +102,14 @@ export async function companionReply(
   return { replyNl: content, replyEn: content, text: content };
 }
 
-export async function synthesizeSpeechToStorage(params: { elderId: string; interactionId: string; text: string; locale: 'en-GB' | 'nl-NL' }) {
+export async function synthesizeSpeechToStorage(params: { elderId: string; interactionId: string; text: string; locale: 'en-GB' | 'nl-NL'; voiceId?: string }) {
   if (mockEnabled()) {
     const mocked = await mockJson('/tts', params);
     if (mocked?.audio_url) return String(mocked.audio_url);
     return null;
   }
   const key = Deno.env.get('ELEVENLABS_API_KEY');
-  const voiceId = Deno.env.get(params.locale === 'nl-NL' ? 'ELEVENLABS_VOICE_ID_NL' : 'ELEVENLABS_VOICE_ID_EN');
+  const voiceId = params.voiceId ?? Deno.env.get(params.locale === 'nl-NL' ? 'ELEVENLABS_VOICE_ID_NL' : 'ELEVENLABS_VOICE_ID_EN');
   if (!key || !voiceId) return null;
   const response = await fetch(`${ELEVEN_BASE}/text-to-speech/${voiceId}`, {
     method: 'POST',

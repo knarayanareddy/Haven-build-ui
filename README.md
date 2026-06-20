@@ -4,22 +4,22 @@
 
 HAVEN is a privacy-first, voice-first elder-care platform for older adults in the Netherlands and the families and care professionals who support them. It combines fraud protection, medication support, family connection, cognitive/orientation safety, a warm voice companion and professional care workflows into one coherent product suite.
 
-This repository is an end-to-end production-shaped package generated from the HAVEN engineering design suite (`designdoc.md` v1.2.1). It contains app surfaces, Supabase schema, storage policies, Edge Functions, shared packages, ML safety assets, tests, release documentation, deployment scripts and compliance-support records.
+This repository is an end-to-end production-shaped HAVEN build. It contains the Expo elder, carer, and grandchild apps; the Next.js family dashboard; Supabase schema, storage policies, and Edge Functions; shared packages; ML safety assets; tests; release documentation; deployment scripts; and compliance-support records.
 
 ---
 
 ## Current build status
 
-The repository is the **HAVEN vNext Well-Rounded Patch** layered on top of the original v1.2.1 SSOT. It implements the full design-document feature surface plus the vNext extensions (fall detection, daily check-ins, daily family status, trust signal, scam coaching, Familiar Voice, Live video calling, carer handover notes, etc.) behind feature flags.
+The repository is the **HAVEN vNext build plus the June 20, 2026 end-to-end runtime/configuration fixes** layered on top of the original v1.2.1 SSOT. It implements the design-document feature surface plus vNext extensions (fall detection, daily check-ins, daily family status, trust signal, scam coaching, Familiar Voice, live video calling, carer handover notes, storage signed URLs, hosted smoke scripts, and local Supabase verification) behind feature flags and environment gates.
 
-Validation currently passes with:
+Validation currently reports:
 
 ```json
 {
   "ok": true,
   "app": "apps/iphone-suite/index.html",
-  "edgeFunctions": 72,
-  "schemaBytes": 158308
+  "edgeFunctions": 81,
+  "schemaBytes": 158544
 }
 ```
 
@@ -29,12 +29,13 @@ Validation currently passes with:
 |---|---|---|---|
 | **Original SSOT** | `designdoc.md` v1.2.1 | ~6,939 | Built |
 | **P0 security hardening closure** | 12 migrations + 55 Edge Functions | ~2,900 SQL / ~5,500 TS | Built (June 2026) |
-| **vNext Well-Rounded Patch** | `docs/implementation/VNEXT_PATCH_DESIGN.md` + `VNEXT_IMPLEMENTATION_REPORT.md` | 13 migrations + 72 Edge Functions | Built (June 2026) |
-| **Test pyramid** | `tests/edge/*.test.mjs` + `tests/rls/*.audit.mjs` + `tests/integration/live-rls.test.mjs` | ~50+ assertions | Green |
+| **vNext Well-Rounded Patch** | `docs/implementation/VNEXT_IMPLEMENTATION_REPORT.md` | 13 migrations + 72 Edge Functions at the time of that report | Built (June 2026) |
+| **End-to-end runtime/config pass** | Supabase grants/lint fixes, Expo/EAS/env wiring, hosted smoke script, demo-data removal, token encryption/config gates | 81 Edge Functions + current migrations | Built (June 20, 2026) |
+| **Test pyramid** | `tests/edge/*.test.mjs` + `tests/rls/*.audit.mjs` + `tests/integration/live-rls.test.mjs` + static smoke tests | full local suite | Green locally |
 
 ### vNext patch at a glance
 
-The vNext directive (`docs/implementation/VNEXT_PATCH_DESIGN.md`) was applied in-place. It added:
+The vNext directive summarised in `docs/implementation/VNEXT_IMPLEMENTATION_REPORT.md` was applied in-place. It added:
 
 - **1 schema migration** (`20260614000000_vnext_wellrounded_patch.sql`) with **14 new tables** + 11 telemetry columns on `device_sessions` + 6 seeded consent packs + 10 new feature flags + forced RLS on every new user-data table.
 - **16 new Edge Functions** + **4 patches** to existing ones.
@@ -43,7 +44,20 @@ The vNext directive (`docs/implementation/VNEXT_PATCH_DESIGN.md`) was applied in
 - **Carer portal**: handover-notes form + offline-first queue + MAR-light entry.
 - **Behavioural + RLS test coverage** grew to ~50+ assertions, all green.
 
-Honest gaps remaining (per `docs/implementation/VNEXT_IMPLEMENTATION_REPORT.md`): guided multi-step consent-pack onboarding UI in elder onboarding, elder-side video-call incoming-call screen, dedicated `fn-voice-profile-revoke` endpoint, and Playwright E2E flows for vNext paths. Schema + functions are ready; UI is the next session.
+Current local verification status:
+
+- `corepack pnpm run typecheck` passes.
+- `corepack pnpm run lint` passes.
+- `corepack pnpm test` passes.
+- `corepack pnpm run quality:check` passes, including the Next.js family production build.
+- `./scripts/ci/verify-local-supabase.sh` has passed in this working tree after clearing poisoned Supabase temp cache, applying migrations, parsing DB lint output, and running live local RLS checks.
+
+Current remaining boundary:
+
+- Real production/staging secret values still need to be filled for EAS, Supabase, and vendors.
+- `corepack pnpm run smoke:hosted` still needs hosted Supabase URL/JWT/internal key values before it can prove hosted Edge Functions and Storage.
+- Physical iOS/Android runtime behavior still needs device validation for camera, mic/TTS, push notifications, offline queues, and background/foreground behavior.
+- DPO/DPIA, vendor DPAs/SCCs, external pentest, usability sessions, and app-store approval remain human/commercial gates.
 
 ### Security Boundary Hardening (P0 Audit Complete)
 
@@ -76,18 +90,17 @@ Current test coverage includes:
 
 ### Production-launch note
 
-This repository is production-shaped and feature-complete from an engineering scaffold perspective. A real production launch still requires external operational gates:
+This repository is production-shaped and locally green, but it is not truthfully production-launched. A real production launch still requires external operational gates:
 
-1. Supabase CLI + Docker DB reset in CI or a developer machine.
-2. Real generated Supabase database types from a running database.
-3. Real RLS tests with real Supabase JWTs.
-4. Physical iPhone and Android testing.
-5. Vendor sandbox and production credentials.
-6. DPO-signed DPIA.
-7. Vendor DPAs/SCCs.
-8. External penetration test.
-9. Older-adult usability sessions.
-10. App Store / Play Store submissions and approvals.
+1. Hosted Supabase staging/production project with migrations, secrets, storage buckets, and Edge Functions deployed.
+2. `smoke:hosted` and live RLS/API checks run against hosted Supabase with real test JWTs.
+3. Physical iPhone and Android validation.
+4. Vendor sandbox and production credentials.
+5. DPO-signed DPIA.
+6. Vendor DPAs/SCCs.
+7. External penetration test.
+8. Older-adult usability sessions.
+9. App Store / Play Store submissions and approvals.
 
 These are tracked in the release and compliance documentation.
 
@@ -103,9 +116,10 @@ Haven-build/
 │   ├── admin-console/       # Compliance/release/admin console preview
 │   ├── carer-portal/        # WACHT professional carer portal preview
 │   ├── browser-shield/      # Browser Shield extension scaffold
-│   ├── elder/               # Expo elder app scaffold
-│   ├── family/              # Next.js family dashboard scaffold
-│   └── grandchild/          # Expo grandchild companion app scaffold
+│   ├── elder/               # Expo elder app
+│   ├── carer/               # Expo carer app
+│   ├── family/              # Next.js family dashboard
+│   └── grandchild/          # Expo grandchild companion app
 ├── docs/
 │   ├── api/                 # OpenAPI + Edge Function catalog
 │   ├── implementation/      # audits, phase coverage, feature matrix
@@ -127,8 +141,8 @@ Haven-build/
 │   ├── check-local-supabase.sh
 │   └── validate-suite.mjs
 ├── supabase/
-│   ├── functions/           # 55 Edge Functions
-│   ├── migrations/          # 9 migrations covering schema/security/features
+│   ├── functions/           # 81 Edge Functions
+│   ├── migrations/          # timestamped schema/security/runtime migrations
 │   ├── seed.sql             # synthetic local seed data
 │   └── config.toml          # Supabase local function config
 ├── tests/
@@ -177,7 +191,7 @@ Includes:
 - local state for demo interactions
 - PWA manifest and service worker
 
-### Elder app scaffold
+### Elder app
 
 Location:
 
@@ -189,6 +203,8 @@ Includes (v1.2.1 baseline + vNext patch):
 
 - Expo app config (SDK 56, RN 0.86, React 19.2.7)
 - EAS build profiles (`development`, `preview`, `production`)
+- EAS fail-fast validation for required public Supabase env values
+- Native permission configuration for camera, microphone, speech, location, calendar, notifications and background modes
 - React Navigation native-stack
 - Supabase Auth provider with `expo-secure-store` session persistence
 - **Schema-driven `ScreenRenderer`** rendering 10 production screens from `packages/schema/src/screenSchema.ts`
@@ -199,6 +215,7 @@ Includes (v1.2.1 baseline + vNext patch):
 - **Familiar Voice toggle** on STEM + SETTINGS screens (gated by `familiar_voice_enabled`)
 - SQLite offline queue with `expo-sqlite` (`apps/elder/src/services/sqliteOfflineQueue.ts`)
 - Voice recorder service (`expo-av`)
+- Floating voice button wired to real recording and `fn-voice-pipeline` submission
 - Document camera capture service (`expo-camera`)
 - Push-token registration service (`expo-notifications`)
 - Crisis phrase detection (`apps/elder/src/services/crisis.ts`)
@@ -206,7 +223,9 @@ Includes (v1.2.1 baseline + vNext patch):
 - PII-safe logger (`apps/elder/src/services/security.ts`)
 - Network resilience + offline sync machine (`apps/elder/src/state/*`)
 
-### Family dashboard scaffold
+The elder live action path uses the authenticated profile ID derived from the Supabase session token. It no longer sends live calls with a hardcoded demo elder UUID.
+
+### Family dashboard
 
 Location:
 
@@ -216,13 +235,14 @@ apps/family
 
 Includes (v1.2.1 baseline + vNext patch):
 
-- Next.js 16 app scaffold with TypeScript and ESLint
+- Next.js 16 app with TypeScript and ESLint
 - Security headers + middleware permission mapping
 - Dashboard routes for medications, alerts, BUURT, location, WACHT, **Familiar Voice**
 - **Daily status pill** (`apps/family/src/components/DailyStatusPill.tsx`) showing green/amber/red with "why" + "what next"
 - **Trust signal panel** (`apps/family/src/components/TrustSignalPanel.tsx`) showing device last-seen, permissions last known, recent `device_health_events`
 - **Two-way action buttons**: send heart, voice message, gentle check-in, video call
-- **Consent-scoped dashboard RPC client** (`apps/family/src/services/dashboard.ts`)
+- **Consent-scoped dashboard RPC client** (`apps/family/src/services/dashboard.ts`) using `family_dashboard_summary`
+- Server-side dashboard bootstrap via `HAVEN_FAMILY_ELDER_ID` and `HAVEN_FAMILY_ACCESS_TOKEN`; if missing, the dashboard shows a setup-required state instead of fake care data
 - **Real-time subscriptions** (`apps/family/src/services/realtime.ts`)
 - **Familiar Voice recording page** with privacy disclosure + sample sentences + record/test actions (`apps/family/src/app/dashboard/familiar-voice/page.tsx`)
 
@@ -272,6 +292,24 @@ Covers (v1.2.1 baseline + vNext patch):
 - **Offline-first capture** — localStorage-backed queue with online/offline buttons
 - **MAR-light** — administration logging linked to `medication_reminders`
 
+### Carer app
+
+Location:
+
+```text
+apps/carer
+```
+
+Includes:
+
+- Expo app config and EAS build profiles
+- Supabase Auth provider with secure session storage
+- Visit list and shift summary screens that call `fn-shift-summary` for configured `EXPO_PUBLIC_CARER_ELDER_IDS`
+- Visit completion path that calls `fn-care-visit-log`
+- Handover form calling `fn-carer-handover-note`
+- Offline queue fallback for handover and visit-log writes
+- Setup-required states when no signed-in session or assigned elder IDs are configured
+
 ### Grandchild app
 
 Location:
@@ -282,8 +320,9 @@ apps/grandchild
 
 Covers:
 
-- one-button video hello flow
-- backend call to `fn-grandchild-message-send`
+- simple authenticated hello form
+- backend call to `fn-grandchild-message-send` through `apps/grandchild/src/client.ts`
+- setup-required validation for Supabase URL, elder ID, family member ID, display name and family access token
 
 ---
 
@@ -305,7 +344,9 @@ supabase/migrations/
 ├── 20260613000010_edge_authz_hardening.sql                    # Companion memory + audit log RLS
 ├── 20260613000011_voice_interactions_self_write.sql           # voice_elder_insert/update
 ├── 20260613000012_data_lifecycle_expansion.sql               # GDPR export expansion + retention
-└── 20260614000000_vnext_wellrounded_patch.sql                 # vNext patch: 14 new tables + flags
+├── 20260614000000_vnext_wellrounded_patch.sql                 # vNext patch: 14 new tables + flags
+├── 20260620000001_fix_export_elder_data_recorded_at.sql       # export_elder_data runtime fix
+└── 20260620000002_end_to_end_runtime_fixes.sql                # grants, function drift, lint/runtime fixes
 ```
 
 The migrations implement:
@@ -327,16 +368,12 @@ The migrations implement:
 
 ### Edge Functions
 
-There are currently **72 Edge Functions** in `supabase/functions`. They are classified into 5 explicit trust zones per `docs/implementation/EDGE_FUNCTION_TRUST_BOUNDARY_MATRIX.md`:
+There are currently **81 Edge Functions** in `supabase/functions`. They are classified into explicit trust zones per `docs/implementation/EDGE_FUNCTION_TRUST_BOUNDARY_MATRIX.md`:
 
-- 41 user-scoped (`verify_jwt = true`) — every call uses the caller's JWT
-- 11 admin-bearer only — `requireAdminBearer`
-- 4 vendor-secret + internal-header — `requireVendorSecretHeader` or `requireInternalAccess`
-- 16 internal-header only — `requireInternalAccess`
-
-Of the 72 functions:
-- **55 from v1.2.1** (P0 hardening closure) — SCHILD/ANKER/KRING/KOMPAS/STEM/WACHT
-- **17 added by the vNext patch** — fall detection + wellness check-ins + scam coaching + med OCR review + med interactions + voice profile + video calling + carer handover + internal scheduled jobs
+- user-scoped functions (`verify_jwt = true`) use the caller's JWT and relationship/permission checks
+- admin/service functions use explicit admin bearer or service execution paths
+- vendor-facing functions use HMAC/shared-secret validation
+- internal scheduled/background functions require `HAVEN_INTERNAL_KEY`
 
 A complete catalog is available here:
 
@@ -449,7 +486,7 @@ corepack pnpm install --frozen-lockfile
 Run validation:
 
 ```bash
-corepack pcorepack pnpm run validate:suite
+corepack pnpm run validate:suite
 ```
 
 Run lint coverage:
@@ -466,8 +503,8 @@ corepack pnpm run typecheck
 
 This currently checks:
 - shared packages
-- Expo elder app scaffold
-- Expo grandchild app scaffold
+- Expo elder app
+- Expo grandchild app
 
 The Next.js family app gets its TypeScript validation through the production build step:
 
@@ -513,10 +550,21 @@ Optional local Supabase orchestration:
 corepack pnpm run verify:supabase:local
 ```
 
+Hosted Supabase smoke test, after staging/production secrets and test JWTs are available:
+
+```bash
+SUPABASE_URL=... \
+SUPABASE_ANON_KEY=... \
+HAVEN_INTERNAL_KEY=... \
+HAVEN_TEST_ELDER_ID=... \
+HAVEN_TEST_ELDER_JWT=... \
+corepack pnpm run smoke:hosted
+```
+
 Run all tests:
 
 ```bash
-corepack pcorepack pnpm test
+corepack pnpm test
 ```
 
 ### Supabase local reset
@@ -586,9 +634,9 @@ External integrations are represented in code and tracked in `integration_connec
 | OpenAI embeddings/LLM | implemented | API key + DPA/SCC |
 | ElevenLabs TTS | implemented | API key + DPA/SCC |
 | Expo Push | implemented | Expo token + store setup |
-| Supabase Storage signed URLs | implemented | Supabase project |
+| Supabase Storage signed URLs | implemented + hosted smoke script | Supabase project + test JWT |
 | Sentry/log drains | implemented | DSN/log-drain config |
-| PSD2 | implemented with HMAC webhook support | provider contract and sandbox |
+| PSD2/Tink | implemented with HMAC webhook support and encrypted refresh-token storage | provider contract, sandbox, `TINK_TOKEN_ENCRYPTION_KEY` |
 | MedMij/FHIR | implemented importer | accreditation and credentials |
 | G-Standaard/Z-Index | implemented with legal-basis gate | AGB-code/formal agreement |
 | ONS/Nedap/Careweb | implemented sync scaffolds | partner access |
@@ -621,14 +669,16 @@ docs/release/ELDER_USABILITY_PROTOCOL.md
 docs/release/COPY_REVIEW.md
 ```
 
-Human gates still required before real production launch:
+Human and hosted-runtime gates still required before real production launch:
 
-1. DPO signs DPIA.
-2. Vendor DPAs/SCCs completed.
-3. Production secrets/vendor credentials provisioned.
-4. External penetration test completed.
-5. Older-adult usability testing completed.
-6. App Store / Play Store submissions approved.
+1. Hosted Supabase staging/production smoke test passes.
+2. Production secrets/vendor credentials provisioned.
+3. Physical iOS/Android validation completed.
+4. DPO signs DPIA.
+5. Vendor DPAs/SCCs completed.
+6. External penetration test completed.
+7. Older-adult usability testing completed.
+8. App Store / Play Store submissions approved.
 
 ---
 
@@ -643,14 +693,13 @@ docs/implementation/DESIGN_DOC_DIFF.md                      # Design-doc-to-buil
 docs/implementation/PHASE_COVERAGE_AUDIT.md                 # Phase-by-phase coverage
 docs/implementation/FEATURE_IMPLEMENTATION_MATRIX.md        # 60+ feature matrix
 docs/implementation/FEATURE_IMPLEMENTATION_MATRIX.json      # Machine-readable matrix
-docs/implementation/EDGE_FUNCTION_TRUST_BOUNDARY_MATRIX.md  # 5 trust zones × 72 functions
+docs/implementation/EDGE_FUNCTION_TRUST_BOUNDARY_MATRIX.md  # Edge Function trust zones
 docs/implementation/RESIDUAL_HARDENING_REPORT.md            # Human-only remaining gates
 docs/implementation/RELEASE_CANDIDATE_SUMMARY.md            # Honest RC label
 docs/implementation/PRIORITIZED_REMAINING_ISSUES.md        # P0/P1/P2 backlog
 docs/implementation/NEXT_10_GITHUB_ISSUES.md               # Suggested labels
 docs/implementation/SESSION_HANDOFF_CHANGELOG.md            # Session-by-session changelog
 docs/implementation/GAP_CLOSURE_REPORT.md                   # Earlier scaffold→real gap closure
-docs/implementation/VNEXT_PATCH_DESIGN.md                  # vNext directive
 docs/implementation/VNEXT_IMPLEMENTATION_REPORT.md         # vNext acceptance criteria + honest gaps
 ```
 
@@ -660,20 +709,20 @@ The feature matrix currently tracks all major features from the design document 
 
 ## Engineering rating
 
-After the v1.2.1 hardening pass **and the vNext Well-Rounded Patch**, this repository is best described as:
+After the v1.2.1 hardening pass, the vNext Well-Rounded Patch, and the June 20, 2026 runtime/configuration pass, this repository is best described as:
 
-> A substantially hardened, feature-complete production-shaped engineering package for HAVEN. Schema, Edge Functions, app surfaces, and test coverage are all in place behind feature flags. Phase 1 features (daily check-ins, fall detection, scam coaching, trust signal, medication repeat-back, daily family status, OCR review) are wired end-to-end. Phase 2 features (Familiar Voice, Live video calling) have schema + functions + app surfaces and are ready for provider integration.
+> A substantially hardened, locally green, production-shaped engineering package for HAVEN. Schema, Edge Functions, app surfaces, Supabase local verification, and test coverage are in place behind feature flags and configuration gates. The live app paths no longer rely on hidden demo IDs or demo fixtures, and production-risk integration paths now fail fast when required secrets/config are absent.
 
-Current engineering scaffold rating: **9.0/10** (up from 8.5/10 after the vNext patch).
+Current engineering readiness rating: **9.3/10 for local/pre-production code readiness**.
 
-The remaining 1.0 point requires:
-1. Real Supabase infrastructure + generated DB types
+The remaining gap requires:
+1. Hosted Supabase staging/production smoke and live RLS/API verification
 2. Real devices (physical iPhone / Android) + vendor sandbox credentials
 3. DPO-signed DPIA + vendor DPAs/SCCs
 4. External penetration test + older-adult usability sessions
 5. App Store / Play Store submissions
 
-These are documented as human-only gates in `docs/implementation/VNEXT_IMPLEMENTATION_REPORT.md` and `RESIDUAL_HARDENING_REPORT.md`.
+These are documented as external gates in `docs/PRODUCTION_READINESS_CHECKLIST.md`, `PRODUCTION_INFRASTRUCTURE_AND_HUMAN_GATES.md`, and `docs/implementation/RESIDUAL_HARDENING_REPORT.md`.
 
 ---
 

@@ -45,8 +45,8 @@ export async function executeRegulatoryEscalation(
   const escalationTask = async () => {
     let webhookOutcome: "success" | "failure";
     let httpStatus: number | null = null;
-    let endpointUrl = "https://igj.haven.internal/webhook/v1/escalate";
-    let vendorSecret = "secret_hmac_default";
+    let endpointUrl = Deno.env.get("REGULATORY_ESCALATION_WEBHOOK_URL") ?? "";
+    let vendorSecret = Deno.env.get("REGULATORY_ESCALATION_HMAC_SECRET") ?? "";
 
     try {
       const { data: conn } = await db
@@ -56,7 +56,11 @@ export async function executeRegulatoryEscalation(
         .maybeSingle();
 
       if (conn?.legal_gate) endpointUrl = conn.legal_gate;
-      if (conn?.secret_names?.[0]) vendorSecret = conn.secret_names[0];
+      if (conn?.secret_names?.[0]) vendorSecret = Deno.env.get(conn.secret_names[0]) ?? vendorSecret;
+
+      if (!endpointUrl || !vendorSecret) {
+        throw new Error("Regulatory escalation webhook URL and HMAC secret must be configured");
+      }
 
       // FIX B7: Authoritative SSRF URL validation
       const parsedUrl = new URL(endpointUrl);

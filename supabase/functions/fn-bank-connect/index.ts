@@ -25,6 +25,27 @@ interface TinkTokenResponse {
   expires_in: number;
 }
 
+async function encryptRefreshToken(refreshToken: string): Promise<string> {
+  const rawKey = Deno.env.get("TINK_TOKEN_ENCRYPTION_KEY");
+  if (!rawKey) {
+    throw new Error("TINK_TOKEN_ENCRYPTION_KEY must be configured before storing Tink refresh tokens");
+  }
+
+  const keyBytes = Uint8Array.from(atob(rawKey), (char) => char.charCodeAt(0));
+  if (keyBytes.byteLength !== 32) {
+    throw new Error("TINK_TOKEN_ENCRYPTION_KEY must be a base64-encoded 32-byte AES-GCM key");
+  }
+
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await crypto.subtle.importKey("raw", keyBytes, { name: "AES-GCM" }, false, ["encrypt"]);
+  const ciphertext = new Uint8Array(
+    await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(refreshToken)),
+  );
+
+  const encode = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes));
+  return `v1.aes-gcm.${encode(iv)}.${encode(ciphertext)}`;
+}
+
 async function exchangeCodeForToken(code: string): Promise<TinkTokenResponse> {
   const clientId = Deno.env.get('TINK_CLIENT_ID');
   const clientSecret = Deno.env.get('TINK_CLIENT_SECRET');
@@ -112,6 +133,7 @@ Deno.serve(async (req) => {
 
       // Exchange code for tokens
       const tokens = await exchangeCodeForToken(code);
+      const encryptedRefreshToken = await encryptRefreshToken(tokens.refresh_token);
 
       // Store the connection
       const connectionId = crypto.randomUUID();
@@ -122,7 +144,7 @@ Deno.serve(async (req) => {
         provider_ref: `tink-${elderId}`,
         status: "active",
         linked_at: new Date().toISOString(),
-        refresh_token_encrypted: tokens.refresh_token, // In production: encrypt this
+        refresh_token_encrypted: encryptedRefreshToken,
         last_synced_at: new Date().toISOString(),
       });
 

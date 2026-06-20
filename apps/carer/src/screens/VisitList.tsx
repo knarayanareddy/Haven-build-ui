@@ -2,12 +2,12 @@
 // Today's schedule of elders to visit. Shows medication status,
 // last handover note summary, and one-tap "Start visit" / "Complete visit".
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { useAuth } from '../auth/AuthProvider';
 import { CarerClient } from '../services/havenClient';
-import { getOfflineQueue, getQueueSize } from '../services/offlineQueue';
+import { enqueueOffline, getQueueSize } from '../services/offlineQueue';
 
 interface ElderVisit {
   elder_id: string;
@@ -15,18 +15,27 @@ interface ElderVisit {
   next_medication: string | null;
   last_note_summary: string | null;
   visit_status: 'pending' | 'in_progress' | 'completed';
+  started_at: string | null;
 }
 
-// Demo data — in production, fetched from fn-care-plan + fn-shift-summary
-const DEMO_VISITS: ElderVisit[] = [
-  { elder_id: '00000000-0000-0000-0000-000000000001', elder_name: 'Margreet Bakker', next_medication: 'Metformine 500 mg om 08:00', last_note_summary: 'Stemming rustig. Medicatiecontrole afgerond.', visit_status: 'in_progress' },
-  { elder_id: '11111111-0000-0000-0000-000000000002', elder_name: 'Jan de Vries', next_medication: 'Lisinopril 10 mg om 09:00', last_note_summary: 'Mobiliteit verminderd. Extra hulp bij opstaan.', visit_status: 'pending' },
-  { elder_id: '22222222-0000-0000-0000-000000000003', elder_name: 'Ans Smit', next_medication: null, last_note_summary: null, visit_status: 'pending' },
-];
+function sessionUserId(session: { access_token?: string } | null): string | null {
+  const directUser = (session as unknown as { user?: { id?: string } } | null)?.user?.id;
+  if (directUser) return directUser;
+  const token = session?.access_token;
+  if (!token) return null;
+  try {
+    const [, payload] = token.split('.');
+    return JSON.parse(atob(payload))?.sub ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export function VisitList({ navigation }: { navigation: { navigate: (screen: string, params?: Record<string, string>) => void } }) {
   const { session } = useAuth();
-  const [visits, setVisits] = useState<ElderVisit[]>(DEMO_VISITS);
+  const elderIds = useMemo(() => (process.env.EXPO_PUBLIC_CARER_ELDER_IDS ?? '').split(',').map((id) => id.trim()).filter(Boolean), []);
+  const [visits, setVisits] = useState<ElderVisit[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [offlineCount, setOfflineCount] = useState(getQueueSize());
 
   useEffect(() => {
@@ -34,15 +43,79 @@ export function VisitList({ navigation }: { navigation: { navigate: (screen: str
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    async function loadVisits() {
+      if (!session || elderIds.length === 0) {
+        setVisits([]);
+        return;
+      }
+
+      try {
+        const client = new CarerClient({
+          supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!,
+          accessToken: session.access_token,
+        });
+        const shiftEnd = new Date().toISOString();
+        const shiftStart = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
+        const rows = await Promise.all(elderIds.map(async (elderId) => {
+          const result = await client.shiftSummary(elderId, shiftStart, shiftEnd);
+          const summary = result.summary as {
+            outstanding_tasks?: Array<{ medication_name: string; scheduled_time: string }>;
+            handover_notes?: Array<{ concerns_nl: string | null }>;
+          };
+          const nextMed = summary.outstanding_tasks?.[0];
+          return {
+            elder_id: elderId,
+            elder_name: elderId,
+            next_medication: nextMed ? `${nextMed.medication_name} ${new Date(nextMed.scheduled_time).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}` : null,
+            last_note_summary: summary.handover_notes?.[0]?.concerns_nl ?? null,
+            visit_status: 'pending' as const,
+            started_at: null,
+          };
+        }));
+        if (mounted) {
+          setVisits(rows);
+          setLoadError(null);
+        }
+      } catch (error) {
+        if (mounted) setLoadError(String((error as Error).message ?? error));
+      }
+    }
+    loadVisits();
+    return () => { mounted = false; };
+  }, [elderIds, session]);
+
   const startVisit = useCallback((elderId: string) => {
-    setVisits((prev) => prev.map((v) => v.elder_id === elderId ? { ...v, visit_status: 'in_progress' as const } : v));
+    const startedAt = new Date().toISOString();
+    setVisits((prev) => prev.map((v) => v.elder_id === elderId ? { ...v, visit_status: 'in_progress' as const, started_at: startedAt } : v));
   }, []);
 
-  const completeVisit = useCallback((elderId: string) => {
-    setVisits((prev) => prev.map((v) => v.elder_id === elderId ? { ...v, visit_status: 'completed' as const } : v));
-  }, []);
-
-  void session;
+  const completeVisit = useCallback(async (elderId: string) => {
+    const visit = visits.find((v) => v.elder_id === elderId);
+    const completedAt = new Date().toISOString();
+    if (!session) {
+      enqueueOffline('visit_log', { elder_id: elderId, check_in_time: visit?.started_at ?? completedAt, check_out_time: completedAt });
+      setVisits((prev) => prev.map((v) => v.elder_id === elderId ? { ...v, visit_status: 'completed' as const } : v));
+      return;
+    }
+    try {
+      const carerId = sessionUserId(session);
+      if (!carerId) throw new Error('Missing carer profile for signed-in session');
+      const client = new CarerClient({ supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!, accessToken: session.access_token });
+      await client.visitLog({
+        elder_id: elderId,
+        carer_id: carerId,
+        visit_date: completedAt.slice(0, 10),
+        check_in_time: visit?.started_at ?? completedAt,
+        check_out_time: completedAt,
+      });
+      setVisits((prev) => prev.map((v) => v.elder_id === elderId ? { ...v, visit_status: 'completed' as const } : v));
+    } catch (error) {
+      enqueueOffline('visit_log', { elder_id: elderId, check_in_time: visit?.started_at ?? completedAt, check_out_time: completedAt });
+      Alert.alert('HAVEN', String((error as Error).message ?? error));
+    }
+  }, [session, visits]);
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 20, gap: 14 }}>
@@ -58,6 +131,24 @@ export function VisitList({ navigation }: { navigation: { navigate: (screen: str
           </View>
         )}
       </View>
+
+      {!session && (
+        <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist }}>
+          <Text style={{ color: colors.graphite, fontWeight: '800' }}>Log in om live bezoeken te laden.</Text>
+        </View>
+      )}
+
+      {session && elderIds.length === 0 && (
+        <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist }}>
+          <Text style={{ color: colors.graphite, fontWeight: '800' }}>Configureer EXPO_PUBLIC_CARER_ELDER_IDS om toegewezen ouderen te laden.</Text>
+        </View>
+      )}
+
+      {loadError && (
+        <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.amber }}>
+          <Text style={{ color: colors.graphite, fontWeight: '800' }}>{loadError}</Text>
+        </View>
+      )}
 
       {visits.map((visit) => (
         <View

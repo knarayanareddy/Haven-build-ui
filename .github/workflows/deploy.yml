@@ -183,6 +183,27 @@ jobs:
           eas-version: latest
           token: ${{ env.EXPO_TOKEN }}
 
+      - name: Prepare EAS Production Environment
+        if: ${{ env.EXPO_TOKEN != '' && env.EXPO_PUBLIC_SUPABASE_URL != '' && env.EXPO_PUBLIC_SUPABASE_ANON_KEY != '' }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = 'apps/elder/eas.json';
+          const eas = JSON.parse(fs.readFileSync(path, 'utf8'));
+          eas.build.production.env = {
+            ...(eas.build.production.env ?? {}),
+            EXPO_PUBLIC_HAVEN_ENV: 'production',
+            EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
+            EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+          };
+          for (const [key, value] of Object.entries(eas.build.production.env)) {
+            if (!value || String(value).startsWith('REPLACE_WITH_')) {
+              throw new Error(`${key} must be configured before EAS production builds`);
+            }
+          }
+          fs.writeFileSync(path, `${JSON.stringify(eas, null, 2)}\n`);
+          NODE
+
       - name: 5) Build & Submit Production Mobile Clients (EAS Build)
         if: ${{ env.EXPO_TOKEN != '' && env.EXPO_PUBLIC_SUPABASE_URL != '' && env.EXPO_PUBLIC_SUPABASE_ANON_KEY != '' }}
         run: |

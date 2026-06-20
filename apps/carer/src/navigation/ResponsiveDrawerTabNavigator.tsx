@@ -1,83 +1,159 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
 import { useResponsiveLayout } from '../services/platform';
 import { useAccessibilityInfo } from '../services/accessibility';
-import { VisitList } from '../screens/VisitList';
-import { ShiftSummary } from '../screens/ShiftSummary';
+import { useTranslation } from '@haven/i18n';
+import { getQueueSize } from '../services/offlineQueue';
+import { VandaagTab } from '../screens/vision/VandaagTab';
+import { HandoverTab } from '../screens/vision/HandoverTab';
+import { MARTab } from '../screens/vision/MARTab';
+import { SafeguardingTab } from '../screens/vision/SafeguardingTab';
+import { VisitsTab } from '../screens/vision/VisitsTab';
+
+type TabId = 'today' | 'handover' | 'mar' | 'safeguarding' | 'visits';
+
+function getTabs(nl: boolean): Array<{ id: TabId; label: string; icon: string }> {
+  return [
+    { id: 'today', label: nl ? 'Vandaag' : 'Today', icon: '📋' },
+    { id: 'handover', label: 'Handover', icon: '📝' },
+    { id: 'mar', label: 'MAR-light', icon: '💊' },
+    { id: 'safeguarding', label: nl ? 'Veiligheid' : 'Safety', icon: '⚠️' },
+    { id: 'visits', label: nl ? 'Bezoeken' : 'Visits', icon: '📅' },
+  ];
+}
 
 export function ResponsiveDrawerTabNavigator({ navigation }: any) {
   const { isIpad } = useResponsiveLayout();
   const { textMultiplier } = useAccessibilityInfo();
-  const [activeTab, setActiveTab] = React.useState<'VisitList' | 'ShiftSummary'>('VisitList');
+  const { locale } = useTranslation();
+  const nl = locale.startsWith('nl');
+  const TABS = getTabs(nl);
+  const [activeTab, setActiveTab] = useState<TabId>('today');
+  const [isOnline] = useState(true);
+  const [offlineCount, setOfflineCount] = useState(getQueueSize());
+  const elderName = 'Margaret van den Berg';
 
-  // LAYOUT 1: Detect screen width using useResponsiveLayout() / useWindowDimensions()
-  // width >= 768 -> drawer navigator (persistent sidebar drawer on iPad, not modal)
-  // width < 768 -> bottom tab navigator (existing bottom tabs on iPhone, no regression)
+  useEffect(() => {
+    const interval = setInterval(() => setOfflineCount(getQueueSize()), 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  function renderTab() {
+    switch (activeTab) {
+      case 'today':
+        return (
+          <VandaagTab
+            elderName={elderName}
+            isOnline={isOnline}
+            offlineCount={offlineCount}
+            onCompleteVisit={() => {}}
+            locale={locale}
+          />
+        );
+      case 'handover':
+        return <HandoverTab elderName={elderName} isOnline={isOnline} locale={locale} />;
+      case 'mar':
+        return <MARTab locale={locale} />;
+      case 'safeguarding':
+        return <SafeguardingTab locale={locale} />;
+      case 'visits':
+        return <VisitsTab locale={locale} />;
+    }
+  }
 
   return (
     <View style={{ flex: 1, flexDirection: isIpad ? 'row' : 'column' }}>
-      {/* iPad Persistent Sidebar Drawer (screen width >= 768pt) */}
+      {/* Header with gradient */}
+      {!isIpad && (
+        <View style={{ backgroundColor: '#DC2626', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View>
+              <Text style={{ color: '#fff', fontSize: 18 * textMultiplier, fontWeight: '900' }}>⌂ HAVEN WACHT</Text>
+              <Text style={{ color: '#FECACA', fontSize: 12 * textMultiplier, fontWeight: '600', marginTop: 2 }}>
+                {nl ? 'Professioneel zorgportaal' : 'Professional care portal'} — {elderName}
+              </Text>
+            </View>
+            <View style={{
+              flexDirection: 'row', alignItems: 'center', gap: 6,
+              paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12,
+              backgroundColor: isOnline ? 'rgba(74,222,128,0.2)' : 'rgba(251,191,36,0.2)',
+            }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isOnline ? '#4ADE80' : '#FBBF24' }} />
+              <Text style={{ color: isOnline ? '#BBF7D0' : '#FDE68A', fontSize: 12 * textMultiplier, fontWeight: '700' }}>
+                {isOnline ? 'Online' : 'Offline'}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* iPad sidebar */}
       {isIpad && (
-        <View accessibilityRole="navigation" style={{ width: 280, backgroundColor: '#2C3E6B', paddingTop: 40, paddingHorizontal: 20, justifyContent: 'space-between', borderRightWidth: 1, borderColor: '#1A2B4C' }}>
-          <View style={{ gap: 24 }}>
-            <Text style={{ color: 'white', fontSize: 24 * textMultiplier, fontWeight: '900' }}>HAVEN WACHT</Text>
-            <View style={{ gap: 12 }}>
-              <TouchableOpacity
-                accessibilityRole="link"
-                accessibilityLabel="HAVEN WACHT Route"
-                onPress={() => setActiveTab('VisitList')}
-                style={{ paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14, backgroundColor: activeTab === 'VisitList' ? '#1A2B4C' : 'transparent' }}
-              >
-                <Text style={{ color: activeTab === 'VisitList' ? 'white' : '#CCCCCC', fontSize: 18 * textMultiplier, fontWeight: '700' }}>📅 Visit List</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                accessibilityRole="link"
-                accessibilityLabel="Overdracht Handover"
-                onPress={() => setActiveTab('ShiftSummary')}
-                style={{ paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14, backgroundColor: activeTab === 'ShiftSummary' ? '#1A2B4C' : 'transparent' }}
-              >
-                <Text style={{ color: activeTab === 'ShiftSummary' ? 'white' : '#CCCCCC', fontSize: 18 * textMultiplier, fontWeight: '700' }}>📋 Overdracht</Text>
-              </TouchableOpacity>
+        <View accessibilityRole="navigation" style={{ width: 240, backgroundColor: '#DC2626', paddingTop: 40, paddingHorizontal: 16, justifyContent: 'space-between' }}>
+          <View style={{ gap: 20 }}>
+            <Text style={{ color: '#fff', fontSize: 20 * textMultiplier, fontWeight: '900' }}>⌂ HAVEN WACHT</Text>
+            <Text style={{ color: '#FECACA', fontSize: 12 * textMultiplier, fontWeight: '600' }}>{elderName}</Text>
+            <View style={{ gap: 8 }}>
+              {TABS.map((tab) => (
+                <TouchableOpacity
+                  key={tab.id}
+                  accessibilityRole="link"
+                  onPress={() => setActiveTab(tab.id)}
+                  style={{
+                    paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14,
+                    backgroundColor: activeTab === tab.id ? 'rgba(0,0,0,0.2)' : 'transparent',
+                  }}
+                >
+                  <Text style={{ color: activeTab === tab.id ? '#fff' : '#FECACA', fontSize: 15 * textMultiplier, fontWeight: '700' }}>
+                    {tab.icon} {tab.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
           <View style={{ paddingBottom: 40 }}>
-            <Text style={{ color: '#8899BB', fontSize: 14 * textMultiplier, fontWeight: '600' }}>Connected to Dutch EMR</Text>
+            <View style={{
+              flexDirection: 'row', alignItems: 'center', gap: 6,
+              paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12,
+              backgroundColor: isOnline ? 'rgba(74,222,128,0.15)' : 'rgba(251,191,36,0.15)',
+            }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isOnline ? '#4ADE80' : '#FBBF24' }} />
+              <Text style={{ color: '#FECACA', fontSize: 12 * textMultiplier, fontWeight: '600' }}>
+                {isOnline ? 'Online — EMR Connected' : 'Offline mode'}
+              </Text>
+            </View>
           </View>
         </View>
       )}
 
-      {/* Main Content Area */}
-      <View style={{ flex: 1 }}>
-        {activeTab === 'VisitList' ? (
-          <VisitList navigation={navigation} />
-        ) : (
-          <ShiftSummary />
-        )}
-      </View>
-
-      {/* iPhone Existing Bottom Tabs (screen width < 768pt, no regression) */}
+      {/* Phone bottom tabs */}
       {!isIpad && (
-        <View accessibilityRole="tablist" style={{ flexDirection: 'row', height: 72, backgroundColor: '#2C3E6B', borderTopWidth: 1, borderColor: '#1A2B4C', alignItems: 'center', justifyContent: 'space-around', paddingBottom: 16 }}>
-          <TouchableOpacity
-            accessibilityRole="tab"
-            accessibilityLabel="HAVEN WACHT Tab"
-            onPress={() => setActiveTab('VisitList')}
-            style={{ flex: 1, alignItems: 'center' }}
-          >
-            <Text style={{ fontSize: 22 }}>📅</Text>
-            <Text style={{ color: activeTab === 'VisitList' ? 'white' : '#CCCCCC', fontSize: 12 * textMultiplier, fontWeight: '700' }}>Visits</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            accessibilityRole="tab"
-            accessibilityLabel="Overdracht Tab"
-            onPress={() => setActiveTab('ShiftSummary')}
-            style={{ flex: 1, alignItems: 'center' }}
-          >
-            <Text style={{ fontSize: 22 }}>📋</Text>
-            <Text style={{ color: activeTab === 'ShiftSummary' ? 'white' : '#CCCCCC', fontSize: 12 * textMultiplier, fontWeight: '700' }}>Overdracht</Text>
-          </TouchableOpacity>
+        <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#fff' }}>
+          {TABS.map((tab) => (
+            <TouchableOpacity
+              key={tab.id}
+              accessibilityRole="tab"
+              onPress={() => setActiveTab(tab.id)}
+              style={{
+                flex: 1, paddingVertical: 10, alignItems: 'center',
+                borderBottomWidth: 2,
+                borderBottomColor: activeTab === tab.id ? '#DC2626' : 'transparent',
+              }}
+            >
+              <Text style={{ fontSize: 14 }}>{tab.icon}</Text>
+              <Text style={{
+                fontSize: 10 * textMultiplier, fontWeight: '700',
+                color: activeTab === tab.id ? '#DC2626' : '#6B7280',
+              }}>{tab.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       )}
+
+      {/* Content */}
+      <View style={{ flex: 1 }}>
+        {renderTab()}
+      </View>
     </View>
   );
 }

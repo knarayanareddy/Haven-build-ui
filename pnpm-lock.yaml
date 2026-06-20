@@ -216,6 +216,9 @@ importers:
       '@haven/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@haven/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@haven/ui':
         specifier: workspace:*
         version: link:../../packages/ui

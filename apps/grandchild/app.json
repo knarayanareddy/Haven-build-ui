@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "HAVEN Hello",
+    "slug": "haven-grandchild",
+    "scheme": "havenhello",
+    "orientation": "portrait",
+    "ios": { "bundleIdentifier": "nl.haven.grandchild" },
+    "android": { "package": "nl.haven.grandchild" },
+    "extra": {
+      "eas": {
+        "projectId": "b9cef469-3078-4162-81d5-5a53bb6abcbe"
+      }
+    }
+  }
+}

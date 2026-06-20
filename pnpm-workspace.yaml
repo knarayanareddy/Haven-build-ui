@@ -1,0 +1,23 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+overrides:
+  "@xmldom/xmldom": ">=0.8.13"
+  semver: ">=7.5.2"
+packageExtensions:
+  "babel-preset-expo@10.0.2":
+    dependencies:
+      metro-transform-plugins: "0.80.12"
+  "@expo/cli@0.17.13":
+    dependencies:
+      metro: "0.80.12"
+      metro-resolver: "0.80.12"
+  "@expo/metro-config@0.17.8":
+    dependencies:
+      metro: "0.80.12"
+      metro-cache: "0.80.12"
+      metro-cache-key: "0.80.12"
+      metro-resolver: "0.80.12"
+      metro-transform-worker: "0.80.12"
+allowBuilds:
+  sharp: true

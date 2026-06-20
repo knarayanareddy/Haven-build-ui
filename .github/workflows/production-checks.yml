@@ -1,0 +1,58 @@
+name: HAVEN Production Checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  static-suite-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: ./scripts/ci/verify-core.sh
+
+  browser-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: ./scripts/ci/verify-browser.sh
+
+  supabase-layout-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: test -f pnpm-lock.yaml
+      - run: test -f eslint.config.mjs
+      - run: test -f tsconfig.base.json
+      - run: test -f tsconfig.packages.json
+      - run: test -f types/mobile-shims.d.ts
+      - run: test -f apps/family/tsconfig.json
+      - run: test -f apps/family/next-env.d.ts
+      - run: test -f apps/elder/tsconfig.json
+      - run: test -f apps/grandchild/tsconfig.json
+      - run: test -f supabase/config.toml
+      - run: test -f supabase/seed.sql
+      - run: test -f scripts/ci/verify-core.sh
+      - run: test -f scripts/ci/verify-browser.sh
+      - run: test -f scripts/ci/verify-local-supabase.sh
+      - run: test -d supabase/functions/fn-voice-pipeline
+      - run: test -d supabase/functions/fn-scam-pipeline
+      - run: test -f docs/implementation/EDGE_FUNCTION_TRUST_BOUNDARY_MATRIX.md
+      - run: test -f docs/implementation/DATA_LIFECYCLE_AUDIT.md
+      - run: test -f docs/implementation/STORAGE_BLOB_LIFECYCLE_AUDIT.md
+      - run: test -f docs/implementation/CODE_QUALITY_GUARDRAILS.md
+      - run: test -f docs/implementation/SUPABASE_CI_STRATEGY.md
+      - run: test -f docs/implementation/RESIDUAL_HARDENING_REPORT.md
+      - run: test -f docs/implementation/RELEASE_CANDIDATE_SUMMARY.md
+      - run: test -f docs/implementation/PRIORITIZED_REMAINING_ISSUES.md
+      - run: test -f docs/implementation/NEXT_10_GITHUB_ISSUES.md
+      - run: test -f docs/implementation/SESSION_HANDOFF_CHANGELOG.md
+      - run: grep -R -i "FORCE ROW LEVEL SECURITY" supabase/migrations

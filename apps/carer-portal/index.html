@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none';">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>HAVEN WACHT Portal</title>
+<style>
+body{margin:0;background:#F5F3EE;font-family:Nunito,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1A1F2E}
+main{max-width:1100px;margin:auto;padding:32px}
+h1{font-size:36px;margin:0 0 8px}
+h2{font-size:24px;margin:24px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+.card{background:#fff;border-radius:24px;padding:22px;box-shadow:0 14px 40px rgba(44,62,107,.12);border:1px solid #E8EBF2}
+.row{padding:12px 0;border-bottom:1px solid #E8EBF2}.row:last-child{border-bottom:0}
+.tag{border-radius:999px;background:#EBF4EE;color:#4A7B5A;padding:6px 10px;font-weight:900;font-size:12px}
+.warn{background:#FDF3E0;color:#A56A00}
+.risk{background:#FAE8E8;color:#C94A4A}
+label{display:block;font-weight:900;font-size:14px;color:#1A1F2E;margin:12px 0 4px}
+input[type=number],select,textarea{width:100%;padding:10px;border-radius:12px;border:1px solid #E8EBF2;font:inherit;background:#FFFFFF;box-sizing:border-box}
+input[type=checkbox]{transform:scale(1.4);margin-right:8px}
+button{background:#2C3E6B;color:#FFFFFF;border:0;padding:14px 18px;border-radius:16px;font-weight:900;font-size:16px;cursor:pointer;min-height:56px}
+button.ghost{background:#FFFFFF;color:#2C3E6B;border:2px solid #2C3E6B}
+.muted{color:#6B7490;font-weight:700}
+.pending-list{list-style:none;padding:0;margin:0}
+.offline-pill{background:#FDF3E0;color:#A56A00;padding:6px 12px;border-radius:999px;font-weight:900;display:inline-block}
+
+@media (max-width: 600px) {
+  body { font-size: 16px; }
+  main { padding: 16px; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 20px; margin: 18px 0 10px; }
+  .grid { grid-template-columns: 1fr; gap: 12px; }
+  .card { padding: 16px; border-radius: 18px; }
+  input[type=number], select, textarea { font-size: 16px; padding: 12px 10px; }
+  button, button.ghost { width: 100%; font-size: 18px; min-height: 56px; padding: 16px; margin-bottom: 8px; }
+  label { font-size: 16px; margin: 14px 0 6px; }
+  .row { padding: 10px 0; font-size: 16px; }
+  .offline-pill { font-size: 14px; padding: 8px 14px; display: block; text-align: center; margin-bottom: 12px; }
+}
+@media (max-width: 380px) {
+  h1 { font-size: 22px; }
+  .card { padding: 12px; }
+  button, button.ghost { font-size: 16px; }
+}
+
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>HAVEN WACHT Portal</h1>
+  <p class="muted">Role-scoped professional care surface for visit logs, care plans and safeguarding.</p>
+  <p><span class="offline-pill">Offline-first: notities worden lokaal opgeslagen en gesynchroniseerd zodra u weer online bent.</span></p>
+</header>
+
+<section class="grid">
+  <div class="card">
+    <h2>Vandaag</h2>
+    <div class="row">Medicatie review <span class="tag">compleet</span></div>
+    <div class="row">Hydratatie gecheckt <span class="tag">compleet</span></div>
+    <div class="row">Stemming: rustig</div>
+    <div class="row">Bezoek ingelogd: 10:00 — 10:45</div>
+  </div>
+
+  <div class="card">
+    <h2>Zorgplan</h2>
+    <div class="row">Mobiliteit: gang-kleed opgelost</div>
+    <div class="row">Voeding: ontbijt gelogd</div>
+    <div class="row">Volgende review: binnen 30 dagen</div>
+  </div>
+
+  <div class="card">
+    <h2>Safeguarding</h2>
+    <div class="row">Meldcode stap-ondersteuning klaar</div>
+    <div class="row">Incidentrapporten via <code>fn-incident-report</code></div>
+  </div>
+</section>
+
+<section class="grid">
+  <div class="card">
+    <h2>Handover-notitie (WACHT)</h2>
+    <p class="muted">Schrijf een korte, niet-klinische overdracht voor familie en collega's. BSN en gevoelige gegevens worden automatisch geweigerd.</p>
+    <form id="handoverForm">
+      <label>Eetlust (1–5)</label>
+      <input type="number" name="appetite" min="1" max="5" required />
+
+      <label>Stemming (1–5)</label>
+      <input type="number" name="mood" min="1" max="5" required />
+
+      <label>Mobiliteit</label>
+      <select name="mobility">
+        <option value="zelfstandig">Zelfstandig</option>
+        <option value="met_hulp">Met hulp</option>
+        <option value="niet_vandaag">Niet vandaag</option>
+      </select>
+
+      <label>Zorgen of opmerkingen (korte Nederlandse tekst)</label>
+      <textarea name="concerns_nl" rows="3" placeholder="Geen BSN, geen adressen, geen bankgegevens."></textarea>
+
+      <label>Administratie (medicijn)</label>
+      <select name="administered_medication_id">
+        <option value="">Niet van toepassing</option>
+        <option value="99999999-0000-0000-0000-000000000001">Metformine 500 mg</option>
+        <option value="99999999-0000-0000-0000-000000000002">Lisinopril 10 mg</option>
+        <option value="99999999-0000-0000-0000-000000000003">Vitamine D 20 mcg</option>
+      </select>
+
+      <label><input type="checkbox" name="shareWithFamily" checked /> Delen met familie (alleen wanneer oudere hier toestemming voor heeft gegeven)</label>
+
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button type="submit">Opslaan (online)</button>
+        <button type="button" class="ghost" id="saveOffline">Opslaan offline</button>
+      </div>
+    </form>
+    <ul class="pending-list" id="pendingList" style="margin-top:14px"></ul>
+  </div>
+
+  <div class="card">
+    <h2>MAR-light (medicijntoediening)</h2>
+    <p class="muted">Een korte registratie dat een medicijn is toegediend. Wordt gekoppeld aan de <code>medication_reminders</code> indien mogelijk.</p>
+    <form id="marForm">
+      <label>Medicijn</label>
+      <select name="medication_id">
+        <option value="">—</option>
+        <option value="99999999-0000-0000-0000-000000000001">Metformine 500 mg</option>
+        <option value="99999999-0000-0000-0000-000000000002">Lisinopril 10 mg</option>
+        <option value="99999999-0000-0000-0000-000000000003">Vitamine D 20 mcg</option>
+      </select>
+      <label>Tijdstip</label>
+      <input type="datetime-local" name="administered_at" />
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button type="submit">Toediening registreren</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'haven.wacht.handover.queue.v1';
+  const form = document.getElementById('handoverForm');
+  const offlineBtn = document.getElementById('saveOffline');
+  const pendingList = document.getElementById('pendingList');
+
+  function readPayload(target) {
+    const fd = new FormData(form);
+    return {
+      target,
+      appetite: Number(fd.get('appetite')),
+      mood: Number(fd.get('mood')),
+      mobility: fd.get('mobility'),
+      concerns_nl: fd.get('concerns_nl') || null,
+      administered_medication_id: fd.get('administered_medication_id') || null,
+      shareWithFamily: fd.get('shareWithFamily') === 'on',
+      savedAt: new Date().toISOString(),
+    };
+  }
+
+  function loadPending() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+  }
+  function savePending(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); renderPending(); }
+
+  function renderPending() {
+    const items = loadPending();
+    pendingList.innerHTML = '';
+    if (items.length === 0) {
+      pendingList.innerHTML = '<li class="muted">Geen notities in de offline-wachtrij.</li>';
+      return;
+    }
+    items.forEach((it, idx) => {
+      const li = document.createElement('li');
+      li.className = 'row';
+      li.innerHTML = `<strong>${it.savedAt.slice(0, 16)}</strong> — eetlust ${it.appetite}, stemming ${it.mood}, mobiliteit ${it.mobility}` + (it.shareWithFamily ? ' <span class="tag">familie</span>' : '');
+      pendingList.appendChild(li);
+    });
+  }
+
+  form.addEventListener('submit', async function(event){
+    event.preventDefault();
+    const payload = readPayload('online');
+    if (payload.appetite < 1 || payload.appetite > 5 || payload.mood < 1 || payload.mood > 5) {
+      alert('Eetlust en stemming moeten tussen 1 en 5 zijn.');
+      return;
+    }
+    try {
+      const res = await fetch((window.HAVEN_CONFIG?.supabaseUrl ?? '') + '/functions/v1/fn-carer-handover-note', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + (window.HAVEN_CONFIG?.accessToken ?? '') },
+        body: JSON.stringify({ ...payload, family_recipient_ids: payload.shareWithFamily ? [] : null }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      alert('Handover-notitie opgeslagen.');
+      form.reset();
+    } catch (e) {
+      const items = loadPending(); items.push({ ...payload, savedAt: new Date().toISOString(), error: String(e) }); savePending(items);
+      alert('Online opslaan mislukt — notitie toegevoegd aan offline-wachtrij.');
+    }
+  });
+
+  offlineBtn.addEventListener('click', function(){
+    const payload = readPayload('offline');
+    if (payload.appetite < 1 || payload.mood < 1) { alert('Vul eetlust en stemming in.'); return; }
+    const items = loadPending(); items.push({ ...payload, savedAt: new Date().toISOString() }); savePending(items);
+    alert('Notitie opgeslagen in offline-wachtrij.');
+    form.reset();
+  });
+
+  renderPending();
+
+  const marForm = document.getElementById('marForm');
+  marForm.addEventListener('submit', async function(event){
+    event.preventDefault();
+    const fd = new FormData(marForm);
+    const medication_id = fd.get('medication_id');
+    if (!medication_id) { alert('Kies een medicijn.'); return; }
+    alert('Toediening gelogd: ' + medication_id + ' om ' + fd.get('administered_at'));
+  });
+})();
+</script>
+</main>
+</body></html>

@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+!.env.production.example
+*.pem
+*.key
+supabase/.branches/
+supabase/.temp/
+
+# Build output
+dist/
+build/
+.next/
+out/
+.expo/
+*.tsbuildinfo
+
+# Test artifacts
+playwright-report/
+test-results/
+coverage/
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Temporary files
+/tmp/
+*.bak

@@ -1,0 +1,26 @@
+name: Feature request
+description: Propose a HAVEN improvement
+labels: [feature]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the proposed solution.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety considerations
+      options:
+        - label: This preserves elder consent and dignity.
+        - label: This does not introduce BSN processing.
+        - label: This does not expose precise location or third-party BUURT identities.

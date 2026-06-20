@@ -1,0 +1,10 @@
+# HAVEN code ownership
+
+/supabase/migrations/ @haven/security @haven/backend
+/supabase/functions/ @haven/backend @haven/security
+/apps/elder/ @haven/mobile @haven/accessibility
+/apps/family/ @haven/web @haven/security
+/apps/browser-shield/ @haven/security
+/docs/release/ @haven/product @haven/privacy
+/docs/implementation/ @haven/engineering
+/ml/ @haven/ml @haven/security

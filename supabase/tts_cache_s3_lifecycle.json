@@ -1,0 +1,14 @@
+{
+  "Rules": [
+    {
+      "ID": "expire-emergency-location-objects",
+      "Filter": {
+        "Prefix": "emergency-location/"
+      },
+      "Status": "Enabled",
+      "Expiration": {
+        "Days": 1
+      }
+    }
+  ]
+}

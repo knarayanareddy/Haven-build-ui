@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "@haven/contracts": ["packages/contracts/src/haven.ts"],
+      "@haven/contracts/*": ["packages/contracts/*"],
+      "@haven/database": ["packages/database/src/types.ts"],
+      "@haven/database/*": ["packages/database/*"],
+      "@haven/i18n": ["packages/i18n/src/index.tsx"],
+      "@haven/i18n/*": ["packages/i18n/*"],
+      "@haven/scam-engine": ["packages/scam-engine/src/rules.ts"],
+      "@haven/scam-engine/*": ["packages/scam-engine/*"],
+      "@haven/schema": ["packages/schema/src/screenSchema.ts"],
+      "@haven/schema/*": ["packages/schema/*"],
+      "@haven/ui": ["packages/ui/src/tokens.ts"],
+      "@haven/ui/*": ["packages/ui/*"]
+    },
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx"
+  }
+}

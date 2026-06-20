@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "HAVEN Carer",
+    "slug": "haven-carer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "splash": { "image": "./assets/splash.png", "backgroundColor": "#2C3E6B" },
+    "ios": { 
+      "supportsTablet": true, 
+      "bundleIdentifier": "nl.haven.carer",
+      "infoPlist": {
+        "UISupportsDocumentBrowser": true
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "android": {
+      "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#2C3E6B" },
+      "package": "nl.haven.carer",
+      "versionCode": 1
+    },
+    "plugins": ["expo-secure-store", "expo-local-authentication"],
+    "extra": {
+      "eas": {
+        "projectId": "aefc3f5f-f659-4c48-8c28-b50fbd851b22"
+      }
+    }
+  }
+}

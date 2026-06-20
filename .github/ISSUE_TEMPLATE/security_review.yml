@@ -1,0 +1,26 @@
+name: Security review
+description: Request a security/privacy review
+labels: [security, privacy]
+body:
+  - type: textarea
+    id: change
+    attributes:
+      label: Change under review
+    validations:
+      required: true
+  - type: textarea
+    id: data
+    attributes:
+      label: Data categories affected
+    validations:
+      required: true
+  - type: checkboxes
+    id: gates
+    attributes:
+      label: Required checks
+      options:
+        - label: RLS policy reviewed.
+        - label: Storage access reviewed.
+        - label: Logging/PII reviewed.
+        - label: Consent model reviewed.
+        - label: Retention impact reviewed.

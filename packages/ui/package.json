@@ -1,0 +1,12 @@
+{
+  "name": "@haven/ui",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/tokens.ts",
+  "private": true,
+  "peerDependencies": {
+    "expo-linear-gradient": ">=14.0.0",
+    "react": ">=18.0.0",
+    "react-native": ">=0.73.0"
+  }
+}

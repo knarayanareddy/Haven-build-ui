@@ -3,7 +3,6 @@ packages:
   - "packages/*"
 overrides:
   "@xmldom/xmldom": ">=0.8.13"
-  tar: ">=7.5.11"
   semver: ">=7.5.2"
 packageExtensions:
   "babel-preset-expo@10.0.2":

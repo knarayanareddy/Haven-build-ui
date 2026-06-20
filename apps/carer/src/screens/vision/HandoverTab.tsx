@@ -1,8 +1,10 @@
 // ─── Vision Carer: Handover Tab ───
+// Wired to Supabase: calls fn-carer-handover-note, offline queue fallback
 import React, { useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { useAuth } from '../../auth/AuthProvider';
+import { CarerClient } from '../../services/havenClient';
 import { enqueueOffline } from '../../services/offlineQueue';
 
 interface HandoverTabProps {
@@ -46,15 +48,58 @@ export function HandoverTab({ elderName, isOnline, locale }: HandoverTabProps) {
     setRecipients((prev) => prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]);
   }
 
-  function handleSave() {
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSave() {
+    const elderId = process.env.EXPO_PUBLIC_CARER_ELDER_IDS?.split(',')[0] ?? '00000000-0000-0000-0000-000000000001';
+
+    // Offline path: queue for later sync
     if (!isOnline || !session) {
-      enqueueOffline('handover_note', { ...form, recipients });
+      enqueueOffline('handover_note', { elder_id: elderId, ...form, recipients });
+      setSaved(true);
+      Alert.alert('HAVEN', nl ? 'Lokaal opgeslagen — synchroniseert zodra online.' : 'Saved locally — will sync when online.');
+      setTimeout(() => setSaved(false), 3000);
+      return;
     }
-    setSaved(true);
-    Alert.alert('HAVEN', isOnline
-      ? (nl ? 'Handover opgeslagen en verzonden!' : 'Handover saved and sent!')
-      : (nl ? 'Lokaal opgeslagen — synchroniseert zodra online.' : 'Saved locally — will sync when online.'));
-    setTimeout(() => setSaved(false), 3000);
+
+    // Online path: call fn-carer-handover-note
+    setSubmitting(true);
+    try {
+      const client = new CarerClient({
+        supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!,
+        accessToken: session.access_token,
+      });
+      const result = await client.handoverNote({
+        elder_id: elderId,
+        appetite: form.appetite ? 3 : 0,
+        mood: form.mood ? 3 : 0,
+        mobility: form.mobility || undefined,
+        concerns_nl: form.concerns || undefined,
+        notes_nl: [form.appetite, form.mood, form.mobility, form.administered].filter(Boolean).join(' | ') || undefined,
+        administered_medication_id: undefined,
+        family_recipient_ids: recipients.includes('family') ? [] : undefined,
+      });
+
+      setSaved(true);
+      const interactionWarning = result.interaction_warning;
+      Alert.alert('HAVEN',
+        (nl ? 'Handover opgeslagen en verzonden!' : 'Handover saved and sent!') +
+        (interactionWarning ? `\n\n${interactionWarning}` : '')
+      );
+      setForm({ appetite: '', mood: '', mobility: '', concerns: '', administered: '' });
+      setRecipients(['family']);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      // Network failure: queue offline
+      enqueueOffline('handover_note', { elder_id: elderId, ...form, recipients });
+      Alert.alert('HAVEN', nl
+        ? 'Verzenden mislukt — lokaal opgeslagen voor later.'
+        : 'Send failed — saved locally for later.');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function handleCancel() {
@@ -89,7 +134,7 @@ export function HandoverTab({ elderName, isOnline, locale }: HandoverTabProps) {
           <Text style={{ fontSize: 13, fontWeight: '800', color: colors.ink }}>{label}</Text>
           <TextInput
             value={form[field]}
-            onChangeText={(v) => updateField(field, v)}
+            onChangeText={(v: string) => updateField(field, v)}
             placeholder={placeholder}
             placeholderTextColor={colors.pewter}
             multiline
@@ -134,10 +179,11 @@ export function HandoverTab({ elderName, isOnline, locale }: HandoverTabProps) {
         </TouchableOpacity>
         <TouchableOpacity
           onPress={handleSave}
-          style={{ flex: 1, paddingVertical: 12, borderRadius: 14, alignItems: 'center', backgroundColor: '#DC2626' }}
+          disabled={submitting}
+          style={{ flex: 1, paddingVertical: 12, borderRadius: 14, alignItems: 'center', backgroundColor: '#DC2626', opacity: submitting ? 0.6 : 1 }}
         >
           <Text style={{ fontSize: 14, fontWeight: '800', color: '#fff' }}>
-            {isOnline ? (nl ? '📤 Verzenden' : '📤 Send') : (nl ? '💾 Lokaal opslaan' : '💾 Save locally')}
+            {submitting ? (nl ? 'Bezig...' : 'Sending...') : isOnline ? (nl ? '📤 Verzenden' : '📤 Send') : (nl ? '💾 Lokaal opslaan' : '💾 Save locally')}
           </Text>
         </TouchableOpacity>
       </View>

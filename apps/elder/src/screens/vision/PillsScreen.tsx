@@ -1,12 +1,45 @@
 // ─── Vision PillsScreen ───
 // Translates havenUIvision/src/components/elder/PillsScreen.tsx to React Native
+// Wired to Supabase: fetches real medication_reminders, confirms via fn-voice-pipeline
 
-import React, { useState } from 'react';
-import { Modal, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, Modal, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { ProgressBar } from '@haven/ui/src/visionComponents';
 import { MEDICATIONS } from '@haven/ui/src/mockData';
+import { useAuth } from '../../auth/AuthProvider';
+import { HavenClient } from '../../services/havenClient';
+import { enqueueOfflineAction } from '../../services/sqliteOfflineQueue';
+import { classifyNetworkError } from '../../state/networkResilience';
+import { translateElderError } from '../../services/errorMapper';
 import type { ScreenContext } from '../../renderer/ScreenRenderer';
+
+type MedItem = {
+  id: string; name: string; dose: string;
+  descriptionNl: string; descriptionEn: string;
+  time: string; status: 'taken' | 'planned' | 'snoozed';
+  stock?: number;
+};
+
+function sessionUserId(session: { access_token?: string } | null): string | null {
+  const directUser = (session as unknown as { user?: { id?: string } } | null)?.user?.id;
+  if (directUser) return directUser;
+  const token = session?.access_token;
+  if (!token) return null;
+  try {
+    const [, payload] = token.split('.');
+    return JSON.parse(atob(payload))?.sub ?? null;
+  } catch { return null; }
+}
+
+function mockMeds(): MedItem[] {
+  return MEDICATIONS.map((m) => ({
+    id: m.id, name: m.name, dose: m.dose,
+    descriptionNl: m.purpose, descriptionEn: m.purpose,
+    time: m.times[0], status: (m.taken[0] ? 'taken' : 'planned') as 'taken' | 'planned' | 'snoozed',
+    stock: m.stock,
+  }));
+}
 
 export function renderVisionPills(ctx: ScreenContext): React.ReactNode {
   return <VisionPillsInner ctx={ctx} />;
@@ -14,12 +47,33 @@ export function renderVisionPills(ctx: ScreenContext): React.ReactNode {
 
 function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
   const { locale, medications: ctxMeds } = ctx;
-  const meds = ctxMeds.length > 0 ? ctxMeds : MEDICATIONS.map((m) => ({
-    id: m.id, name: m.name, dose: m.dose,
-    descriptionNl: m.purpose, descriptionEn: m.purpose,
-    time: m.times[0], status: (m.taken[0] ? 'taken' : 'planned') as 'taken' | 'planned' | 'snoozed',
-    stock: m.stock,
-  }));
+  const { session } = useAuth();
+  const elderId = sessionUserId(session);
+  const client = session ? new HavenClient({ supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!, accessToken: session.access_token }) : null;
+
+  const [liveMeds, setLiveMeds] = useState<MedItem[] | null>(null);
+  const [confirming, setConfirming] = useState<string | null>(null);
+
+  // Try fetching real medications from Supabase; fall back to mock data
+  useEffect(() => {
+    if (!client || !elderId) return;
+    client.rest<Array<Record<string, unknown>>>(`medication_reminders?elder_id=eq.${elderId}&select=id,medication_name,dose,reminder_time,status,stock_remaining`)
+      .then((rows) => {
+        if (rows && rows.length > 0) {
+          setLiveMeds(rows.map((r) => ({
+            id: String(r.id), name: String(r.medication_name ?? ''), dose: String(r.dose ?? ''),
+            descriptionNl: String(r.medication_name ?? ''), descriptionEn: String(r.medication_name ?? ''),
+            time: String(r.reminder_time ?? '08:00').slice(0, 5),
+            status: r.status === 'taken' ? 'taken' : 'planned',
+            stock: typeof r.stock_remaining === 'number' ? r.stock_remaining : undefined,
+          })));
+        }
+      })
+      .catch(() => { /* fall back to mock data silently */ });
+  }, [!!client, elderId]);
+
+  const baseMeds = ctxMeds.length > 0 ? ctxMeds : mockMeds();
+  const meds = liveMeds ?? baseMeds;
 
   const taken = meds.filter((m) => m.status === 'taken').length;
   const total = meds.length;
@@ -27,6 +81,31 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
 
   const [confirmMed, setConfirmMed] = useState<string | null>(null);
   const confirmingMed = meds.find((m) => m.id === confirmMed);
+
+  // Confirm medication via Supabase (with offline fallback)
+  async function confirmMedication(medId: string) {
+    setConfirming(medId);
+    try {
+      if (client && elderId) {
+        await client.voice({ elder_id: elderId, screen_id: 'PILLS', transcript_text: 'I took it', locale: locale as 'en-GB' | 'nl-NL' });
+      } else {
+        enqueueOfflineAction('CONFIRM_MEDICATION', { medication_id: medId, screen_id: 'PILLS' });
+      }
+      // Update local state to show taken
+      if (liveMeds) {
+        setLiveMeds((prev) => prev?.map((m) => m.id === medId ? { ...m, status: 'taken' } : m) ?? null);
+      }
+    } catch (error) {
+      if (classifyNetworkError(error) === 'offline') {
+        enqueueOfflineAction('CONFIRM_MEDICATION', { medication_id: medId, screen_id: 'PILLS' });
+        Alert.alert('HAVEN', locale === 'nl-NL' ? 'Offline opgeslagen — synchroniseert zodra online.' : 'Saved offline — will sync when online.');
+      } else {
+        Alert.alert('HAVEN', translateElderError(error));
+      }
+    } finally {
+      setConfirming(null);
+    }
+  }
 
   return (
     <View style={{ gap: 14 }}>
@@ -123,8 +202,9 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
                 : `Have you just taken ${confirmingMed?.name} ${confirmingMed?.dose}?`}
             </Text>
             <TouchableOpacity
-              onPress={() => { ctx.onPrimaryAction(`TAKE:${confirmMed}`); setConfirmMed(null); }}
-              style={{ backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+              onPress={() => { confirmMedication(confirmMed!); setConfirmMed(null); }}
+              disabled={!!confirming}
+              style={{ backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center', opacity: confirming ? 0.6 : 1 }}
             >
               <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900' }}>
                 {locale === 'nl-NL' ? 'Ja, ingenomen ✓' : 'Yes, taken ✓'}

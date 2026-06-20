@@ -1,7 +1,11 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { getExpoPushTokenAsync } from 'expo-notifications';
+import { requestPermissionsAsync as requestNotifPermissions } from 'expo-notifications/build/NotificationPermissions';
+import { setNotificationChannelAsync } from 'expo-notifications/build/setNotificationChannelAsync';
+import { AndroidImportance } from 'expo-notifications/build/NotificationChannelManager.types';
 import { createClient, Session, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@haven/database/src/types';
 import type { Locale } from '@haven/contracts/src/haven';
@@ -96,10 +100,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signInWithOtp({ email });
   }
 
+  // Register push token when carer session is available
+  const pushRegistered = useRef(false);
+  useEffect(() => {
+    if (!session || pushRegistered.current || !supabaseUrl) return;
+    pushRegistered.current = true;
+    let userId: string | null = null;
+    try {
+      const [, payload] = session.access_token.split('.');
+      userId = JSON.parse(atob(payload))?.sub ?? null;
+    } catch { /* skip */ }
+    if (!userId) return;
+    (async () => {
+      try {
+        const permissions = await requestNotifPermissions();
+        if (!permissions.granted) return;
+        if (Platform.OS === 'android') {
+          await setNotificationChannelAsync('haven-carer', {
+            name: 'HAVEN Carer',
+            importance: AndroidImportance.HIGH,
+          });
+        }
+        const tokenData = await getExpoPushTokenAsync();
+        await fetch(`${supabaseUrl}/functions/v1/fn-push-token-register`, {
+          method: 'POST',
+          headers: { authorization: `Bearer ${session.access_token}`, 'content-type': 'application/json' },
+          body: JSON.stringify({ profile_id: userId, token: tokenData.data, platform: Platform.OS }),
+        });
+      } catch { /* push registration is best-effort */ }
+    })();
+  }, [session, supabaseUrl]);
+
   async function signOut() {
     if (supabase) await supabase.auth.signOut();
     await SecureStore.deleteItemAsync(SESSION_KEY);
     setSession(null);
+    pushRegistered.current = false;
   }
 
   return (

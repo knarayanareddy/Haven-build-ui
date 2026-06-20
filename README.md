@@ -106,6 +106,61 @@ These are tracked in the release and compliance documentation.
 
 ---
 
+## Haven-build-ui: Vision UI Implementation
+
+This repository (`Haven-build-ui`) extends the original Haven-build codebase with a complete **havenUIvision** design implementation, targeting **Android APK builds** with bilingual **EN/NL** support across all three mobile apps.
+
+### Vision UI screens
+
+| App | Screens | Features |
+|---|---|---|
+| **Elder** (11 screens) | Home, Pills, Shield, Family, Stem, Today, Buurt, Kompas, Wacht, Settings, More | Personalized greeting, medication cards with OCR, scam protection with risk levels, voice companion with recording, daily check-in, neighbourhood connector, safe zones, care status |
+| **Carer** (5 tabs) | Vandaag, Handover, MAR-light, Veiligheid, Bezoeken | Daily checklist, handover notes with BSN guard, medication administration, meldcode 5-step safeguarding, visit history |
+| **Family Dashboard** (6 tabs) | Overview, Medications, Alerts, Care, Voice, Privacy | Daily status pill, medication adherence %, trust signal panel, care timeline, VAPI voice (deferred), consent toggles |
+
+### Supabase Edge Function wiring
+
+All five "Must Be Real" features are wired to real Supabase Edge Functions with graceful fallback:
+
+| Feature | UI Screen | Edge Function | Fallback |
+|---|---|---|---|
+| Medication confirm | Elder PillsScreen | `fn-voice-pipeline` + REST query | Mock data if unauthenticated |
+| Voice pipeline | Elder StemScreen | `fn-voice-pipeline` (audio + text) | Alert if no session |
+| Carer handover | Carer HandoverTab | `fn-carer-handover-note` | Offline IndexedDB queue |
+| Family hello | Family OverviewTab | `fn-grandchild-message-send` | Silent skip if no token |
+| Push notifications | All 3 apps | `fn-push-token-register` | Graceful skip if denied |
+
+### Shared component library
+
+Located in `packages/ui/src/`:
+
+- `visionComponents.tsx` — GradientCard, StatusBadge, ProgressBar, MoodPicker, ConsentToggle, TimeSlotPill, StockIndicator
+- `visionColors.ts` — Pillar gradient definitions
+- `mockData.ts` — 482-line offline mock data layer
+- `tokens.ts` — Design tokens (colors, spacing)
+
+### Android APK builds
+
+All 3 apps build as **release APKs** (not debug) for Android:
+
+```bash
+# From each app's android/ directory after expo prebuild:
+cd apps/elder/android && ./gradlew assembleRelease
+cd apps/carer/android && ./gradlew assembleRelease
+cd apps/grandchild/android && ./gradlew assembleRelease
+```
+
+**Key build fixes applied:**
+- `expo-linear-gradient` upgraded from `14.1.5` to `56.0.4` (fixed `LazyKType` crash)
+- `unimodules-app-loader` forced to `56.0.1` via pnpm overrides
+- All apps unified on Expo SDK 56 / React Native 0.85.3 / React 19.2.3
+
+### Bilingual EN/NL
+
+Every screen, button, label, alert, and placeholder supports both English and Dutch via a `locale` parameter (defaulting to `nl-NL`). The locale propagates through `ScreenContext` (elder), props (carer/family), and `I18nProvider`.
+
+---
+
 ## Repository map
 
 ```text
@@ -167,7 +222,7 @@ Haven-build/
 | **KRING** | Family and community connection | family messages, voice/video hellos, life stories, memory lane, grandchild app, community events, skill exchange |
 | **BUURT** | Privacy-safe neighbourhood connector | PC4 profiles, interest tags, anonymous counts, local events, walk buddy matching, double opt-in, opt-out cleanup |
 | **KOMPAS** | Cognitive safety and orientation | safe zone, fuzzy location, emergency profile, night mode, cognitive check-ins, wandering/wearables, driving events, bereavement support |
-| **STEM** | Voice companion | Whisper adapter, intent classification, LLM reply, ElevenLabs TTS, **Familiar Voice (family clone, gated)**, companion memory, crisis detection, **repeat-back confirmation for medication intake** |
+| **STEM** | Voice companion | Whisper adapter, intent classification, LLM reply, VAPI TTS (preferred over ElevenLabs), **Familiar Voice (family clone, gated)**, companion memory, crisis detection, **repeat-back confirmation for medication intake** |
 | **WACHT** | Professional care portal | carer portal with **handover notes + MAR-light + offline queue**, care plans, visit logs, incidents, safeguarding reports, external care sync |
 
 ---

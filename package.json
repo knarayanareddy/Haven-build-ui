@@ -42,7 +42,8 @@
   "pnpm": {
     "overrides": {
       "@xmldom/xmldom": ">=0.8.13",
-      "semver": ">=7.5.2"
+      "semver": ">=7.5.2",
+      "unimodules-app-loader": "56.0.1"
     },
     "packageExtensions": {
       "babel-preset-expo@10.0.2": {
@@ -83,5 +84,8 @@
     "globals": "^17.6.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.61.0"
+  },
+  "dependencies": {
+    "unimodules-app-loader": "56.0.1"
   }
 }

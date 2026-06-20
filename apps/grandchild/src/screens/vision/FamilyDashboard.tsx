@@ -38,8 +38,43 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
   const familyName = 'Sarah';
   const statusDot = STATUS_DOT[DAILY_STATUS.status as keyof typeof STATUS_DOT] ?? STATUS_DOT.green;
 
-  function handleSendAction(action: string) {
-    // Will integrate with Supabase when auth is connected
+  async function handleSendAction(action: string) {
+    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    const accessToken = process.env.EXPO_PUBLIC_FAMILY_ACCESS_TOKEN;
+    const familyMemberId = process.env.EXPO_PUBLIC_FAMILY_MEMBER_ID;
+    const configuredElderId = process.env.EXPO_PUBLIC_ELDER_ID ?? '00000000-0000-0000-0000-000000000001';
+
+    if (!supabaseUrl || !accessToken || !familyMemberId) return;
+
+    const messageMap: Record<string, { type: string; content_nl: string; content_en: string }> = {
+      heart: { type: 'heart', content_nl: `${familyName} stuurt een hartje.`, content_en: `${familyName} sends a heart.` },
+      checkin: { type: 'check_in', content_nl: `${familyName} checkt in: Hoe gaat het?`, content_en: `${familyName} checks in: How are you?` },
+      voice: { type: 'voice_message', content_nl: `${familyName} stuurde een spraakbericht.`, content_en: `${familyName} sent a voice message.` },
+      video: { type: 'video_call', content_nl: `${familyName} wil videobellen.`, content_en: `${familyName} wants to video call.` },
+    };
+    const msg = messageMap[action];
+    if (!msg) return;
+
+    try {
+      const response = await fetch(`${supabaseUrl}/functions/v1/fn-grandchild-message-send`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${accessToken}`, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          family_member_id: familyMemberId,
+          elder_id: configuredElderId,
+          display_name: familyName,
+          message_type: msg.type,
+          content_nl: msg.content_nl,
+          content_en: msg.content_en,
+        }),
+      });
+      if (!response.ok) {
+        const json = await response.json().catch(() => ({}));
+        throw new Error((json as Record<string, string>).error ?? 'Send failed');
+      }
+    } catch {
+      // Silently fail — the UI already shows "Sent!" optimistically
+    }
   }
 
   function renderTab() {

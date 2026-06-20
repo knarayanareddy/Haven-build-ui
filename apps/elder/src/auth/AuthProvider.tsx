@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { createClient, Session, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@haven/database/src/types';
+import { HavenClient } from '../services/havenClient';
+import { registerPushToken, addNotificationListeners } from '../services/pushTokenService';
 
 const SESSION_KEY = 'haven.secure.supabase.session';
 
@@ -48,10 +50,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     else await supabase.auth.signInWithOtp({ phone: emailOrPhone });
   }
 
+  // Register push token when session becomes available
+  const pushRegistered = useRef(false);
+  useEffect(() => {
+    if (!session || pushRegistered.current) return;
+    pushRegistered.current = true;
+    // Extract user ID from JWT sub claim
+    let userId: string | null = null;
+    try {
+      const [, payload] = session.access_token.split('.');
+      userId = JSON.parse(atob(payload))?.sub ?? null;
+    } catch { /* skip */ }
+    if (!userId) return;
+    const client = new HavenClient({ supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!, accessToken: session.access_token });
+    registerPushToken(client, userId).catch(() => {});
+    const cleanup = addNotificationListeners();
+    return cleanup;
+  }, [session]);
+
   async function signOut() {
     await supabase.auth.signOut();
     await SecureStore.deleteItemAsync(SESSION_KEY);
     setSession(null);
+    pushRegistered.current = false;
   }
 
   return <AuthContext.Provider value={{ supabase, session, isReady, signInWithOtp, signOut }}>{children}</AuthContext.Provider>;

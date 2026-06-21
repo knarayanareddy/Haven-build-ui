@@ -66,6 +66,7 @@ export function VisitsTab({ locale }: { locale: string }) {
       const client = new CarerClient({ supabaseUrl, accessToken: session.access_token });
       await client.visitLog({
         elder_id: elderId,
+        carer_id: (() => { try { const [, p] = session.access_token.split('.'); return JSON.parse(atob(p))?.sub; } catch { return undefined; } })(),
         visit_date: new Date().toISOString().slice(0, 10),
         check_in_time: new Date().toISOString(),
         notes_nl: newNote || undefined,

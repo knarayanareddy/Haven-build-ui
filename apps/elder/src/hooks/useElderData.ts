@@ -38,20 +38,20 @@ export function useElderData(elderId: string): ElderLiveData {
       // Fetch family relationships
       const { data: familyRows } = await supabase
         .from('family_relationships')
-        .select('id, family_member_id, relationship_type, profiles!family_relationships_family_member_id_fkey(preferred_name)')
+        .select('id, family_member_id, relation_type, profiles!family_relationships_family_member_id_fkey(preferred_name)')
         .eq('elder_id', elderId)
         .is('deleted_at', null);
 
       const family: FamilyMember[] = (familyRows ?? []).map((row: any) => ({
         id: row.family_member_id,
         name: row.profiles?.preferred_name ?? 'Familie',
-        relation: row.relationship_type ?? 'kind',
+        relation: row.relation_type ?? 'kind',
       }));
 
       // Fetch medications
       const { data: medRows } = await supabase
         .from('medications')
-        .select('id, name_nl, name_en, dosage, frequency, time_slots')
+        .select('id, name_nl, name_en, dose_description_nl, frequency, schedule_times')
         .eq('elder_id', elderId)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
@@ -60,9 +60,9 @@ export function useElderData(elderId: string): ElderLiveData {
       const medications: MedicationRow[] = (medRows ?? []).map((row: any) => ({
         id: row.id,
         name: row.name_nl ?? row.name_en ?? 'Medicijn',
-        dosage: row.dosage ?? '',
-        frequency: row.frequency ?? 'daily',
-        taken: row.time_slots ? (row.time_slots as string[]).map(() => false) : [false],
+        dosage: row.dose_description_nl ?? '',
+        frequency: row.frequency ?? 'dagelijks',
+        taken: row.schedule_times ? (row.schedule_times as string[]).map(() => false) : [false],
       }));
 
       // Fetch tasks

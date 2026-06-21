@@ -35,7 +35,7 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
     const elderId = process.env.EXPO_PUBLIC_ELDER_ID ?? process.env.EXPO_PUBLIC_FAMILY_MEMBER_ID;
     if (!url || !elderId) return;
 
-    fetch(`${url}/rest/v1/consent_records?elder_id=eq.${elderId}&select=consent_type,granted&order=updated_at.desc`, {
+    fetch(`${url}/rest/v1/consent_records?elder_id=eq.${elderId}&select=consent_type,granted&order=created_at.desc`, {
       headers: {
         authorization: `Bearer ${session.access_token}`,
         apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? session.access_token,
@@ -75,7 +75,7 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
           elder_id: elderId,
           consent_type: key,
           granted: value,
-          updated_at: new Date().toISOString(),
+          granted_at: new Date().toISOString(),
         }),
       });
     } catch {

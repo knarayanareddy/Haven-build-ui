@@ -74,8 +74,16 @@ export class CarerClient {
     severity: string;
     summary_nl: string;
     category?: string;
+    reported_by_id?: string;
   }) {
-    return this.invoke<{ success: boolean }>('fn-incident-report', input);
+    const payload = {
+      elder_id: input.elder_id,
+      reported_by_id: input.reported_by_id,
+      incident_type: input.category ?? 'safeguarding',
+      description_nl: input.summary_nl,
+      severity: input.severity,
+    };
+    return this.invoke<{ success: boolean }>('fn-incident-report', payload);
   }
 
   async carePlan(elderId: string) {

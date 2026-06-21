@@ -39,7 +39,8 @@ export function SafeguardingTab({ locale }: { locale: string }) {
         Alert.alert('HAVEN', nl ? 'Lokaal opgeslagen — synchroniseert zodra online.' : 'Saved locally — will sync when online.');
       } else {
         const client = new CarerClient({ supabaseUrl, accessToken: session.access_token });
-        await client.incidentReport({ elder_id: elderId, severity, summary_nl: summary });
+        const carerId = (() => { try { const [, p] = session.access_token.split('.'); return JSON.parse(atob(p))?.sub; } catch { return undefined; } })();
+        await client.incidentReport({ elder_id: elderId, severity, summary_nl: summary, reported_by_id: carerId });
         Alert.alert('HAVEN', nl ? 'Veiligheidsmelding ingediend!' : 'Safeguarding report submitted!');
       }
       setSummary('');

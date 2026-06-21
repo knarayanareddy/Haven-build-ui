@@ -52,6 +52,8 @@ export function MARTab({ locale }: { locale: string }) {
         Alert.alert('HAVEN', nl ? 'Lokaal opgeslagen — synchroniseert zodra online.' : 'Saved locally — will sync when online.');
       } else {
         // Online: write directly to Supabase
+        const now = new Date().toISOString();
+        const reminderStatus = status === 'given' ? 'ingenomen' : status === 'refused' ? 'overgeslagen' : 'gemist';
         const response = await fetch(`${supabaseUrl}/rest/v1/medication_reminders`, {
           method: 'POST',
           headers: {
@@ -63,10 +65,9 @@ export function MARTab({ locale }: { locale: string }) {
           body: JSON.stringify({
             elder_id: elderId,
             medication_id: selectedMed,
-            scheduled_time: selectedTime || new Date().toTimeString().slice(0, 5),
-            status: status === 'given' ? 'taken' : status === 'refused' ? 'refused' : 'missed',
-            administered_by: 'carer',
-            administered_at: new Date().toISOString(),
+            scheduled_time: now,
+            status: reminderStatus,
+            confirmed_at: status === 'given' ? now : null,
           }),
         });
         if (!response.ok) {

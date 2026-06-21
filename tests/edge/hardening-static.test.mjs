@@ -121,6 +121,7 @@ const approvedFalseJwtFns = [
   'fn-daily-status-digest',
   'fn-device-health-monitor',
   'fn-fall-escalation',
+  'fn-vapi-webhook',
 ].sort();
 assert.deepEqual(falseJwtFns, approvedFalseJwtFns, 'verify_jwt = false should be limited to the approved public/internal surface');
 
@@ -135,7 +136,7 @@ for (const fn of vendorOrInternalFns) {
   assert.ok(code.includes('requireVendorSecretHeader'), `${fn} should support a vendor secret path`);
   assert.ok(code.includes('requireInternalAccess'), `${fn} should support an internal invocation path`);
 }
-for (const fn of approvedFalseJwtFns.filter((fn) => !['fn-emergency-profile', 'fn-transaction-intercept', 'fn-bank-connect', 'fn-whatsapp-webhook', 'fn-banking-ingress-buffer', ...adminBearerFns, ...vendorOrInternalFns].includes(fn))) {
+for (const fn of approvedFalseJwtFns.filter((fn) => !['fn-emergency-profile', 'fn-transaction-intercept', 'fn-bank-connect', 'fn-whatsapp-webhook', 'fn-vapi-webhook', 'fn-banking-ingress-buffer', ...adminBearerFns, ...vendorOrInternalFns].includes(fn))) {
   const code = readFileSync(new URL(`../../supabase/functions/${fn}/index.ts`, import.meta.url), 'utf8');
   assert.ok(code.includes('requireInternalAccess'), `${fn} should require the internal access guard`);
 }

@@ -116,7 +116,7 @@ This repository (`Haven-build-ui`) extends the original Haven-build codebase wit
 |---|---|---|
 | **Elder** (11 screens) | Home, Pills, Shield, Family, Stem, Today, Buurt, Kompas, Wacht, Settings, More | Personalized greeting, medication cards with OCR, scam protection with risk levels, voice companion with recording, daily check-in, neighbourhood connector, safe zones, care status |
 | **Carer** (5 tabs) | Vandaag, Handover, MAR-light, Veiligheid, Bezoeken | Daily checklist, handover notes with BSN guard, medication administration, meldcode 5-step safeguarding, visit history |
-| **Family Dashboard** (6 tabs) | Overview, Medications, Alerts, Care, Voice, Privacy | Daily status pill, medication adherence %, trust signal panel, care timeline, VAPI voice (deferred), consent toggles |
+| **Family Dashboard** (6 tabs) | Overview, Medications, Alerts, Care, Voice, Privacy | Daily status pill, medication adherence %, trust signal panel, care timeline, VAPI Familiar Voice (wired to fn-voice-profile-create/test/revoke), consent toggles |
 
 ### Supabase Edge Function wiring
 
@@ -155,6 +155,55 @@ cd apps/grandchild/android && ./gradlew assembleRelease
 - `unimodules-app-loader` forced to `56.0.1` via pnpm overrides
 - All apps unified on Expo SDK 56 / React Native 0.85.3 / React 19.2.3
 
+### VAPI Voice AI Integration
+
+Haven uses **VAPI** as its voice AI platform for real-time bidirectional voice conversations. VAPI replaces the manual record-upload-wait flow with a seamless WebRTC-based real-time voice pipeline.
+
+**Architecture:**
+
+```text
+Elder taps mic → VAPI SDK opens WebRTC stream → STT (Whisper) → LLM (GPT-4o-mini) → TTS (ElevenLabs) → elder hears response
+                                                                                     ↓
+                                                              fn-vapi-webhook receives tool calls
+                                                              (medication confirm, crisis escalation, family messages)
+```
+
+**Components:**
+
+| Layer | Component | Location |
+|---|---|---|
+| Client SDK | `VapiVoiceService` + `useVapiCall` hook | `packages/vapi/src/` |
+| Elder voice orb | Real-time VAPI call with live transcript | `apps/elder/src/screens/vision/StemScreen.tsx` |
+| Floating button | VAPI-enhanced with volume visualization | `apps/elder/src/components/FloatingVoiceButton.tsx` |
+| Server webhook | Tool-call routing to Edge Functions | `supabase/functions/fn-vapi-webhook/` |
+| Assistant setup | Creates NL + EN VAPI Assistants | `scripts/setup-vapi-assistant.ts` |
+| Familiar Voice | Voice cloning via ElevenLabs + VAPI TTS | `apps/grandchild/src/screens/vision/VoiceTab.tsx` |
+
+**VAPI features used:**
+
+- Real-time STT via Whisper (optimized for Dutch)
+- LLM conversation orchestration with GPT-4o-mini (elder-safe system prompts)
+- TTS via ElevenLabs `eleven_multilingual_v2` (supports cloned voices)
+- Server-side tool calling (medication, crisis, family messages, schedule lookup)
+- Turn-taking and interruption handling
+- Silence detection (30s timeout)
+- Graceful fallback to record-upload-wait when VAPI is not configured
+
+**Setup:**
+
+```bash
+# 1. Create VAPI assistants (requires VAPI API key)
+VAPI_API_KEY=vapi_xxx SUPABASE_URL=https://xxx.supabase.co npx tsx scripts/setup-vapi-assistant.ts
+
+# 2. Add output IDs to your .env files
+EXPO_PUBLIC_VAPI_API_KEY=vapi_xxx
+EXPO_PUBLIC_VAPI_ASSISTANT_ID_NL=<output-nl-id>
+EXPO_PUBLIC_VAPI_ASSISTANT_ID_EN=<output-en-id>
+
+# 3. Add VAPI key to Supabase secrets
+supabase secrets set VAPI_API_KEY=vapi_xxx
+```
+
 ### Bilingual EN/NL
 
 Every screen, button, label, alert, and placeholder supports both English and Dutch via a `locale` parameter (defaulting to `nl-NL`). The locale propagates through `ScreenContext` (elder), props (carer/family), and `I18nProvider`.
@@ -190,13 +239,15 @@ Haven-build/
 │   ├── i18n/                # EN/NL product copy
 │   ├── scam-engine/         # local scam scoring rules
 │   ├── schema/              # screen schema + constitution validator
-│   └── ui/                  # design tokens and UI specs
+│   ├── ui/                  # design tokens and UI specs
+│   └── vapi/                # VAPI voice AI client SDK (VapiVoiceService + useVapiCall hook)
 ├── scripts/
 │   ├── deploy/              # Supabase deploy scripts
 │   ├── check-local-supabase.sh
-│   └── validate-suite.mjs
+│   ├── validate-suite.mjs
+│   └── setup-vapi-assistant.ts  # Creates VAPI NL+EN assistants
 ├── supabase/
-│   ├── functions/           # 81 Edge Functions
+│   ├── functions/           # 82 Edge Functions (including fn-vapi-webhook)
 │   ├── migrations/          # timestamped schema/security/runtime migrations
 │   ├── seed.sql             # synthetic local seed data
 │   └── config.toml          # Supabase local function config

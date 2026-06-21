@@ -40,6 +40,8 @@ policy = "per_worker"
 
 [functions.fn-voice-pipeline]
 verify_jwt = true
+[functions.fn-vapi-webhook]
+verify_jwt = false # COMPENSATING CONTROL: VAPI server-to-server webhook, authenticated via VAPI API key verification
 [functions.fn-scam-pipeline]
 verify_jwt = true
 [functions.fn-medication-escalation]

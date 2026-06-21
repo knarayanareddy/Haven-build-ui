@@ -8,7 +8,8 @@
     "App.tsx",
     "src/**/*.ts",
     "src/**/*.tsx",
-    "../../types/mobile-shims.d.ts"
+    "../../types/mobile-shims.d.ts",
+    "../../types/expo-audio-shim.d.ts"
   ],
   "exclude": ["node_modules"]
 }

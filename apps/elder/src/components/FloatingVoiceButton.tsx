@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Animated, Easing, Platform, Text, TouchableOpacity, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { colors } from '@haven/ui/src/tokens';
@@ -6,6 +6,8 @@ import type { Locale } from '@haven/contracts/src/haven';
 import { useAuth } from '../auth/AuthProvider';
 import { HavenClient } from '../services/havenClient';
 import { startVoiceRecording, type ActiveVoiceRecording } from '../services/voiceRecorder';
+import { useVapiCall } from '@haven/vapi/src/useVapiCall';
+import { VapiVoiceService } from '@haven/vapi/src/vapiClient';
 
 export interface FloatingVoiceButtonProps {
   locale: Locale;
@@ -27,6 +29,22 @@ function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVo
   const lastHapticStep = useRef<number>(0);
   const recordingRef = useRef<ActiveVoiceRecording | null>(null);
   const { session } = useAuth();
+  const vapiAvailable = VapiVoiceService.isAvailable();
+
+  const vapiConfig = useMemo(() => {
+    if (!elderId || !session) return null;
+    return {
+      locale: locale as 'en-GB' | 'nl-NL',
+      elderId,
+      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!,
+      accessToken: session.access_token,
+    };
+  }, [elderId, session, locale]);
+
+  const vapi = useVapiCall(vapiConfig);
+  const isVapiActive = vapiAvailable && (vapi.state.status === 'active' || vapi.state.status === 'connecting');
+  // When VAPI is active, override audioVolumePct with VAPI's volumeLevel
+  if (vapiAvailable && isVapiActive) audioVolumePct = vapi.state.volumeLevel;
   
   if (onRenderFrame) onRenderFrame();
   lastRenderTime.current = Date.now();
@@ -76,6 +94,30 @@ function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVo
 
   const handlePress = useCallback(async () => {
     hapticTrigger();
+
+    // ─── VAPI path: real-time bidirectional call ───
+    if (vapiAvailable) {
+      if (isVapiActive) {
+        vapi.stop();
+        stopPulse();
+        setListening(false);
+        setMacosState('idle');
+      } else {
+        try {
+          if (!session) throw new Error(locale === 'nl-NL' ? 'Log eerst in om spraak te gebruiken.' : 'Please sign in before using voice.');
+          await vapi.start();
+          setListening(true);
+          setMacosState('listening');
+          startPulse();
+        } catch (error) {
+          Alert.alert('HAVEN', String((error as Error).message ?? error));
+          stopPulse();
+        }
+      }
+      return;
+    }
+
+    // ─── Fallback path: record-upload-wait ───
     // Closure marker for single-switch tests: if (isListening) { setListening(false);
     if (isListening && recordingRef.current) {
       // FIX P2: Single-Switch Toggle Mode secondary tap to immediately finalize dispatches
@@ -101,7 +143,7 @@ function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVo
         stopPulse();
       }
     }
-  }, [hapticTrigger, isListening, locale, session, startPulse, stopPulse, submitRecording]);
+  }, [hapticTrigger, isListening, isVapiActive, locale, session, startPulse, stopPulse, submitRecording, vapi, vapiAvailable]);
 
   // P3 #2: Refined haptic touch feedback step scales matching exact visual volume visualizer rings
   useEffect(() => {

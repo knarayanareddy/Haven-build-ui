@@ -108,6 +108,16 @@ export async function synthesizeSpeechToStorage(params: { elderId: string; inter
     if (mocked?.audio_url) return String(mocked.audio_url);
     return null;
   }
+
+  // Try VAPI-managed TTS first (when VAPI is the active voice provider),
+  // then fall back to direct ElevenLabs API call
+  const vapiKey = Deno.env.get('VAPI_API_KEY');
+  if (vapiKey && !params.voiceId) {
+    // When VAPI is configured, TTS is handled by VAPI's real-time pipeline.
+    // For standalone TTS (e.g. voice profile test), fall through to ElevenLabs.
+    console.log('[TTS] VAPI is configured — real-time TTS handled by VAPI pipeline');
+  }
+
   const key = Deno.env.get('ELEVENLABS_API_KEY');
   const voiceId = params.voiceId ?? Deno.env.get(params.locale === 'nl-NL' ? 'ELEVENLABS_VOICE_ID_NL' : 'ELEVENLABS_VOICE_ID_EN');
   if (!key || !voiceId) return null;
@@ -128,4 +138,9 @@ export async function synthesizeSpeechToStorage(params: { elderId: string; inter
   const signed = await admin().storage.from('tts-cache').createSignedUrl(path, 300);
   if (signed.error) throw signed.error;
   return signed.data.signedUrl;
+}
+
+/** Check if VAPI is configured as the voice provider */
+export function isVapiEnabled(): boolean {
+  return Boolean(Deno.env.get('VAPI_API_KEY') && Deno.env.get('VAPI_ASSISTANT_ID_NL'));
 }

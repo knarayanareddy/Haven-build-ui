@@ -8,7 +8,9 @@
     "App.tsx",
     "src/**/*.ts",
     "src/**/*.tsx",
-    "../../types/mobile-shims.d.ts"
+    "../../types/mobile-shims.d.ts",
+    "../../packages/vapi/src/**/*.ts",
+    "../../packages/vapi/src/**/*.d.ts"
   ],
   "exclude": ["node_modules"]
 }

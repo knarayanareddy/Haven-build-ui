@@ -134,6 +134,9 @@ importers:
       '@haven/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@haven/vapi':
+        specifier: workspace:*
+        version: link:../../packages/vapi
       '@react-navigation/native':
         specifier: 7.3.1
         version: 7.3.1(react-native@0.85.3(@babel/core@7.29.7)(@react-native-community/cli@12.3.6)(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
@@ -286,6 +289,18 @@ importers:
       expo-linear-gradient:
         specifier: '>=14.0.0'
         version: 14.1.5(expo@56.0.12)(react-native@0.85.3(@babel/core@7.29.7)(@react-native-community/cli@12.3.6)(@types/react@19.2.17)(react@19.2.7))(react@19.2.7)
+      react:
+        specifier: '>=18.0.0'
+        version: 19.2.7
+      react-native:
+        specifier: '>=0.73.0'
+        version: 0.85.3(@babel/core@7.29.7)(@react-native-community/cli@12.3.6)(@types/react@19.2.17)(react@19.2.7)
+
+  packages/vapi:
+    dependencies:
+      events:
+        specifier: ^3.3.0
+        version: 3.3.0
       react:
         specifier: '>=18.0.0'
         version: 19.2.7
@@ -2081,6 +2096,10 @@ packages:
   event-target-shim@5.0.1:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
     engines: {node: '>=6'}
+
+  events@3.3.0:
+    resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
+    engines: {node: '>=0.8.x'}
 
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
@@ -6639,6 +6658,8 @@ snapshots:
 
   event-target-shim@5.0.1: {}
 
+  events@3.3.0: {}
+
   execa@5.1.1:
     dependencies:
       cross-spawn: 7.0.6
@@ -6785,7 +6806,7 @@ snapshots:
 
   expo-haptics@56.0.3(expo@56.0.12):
     dependencies:
-      expo: 56.0.12(@babel/core@7.29.7)(@expo/dom-webview@56.0.5)(react-dom@19.2.7(react@19.2.7))(react-native@0.86.0(@babel/core@7.29.7)(@react-native-community/cli@12.3.6)(@types/react@19.2.17)(react@19.2.7))(react@19.2.7)(typescript@6.0.3)
+      expo: 56.0.12(@babel/core@7.29.7)(@expo/dom-webview@56.0.5)(react-dom@19.2.7(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.7)(@react-native-community/cli@12.3.6)(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
 
   expo-intent-launcher@56.0.4(expo@56.0.12):
     dependencies:

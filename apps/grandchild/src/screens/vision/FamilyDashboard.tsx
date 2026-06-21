@@ -73,8 +73,7 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
         throw new Error((json as Record<string, string>).error ?? 'Send failed');
       }
     } catch (err) {
-      // Re-throw so OverviewTab can show real success/failure state
-      throw err;
+      throw err instanceof Error ? err : new Error(String(err));
     }
   }
 

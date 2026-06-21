@@ -77,4 +77,5 @@ export function translate(key: keyof typeof enGB, locale: Locale = 'nl-NL', para
 }
 
 export { copy } from './copy';
+export { LanguageToggle } from './LanguageToggle';
 

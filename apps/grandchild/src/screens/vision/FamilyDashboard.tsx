@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, TouchableOpacity, Text, Platform, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@haven/ui/src/tokens';
+import { LanguageToggle } from '@haven/i18n';
 // DEMO: mock daily status — wire to live daily_checkins table when authenticated
 import { DAILY_STATUS } from '@haven/ui/src/mockData';
 import { useAuth } from '../../auth/AuthProvider';
@@ -117,13 +118,16 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
       {/* Header */}
       <View style={{ backgroundColor: colors.paper, borderBottomWidth: 1, borderColor: colors.mist, paddingHorizontal: 16, paddingVertical: 12 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>
               {nl ? `Goedemorgen, ${familyName}` : `Good morning, ${familyName}`} 👋
             </Text>
-            <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '600', marginTop: 2 }}>
-              {nl ? `${elderName}'s familiedashboard` : `${elderName}'s family dashboard`}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+              <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '600' }}>
+                {nl ? `${elderName}'s familiedashboard` : `${elderName}'s family dashboard`}
+              </Text>
+              <LanguageToggle />
+            </View>
           </View>
           <View style={{
             flexDirection: 'row', alignItems: 'center', gap: 6,

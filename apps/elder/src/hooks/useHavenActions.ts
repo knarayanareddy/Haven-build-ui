@@ -22,7 +22,7 @@ function sessionUserId(session: { access_token?: string } | null): string | null
 
 export function useHavenActions(screenId: string) {
   const { session } = useAuth();
-  const { t } = useTranslation();
+  const { locale, setLocale, t } = useTranslation();
   const client = session ? new HavenClient({ supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!, accessToken: session.access_token }) : null;
   const elderId = sessionUserId(session);
 
@@ -46,8 +46,10 @@ export function useHavenActions(screenId: string) {
       Alert.alert('HAVEN', t('actions.call_family.alert'));
       return;
     }
-    if (actionId === 'LANG_TOGGLE') {
-      Alert.alert('HAVEN', t('actions.lang_toggle.alert'));
+    if (actionId === 'LANG_TOGGLE' || actionId === 'TOGGLE_LANG') {
+      const next = locale === 'nl-NL' ? 'en-GB' : 'nl-NL';
+      setLocale(next);
+      Alert.alert('HAVEN', next === 'nl-NL' ? 'Taal ingesteld op Nederlands.' : 'Language set to English.');
       return;
     }
     if (actionId === 'CONTRAST_TOGGLE') {

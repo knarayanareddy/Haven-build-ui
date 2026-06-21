@@ -58,7 +58,7 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
       locale: locale as 'en-GB' | 'nl-NL',
       elderId,
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!,
-      accessToken: session.access_token,
+      
     };
   }, [elderId, session, locale]);
 

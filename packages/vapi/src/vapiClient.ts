@@ -11,7 +11,6 @@ export interface VapiConfig {
   locale: 'en-GB' | 'nl-NL';
   elderId: string;
   supabaseUrl: string;
-  accessToken: string;
 }
 
 export interface VapiCallState {
@@ -114,8 +113,6 @@ export class VapiVoiceService extends EventEmitter {
         metadata: {
           elder_id: this.config.elderId,
           locale: this.config.locale,
-          supabase_url: this.config.supabaseUrl,
-          access_token: this.config.accessToken,
         },
       };
 

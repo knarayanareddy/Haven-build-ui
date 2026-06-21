@@ -9,6 +9,12 @@
   },
   "peerDependencies": {
     "react": ">=18.0.0",
-    "react-native": ">=0.73.0"
+    "react-native": ">=0.73.0",
+    "@vapi-ai/react-native": ">=0.3.0"
+  },
+  "peerDependenciesMeta": {
+    "@vapi-ai/react-native": {
+      "optional": true
+    }
   }
 }

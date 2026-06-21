@@ -298,6 +298,20 @@ function buildAssistantConfig(locale: "en-GB" | "nl-NL") {
   };
 }
 
+function verifyVapiSecret(req: Request): boolean {
+  const secret = Deno.env.get("VAPI_WEBHOOK_SECRET");
+  if (!secret) return true; // No secret configured = allow (dev mode)
+  const header = req.headers.get("x-vapi-secret") ?? req.headers.get("authorization")?.replace("Bearer ", "");
+  if (!header) return false;
+  // Constant-time comparison
+  if (header.length !== secret.length) return false;
+  let result = 0;
+  for (let i = 0; i < secret.length; i++) {
+    result |= header.charCodeAt(i) ^ secret.charCodeAt(i);
+  }
+  return result === 0;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders(req) });
@@ -305,6 +319,12 @@ Deno.serve(async (req: Request) => {
 
   const started = Date.now();
   try {
+    // Verify VAPI webhook authentication
+    if (!verifyVapiSecret(req)) {
+      await recordMetric("fn-vapi-webhook", started, "auth_rejected");
+      return json({ error: "Unauthorized" }, 401, req);
+    }
+
     await rateLimit(req, "fn-vapi-webhook");
 
     const body = await req.json() as VapiWebhookBody;

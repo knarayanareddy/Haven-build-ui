@@ -107,29 +107,30 @@ Deno.serve(async (req) => {
     const rawBody = await req.text();
 
     const appSecret = Deno.env.get("WHATSAPP_APP_SECRET");
-    if (appSecret) {
-      if (!signature) return json({ error: "Missing signature" }, 403, req);
-      const key = await crypto.subtle.importKey(
-        "raw", new TextEncoder().encode(appSecret),
-        { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
-      );
-      const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
-      const expected = "sha256=" + [...new Uint8Array(mac)]
-        .map((b) => b.toString(16).padStart(2, "0")).join("");
-
-      // Constant-time comparison
-      if (expected.length !== signature.length) {
-        return json({ error: "Invalid signature" }, 403, req);
-      }
-      let result = 0;
-      for (let i = 0; i < expected.length; i++) {
-        result |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
-      }
-      if (result !== 0) {
-        return json({ error: "Invalid signature" }, 403, req);
-      }
-    } else if (!signature) {
+    if (!appSecret) {
       return json({ error: "WHATSAPP_APP_SECRET is not configured" }, 500, req);
+    }
+    if (!signature) {
+      return json({ error: "Missing signature" }, 403, req);
+    }
+    const key = await crypto.subtle.importKey(
+      "raw", new TextEncoder().encode(appSecret),
+      { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+    );
+    const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
+    const expected = "sha256=" + [...new Uint8Array(mac)]
+      .map((b) => b.toString(16).padStart(2, "0")).join("");
+
+    // Constant-time comparison
+    if (expected.length !== signature.length) {
+      return json({ error: "Invalid signature" }, 403, req);
+    }
+    let result = 0;
+    for (let i = 0; i < expected.length; i++) {
+      result |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+    }
+    if (result !== 0) {
+      return json({ error: "Invalid signature" }, 403, req);
     }
 
     const body = JSON.parse(rawBody) as Record<string, unknown>;
@@ -182,9 +183,10 @@ Deno.serve(async (req) => {
           // 1. Look up the RECIPIENT's profiles.locale from the database
           const { admin } = await import("../_shared/core.ts");
           const db = admin();
+          const sanitizedPhone = senderPhone.replace(/[^0-9+]/g, "");
           const { data: senderProfile } = await db.from("profiles")
             .select("id, locale")
-            .or(`phone.eq.${senderPhone},phone.eq.+${senderPhone}`)
+            .or(`phone.eq.${sanitizedPhone},phone.eq.+${sanitizedPhone}`)
             .maybeSingle();
 
           const dbLocale = senderProfile?.locale ?? (isNl ? "nl-NL" : "en-GB");

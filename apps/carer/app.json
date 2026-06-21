@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon.png",
-    "splash": { "image": "./assets/splash.png", "backgroundColor": "#2C3E6B" },
+    "splash": { "image": "./assets/splash.png", "resizeMode": "contain", "backgroundColor": "#FFFFFF" },
     "ios": { 
       "supportsTablet": true, 
       "bundleIdentifier": "nl.haven.carer",
@@ -19,7 +19,7 @@
       "output": "static"
     },
     "android": {
-      "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#2C3E6B" },
+      "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#4EAAA0" },
       "package": "nl.haven.carer",
       "versionCode": 1
     },

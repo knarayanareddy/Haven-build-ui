@@ -3,8 +3,14 @@
     "name": "HAVEN",
     "slug": "haven-elder",
     "scheme": "haven",
+    "icon": "./assets/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
     "ios": { 
       "bundleIdentifier": "nl.haven.elder", 
       "supportsTablet": true,
@@ -30,6 +36,10 @@
     },
     "android": {
       "package": "nl.haven.elder",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#8B7BB8"
+      },
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",

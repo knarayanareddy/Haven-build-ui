@@ -3,11 +3,21 @@
     "name": "HAVEN Hello",
     "slug": "haven-grandchild",
     "scheme": "havenhello",
+    "icon": "./assets/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
     "ios": { "bundleIdentifier": "nl.haven.grandchild" },
     "android": {
       "package": "nl.haven.grandchild",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#5B7FB8"
+      },
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.INTERNET"

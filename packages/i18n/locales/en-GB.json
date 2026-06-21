@@ -208,6 +208,7 @@
   "actions.tell_pills.alert": "You have 3 medications today: Metformin 500 mg at 08:00 and 18:00, Lisinopril 10 mg at 08:00, Vitamin D 20 mcg at 18:00.",
   "actions.review_alerts.alert": "Open Family Dashboard for a calm alerts review.",
   "actions.send_heart.alert": "Heart sent to Sarah.",
+  "actions.send_ok.alert": "Thumbs up sent to your family.",
   "actions.record_story.alert": "Story recording will start shortly.",
   "actions.buurt_privacy.alert": "Neighbourhood connections are anonymous until mutual confirmation.",
   "actions.opt_in_buurt.alert": "Activating the neighbourhood connector is managed in the Family Dashboard.",

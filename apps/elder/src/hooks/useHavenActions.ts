@@ -68,8 +68,37 @@ export function useHavenActions(screenId: string) {
       Alert.alert('HAVEN', t('actions.review_alerts.alert'));
       return;
     }
-    if (actionId === 'SEND_HEART') {
-      Alert.alert('HAVEN', t('actions.send_heart.alert'));
+    if (actionId === 'SEND_HEART' || actionId === 'SEND_OK') {
+      const kind = actionId === 'SEND_HEART' ? 'heart' : 'ok';
+      try {
+        enqueueOfflineAction('SEND_MESSAGE', { message_type: kind, content_nl: kind === 'heart' ? '❤️' : '👍' });
+      } catch (_) {
+        // SQLite/crypto may not be available
+      }
+      if (client && elderId) {
+        try {
+          await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/rest/v1/family_messages`, {
+            method: 'POST',
+            headers: {
+              authorization: `Bearer ${session?.access_token}`,
+              apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? session?.access_token ?? '',
+              'content-type': 'application/json',
+              prefer: 'return=minimal',
+            },
+            body: JSON.stringify({
+              elder_id: elderId,
+              sender_id: elderId,
+              sender_role: 'elder',
+              message_type: kind,
+              content_nl: kind === 'heart' ? '❤️' : '👍',
+              content_en: kind === 'heart' ? '❤️' : '👍',
+            }),
+          });
+        } catch (_) {
+          // Queued offline, will sync later
+        }
+      }
+      Alert.alert('HAVEN', kind === 'heart' ? t('actions.send_heart.alert') : t('actions.send_ok.alert'));
       return;
     }
     if (actionId === 'RECORD_STORY') {

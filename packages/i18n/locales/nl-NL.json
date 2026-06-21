@@ -208,6 +208,7 @@
   "actions.tell_pills.alert": "U heeft vandaag 3 medicijnen: Metformine 500 mg om 08:00 en 18:00, Lisinopril 10 mg om 08:00, Vitamine D 20 mcg om 18:00.",
   "actions.review_alerts.alert": "Open Familie Dashboard voor een rustige meldingen-review.",
   "actions.send_heart.alert": "Hart verstuurd naar Sarah.",
+  "actions.send_ok.alert": "Duimpje verstuurd naar uw familie.",
   "actions.record_story.alert": "Verhaalopname start binnenkort.",
   "actions.buurt_privacy.alert": "Buurtverbindingen zijn anoniem tot wederzijdse bevestiging.",
   "actions.opt_in_buurt.alert": "Buurtverbinder activeren gebeurt in Familie Dashboard.",

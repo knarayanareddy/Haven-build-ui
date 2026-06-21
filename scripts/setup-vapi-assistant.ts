@@ -234,12 +234,15 @@ async function main() {
   const enId = await createAssistant(enConfig);
   console.log(`   VAPI_ASSISTANT_ID_EN=${enId}`);
 
-  console.log('\n--- Add these to your environment ---');
+  console.log('\n--- Add these to your mobile app .env files ---');
+  console.log('# NOTE: VAPI_API_KEY is used client-side by @vapi-ai/react-native to initiate WebRTC calls.');
+  console.log('# VAPI scopes client keys to only start calls with allowed assistants.');
+  console.log('# For production, create a separate restricted key in VAPI dashboard.');
   console.log(`EXPO_PUBLIC_VAPI_API_KEY=${VAPI_API_KEY}`);
   console.log(`EXPO_PUBLIC_VAPI_ASSISTANT_ID_NL=${nlId}`);
   console.log(`EXPO_PUBLIC_VAPI_ASSISTANT_ID_EN=${enId}`);
   console.log(`EXPO_PUBLIC_VAPI_ASSISTANT_ID=${nlId}`);
-  console.log('\n--- Add to Supabase secrets ---');
+  console.log('\n--- Add to Supabase secrets (server-side only) ---');
   console.log(`supabase secrets set VAPI_API_KEY=${VAPI_API_KEY}`);
   console.log(`supabase secrets set VAPI_ASSISTANT_ID_NL=${nlId}`);
   console.log(`supabase secrets set VAPI_ASSISTANT_ID_EN=${enId}`);

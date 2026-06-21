@@ -1,10 +1,12 @@
 import { admin, corsHeaders, dispatchNotification, json, recordMetric, safeErrorMessage } from "../_shared/core.ts";
 import { requireInternalAccess } from "../_shared/internal.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
+    await rateLimit(req, "fn-quiet-day-detector");
     requireInternalAccess(req);
     const db = admin();
     const now = Date.now();

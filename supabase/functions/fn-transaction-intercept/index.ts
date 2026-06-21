@@ -3,6 +3,7 @@ import { withIdempotency } from "../_shared/idempotency.ts";
 import { captureException } from "../_shared/sentry.ts";
 import { verifyHmacSha256 } from "../_shared/webhook.ts";
 import { asyncWrapper } from "../_shared/async_wrapper.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 Deno.serve(asyncWrapper("fn-transaction-intercept", async (req: Request) => {
   // COMPENSATING CONTROL — full proxy architecture with hold-and-release is tracked as separate milestone
@@ -13,6 +14,7 @@ Deno.serve(asyncWrapper("fn-transaction-intercept", async (req: Request) => {
   const db = admin();
 
   try {
+    await rateLimit(req, "fn-transaction-intercept");
     const raw = await readRequestBody(req);
     body = JSON.parse(raw) as Record<string, unknown>;
     elderId = body.elder_id ? String(body.elder_id) : "";

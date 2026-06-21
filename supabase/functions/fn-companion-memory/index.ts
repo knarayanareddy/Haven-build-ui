@@ -2,11 +2,13 @@ import { corsHeaders, json, readJsonBody, recordMetric, safeErrorMessage, userCl
 import { generateEmbedding } from "../_shared/ai.ts";
 import { assertSelf, getJwtUserId } from "../_shared/authz.ts";
 import { assertNoBsnText, validateBody } from "../_shared/validation.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
+    await rateLimit(req, "fn-companion-memory");
     const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, { elder_id: 'uuid', memory_type: 'string', content: 'string' }, { allowUnknown: true });
     assertNoBsnText(body.content);

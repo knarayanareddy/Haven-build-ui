@@ -1,9 +1,11 @@
 import { admin, corsHeaders, json, readJsonBody, recordMetric, requireFields, safeErrorMessage } from "../_shared/core.ts";
 import { requireInternalAccess, requireVendorSecretHeader } from "../_shared/internal.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
+    await rateLimit(req, "fn-community-events-ingest");
     if (req.headers.get('x-haven-internal-key') || req.headers.get('x-internal-key')) requireInternalAccess(req);
     else requireVendorSecretHeader(req, 'HAVEN_EVENT_INGEST_SECRET', ['x-haven-event-secret', 'x-haven-vendor-secret']);
     const body = await readJsonBody(req) as Record<string, unknown>;

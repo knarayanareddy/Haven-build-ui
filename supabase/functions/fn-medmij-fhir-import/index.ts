@@ -1,6 +1,7 @@
 import { admin, corsHeaders, json, readJsonBody, recordMetric, requireFields, safeErrorMessage, sha256, userClient } from "../_shared/core.ts";
 import { requireInternalAccess, requireVendorSecretHeader } from "../_shared/internal.ts";
 import { asyncWrapper } from "../_shared/async_wrapper.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 interface FhirResource {
   resourceType?: string;
@@ -23,6 +24,7 @@ Deno.serve(asyncWrapper("fn-medmij-fhir-import", async (req: Request) => {
   const started = Date.now();
   let requestElderId: string | null = null;
   try {
+    await rateLimit(req, "fn-medmij-fhir-import");
     if (req.headers.get('x-haven-internal-key') || req.headers.get('x-internal-key')) {
       requireInternalAccess(req);
     } else {

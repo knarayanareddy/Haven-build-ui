@@ -1,5 +1,6 @@
 import { admin, corsHeaders, json, recordMetric, safeErrorMessage } from "../_shared/core.ts";
 import { requireInternalAccess } from "../_shared/internal.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 const REDIS_URL = Deno.env.get("UPSTASH_REDIS_URL");
 const REDIS_TOKEN = Deno.env.get("UPSTASH_REDIS_TOKEN");
@@ -10,6 +11,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
+    await rateLimit(req, "fn-health-check");
     // Fulfilling secure internal access verification gate
     requireInternalAccess(req);
     const db = admin();

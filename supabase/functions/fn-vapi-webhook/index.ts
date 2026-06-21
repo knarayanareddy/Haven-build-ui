@@ -300,7 +300,10 @@ function buildAssistantConfig(locale: "en-GB" | "nl-NL") {
 
 function verifyVapiSecret(req: Request): boolean {
   const secret = Deno.env.get("VAPI_WEBHOOK_SECRET");
-  if (!secret) return true; // No secret configured = allow (dev mode)
+  if (!secret) {
+    console.warn("[fn-vapi-webhook] VAPI_WEBHOOK_SECRET not set — accepting unauthenticated requests. Set this secret before production deployment.");
+    return true;
+  }
   const header = req.headers.get("x-vapi-secret") ?? req.headers.get("authorization")?.replace("Bearer ", "");
   if (!header) return false;
   // Constant-time comparison

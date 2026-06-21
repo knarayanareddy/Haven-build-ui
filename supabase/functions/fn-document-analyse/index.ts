@@ -3,6 +3,7 @@ import { assertSelf, getJwtUserId } from "../_shared/authz.ts";
 import { validateBody } from "../_shared/validation.ts";
 import { captureException } from "../_shared/sentry.ts";
 import { assertNoBsnInPayload, scrubBsnFromLogs } from "../_shared/bsn_guard.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 function looksLikeBsn(text: string) {
   const compact = text.replace(/\D/g, "");
@@ -20,6 +21,7 @@ Deno.serve(async (req: Request) => {
   const started = Date.now();
   let rawBodyPayload: unknown = null;
   try {
+    await rateLimit(req, "fn-document-analyse");
     const body = await readJsonBody(req) as Record<string, unknown>;
     rawBodyPayload = body;
 

@@ -1,6 +1,7 @@
 import { corsHeaders, json, readJsonBody, recordMetric, safeErrorMessage, userClient } from "../_shared/core.ts";
 import { assertSelf, getJwtUserId } from "../_shared/authz.ts";
 import { validateBody } from "../_shared/validation.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 function assertOwnedRecordingPath(userId: string, recordingPath: string) {
   const ownerId = recordingPath.split('/').filter(Boolean)[0] ?? '';
@@ -12,6 +13,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
+    await rateLimit(req, "fn-life-story-process");
     const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, { elder_id: 'uuid', recording_path: 'string' }, { allowUnknown: true });
     const userId = await getJwtUserId(req);

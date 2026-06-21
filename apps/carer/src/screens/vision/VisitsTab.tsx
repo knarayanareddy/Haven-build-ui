@@ -134,7 +134,7 @@ export function VisitsTab({ locale }: { locale: string }) {
                 <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600' }}>{visit.notes_nl}</Text>
               </View>
             )}
-            {visit.mood_observed != null && (
+            {visit.mood_observed !== null && (
               <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600' }}>
                 {nl ? 'Stemming' : 'Mood'}: {visit.mood_observed}/5
               </Text>

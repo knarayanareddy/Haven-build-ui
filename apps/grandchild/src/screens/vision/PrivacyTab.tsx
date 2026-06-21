@@ -1,9 +1,11 @@
 // ─── Vision Family Dashboard: Privacy Tab ───
-import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
+// Toggles persist to Supabase consent_records table when authenticated
+import React, { useEffect, useState } from 'react';
+import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge } from '@haven/ui/src/visionComponents';
-// DEMO: mock consent settings — wire to live consent_records table when authenticated
+import { useAuth } from '../../auth/AuthProvider';
+// DEMO: mock consent settings — fallback when not authenticated
 import { CONSENT_SETTINGS } from '@haven/ui/src/mockData';
 
 interface PrivacyTabProps {
@@ -11,10 +13,80 @@ interface PrivacyTabProps {
   elderName: string;
 }
 
+interface ConsentState {
+  medicationView: boolean;
+  locationView: boolean;
+  weeklyDigest: boolean;
+}
+
 export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
   const nl = locale.startsWith('nl');
+  const { session } = useAuth();
+  const [consent, setConsent] = useState<ConsentState>({
+    medicationView: (CONSENT_SETTINGS as Record<string, boolean>).medicationView ?? true,
+    locationView: (CONSENT_SETTINGS as Record<string, boolean>).locationView ?? true,
+    weeklyDigest: (CONSENT_SETTINGS as Record<string, boolean>).weeklyDigest ?? true,
+  });
+  const [saving, setSaving] = useState(false);
 
-  const items = [
+  useEffect(() => {
+    if (!session) return;
+    const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    const elderId = process.env.EXPO_PUBLIC_ELDER_ID ?? process.env.EXPO_PUBLIC_FAMILY_MEMBER_ID;
+    if (!url || !elderId) return;
+
+    fetch(`${url}/rest/v1/consent_records?elder_id=eq.${elderId}&select=consent_type,granted&order=updated_at.desc`, {
+      headers: {
+        authorization: `Bearer ${session.access_token}`,
+        apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? session.access_token,
+      },
+    })
+      .then((r) => r.json())
+      .then((rows) => {
+        if (!Array.isArray(rows) || rows.length === 0) return;
+        const state: Partial<ConsentState> = {};
+        for (const row of rows) {
+          const key = row.consent_type as keyof ConsentState;
+          if (key in consent) state[key] = row.granted === true;
+        }
+        setConsent((prev) => ({ ...prev, ...state }));
+      })
+      .catch(() => {});
+  }, [session]);
+
+  async function toggleConsent(key: keyof ConsentState, value: boolean) {
+    setConsent((prev) => ({ ...prev, [key]: value }));
+
+    const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    const elderId = process.env.EXPO_PUBLIC_ELDER_ID ?? process.env.EXPO_PUBLIC_FAMILY_MEMBER_ID;
+    if (!session || !url || !elderId) return;
+
+    setSaving(true);
+    try {
+      await fetch(`${url}/rest/v1/consent_records`, {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${session.access_token}`,
+          apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? session.access_token,
+          'content-type': 'application/json',
+          prefer: 'resolution=merge-duplicates',
+        },
+        body: JSON.stringify({
+          elder_id: elderId,
+          consent_type: key,
+          granted: value,
+          updated_at: new Date().toISOString(),
+        }),
+      });
+    } catch {
+      setConsent((prev) => ({ ...prev, [key]: !value }));
+      Alert.alert('HAVEN', nl ? 'Opslaan mislukt.' : 'Save failed.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const items: Array<{ icon: string; label: string; key: keyof ConsentState | null; description: string; alwaysHidden: boolean }> = [
     {
       icon: '💊',
       label: nl ? 'Medicatieweergave' : 'Medication view',
@@ -32,14 +104,14 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
     {
       icon: '🧠',
       label: nl ? 'Metgezel geheugen' : 'Companion memory',
-      key: 'companionMemory',
+      key: null,
       description: nl ? 'Privé voor de oudere. Niet zichtbaar voor familie.' : 'Private to elder. Not visible to family.',
       alwaysHidden: true,
     },
     {
       icon: '🤝',
       label: nl ? 'BUURT identiteiten derden' : 'BUURT third-party identities',
-      key: 'buurtIdentity',
+      key: null,
       description: nl ? 'Nooit zichtbaar in familiedashboard.' : 'Never visible in family dashboard.',
       alwaysHidden: true,
     },
@@ -64,11 +136,18 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
         </Text>
       </View>
 
+      {/* Live data indicator */}
+      {session && (
+        <View style={{ backgroundColor: '#D1FAE5', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' }}>
+          <Text style={{ fontSize: 11, fontWeight: '700', color: '#065F46' }}>● {nl ? 'Live — wijzigingen worden opgeslagen' : 'Live — changes are saved'}</Text>
+        </View>
+      )}
+
       {/* Consent items */}
       {items.map((item) => {
-        const isOn = !item.alwaysHidden && (CONSENT_SETTINGS as Record<string, boolean>)[item.key];
+        const isOn = item.key !== null && !item.alwaysHidden ? consent[item.key] : false;
         return (
-          <View key={item.key} style={{
+          <View key={item.key ?? item.label} style={{
             borderRadius: 16, padding: 14, backgroundColor: colors.paper,
             borderWidth: 1, borderColor: colors.mist,
             flexDirection: 'row', alignItems: 'center', gap: 12,
@@ -78,10 +157,25 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
               <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>{item.label}</Text>
               <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600' }}>{item.description}</Text>
             </View>
-            <StatusBadge
-              status={item.alwaysHidden ? 'red' : isOn ? 'green' : 'amber'}
-              label={item.alwaysHidden ? (nl ? 'verborgen' : 'hidden') : isOn ? (nl ? 'aan' : 'on') : (nl ? 'uit' : 'off')}
-            />
+            {item.alwaysHidden ? (
+              <StatusBadge status="red" label={nl ? 'verborgen' : 'hidden'} />
+            ) : item.key !== null ? (
+              <TouchableOpacity
+                onPress={() => toggleConsent(item.key!, !isOn)}
+                disabled={saving}
+                style={{
+                  width: 48, height: 28, borderRadius: 14, justifyContent: 'center',
+                  backgroundColor: isOn ? '#6EE7B7' : '#E5E7EB',
+                  paddingHorizontal: 3,
+                }}
+              >
+                <View style={{
+                  width: 22, height: 22, borderRadius: 11,
+                  backgroundColor: isOn ? '#065F46' : '#9CA3AF',
+                  alignSelf: isOn ? 'flex-end' : 'flex-start',
+                }} />
+              </TouchableOpacity>
+            ) : null}
           </View>
         );
       })}

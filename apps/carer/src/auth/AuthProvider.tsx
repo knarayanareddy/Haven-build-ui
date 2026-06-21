@@ -65,7 +65,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setReady(true);
     });
-    return () => { mounted = false; };
+    const { data } = supabase.auth.onAuthStateChange(async (_event: string, next: Session | null) => {
+      if (!mounted) return;
+      setSession(next);
+      if (next) await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(next), { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY });
+      else await SecureStore.deleteItemAsync(SESSION_KEY);
+    });
+    return () => { mounted = false; data.subscription.unsubscribe(); };
   }, [supabase]);
 
   async function setPin(pin: string) {

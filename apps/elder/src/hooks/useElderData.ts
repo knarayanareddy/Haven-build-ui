@@ -136,19 +136,18 @@ export function useElderData(elderId: string): ElderLiveData {
         events: [],
       };
 
-      // Fetch visit logs
+      // Fetch visit logs from carer_visit_logs (actual carer entries)
       const { data: visitRows } = await supabase
-        .from('care_plans')
-        .select('id, created_at, care_plan_items(description_nl)')
+        .from('carer_visit_logs')
+        .select('id, visit_date, check_in_time, check_out_time, notes_nl, carer_id, profiles!carer_visit_logs_carer_id_fkey(preferred_name)')
         .eq('elder_id', elderId)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(5);
+        .order('visit_date', { ascending: false })
+        .limit(10);
 
       const visits: VisitLogRow[] = (visitRows ?? []).map((row: any) => ({
-        date: row.created_at ? new Date(row.created_at).toLocaleDateString('nl-NL') : '',
-        carer: 'Verzorger',
-        note: row.care_plan_items?.[0]?.description_nl ?? '',
+        date: row.visit_date ?? (row.check_in_time ? new Date(row.check_in_time).toLocaleDateString('nl-NL') : ''),
+        carer: row.profiles?.preferred_name ?? 'Verzorger',
+        note: row.notes_nl ?? '',
       }));
 
       setData({ family, medications, tasks, messages, scamEvents, buurt, visits });
@@ -199,6 +198,22 @@ export function useElderData(elderId: string): ElderLiveData {
         event: 'INSERT',
         schema: 'public',
         table: 'wellness_checkins',
+        filter: `elder_id=eq.${elderId}`,
+      }, () => {
+        fetchInitialData();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'carer_visit_logs',
+        filter: `elder_id=eq.${elderId}`,
+      }, () => {
+        fetchInitialData();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'carer_handover_notes',
         filter: `elder_id=eq.${elderId}`,
       }, () => {
         fetchInitialData();

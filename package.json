@@ -30,6 +30,7 @@
     "verify:browser": "./scripts/ci/verify-browser.sh",
     "verify:supabase:local": "./scripts/ci/verify-local-supabase.sh",
     "staging:mint-jwts": "node scripts/ci/mint-staging-auth-jwts.mjs --write",
+    "smoke:staging": "./scripts/smoke-staging.sh",
     "smoke:hosted": "./scripts/ci/smoke-hosted-integrations.sh",
     "smoke:vendors:staging": "node scripts/ci/smoke-vendors-staging.mjs",
     "audit:env": "node scripts/ci/audit-env-hygiene.mjs",

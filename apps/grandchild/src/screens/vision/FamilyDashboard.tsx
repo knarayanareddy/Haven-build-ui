@@ -101,7 +101,7 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
       case 'medications':
         return <MedicationsTab locale={locale} />;
       case 'alerts':
-        return <AlertsTab locale={locale} />;
+        return <AlertsTab locale={locale} session={session} />;
       case 'care':
         return <CareTab locale={locale} />;
       case 'voice':

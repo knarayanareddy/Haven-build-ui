@@ -55,8 +55,10 @@ export class CarerClient {
     started_at?: string;
     completed_at?: string;
     notes_nl?: string;
+    observations_nl?: string;
   }) {
-    return this.invoke<{ success: boolean }>('fn-care-visit-log', input);
+    const payload = { ...input, observations_nl: input.observations_nl ?? input.notes_nl };
+    return this.invoke<{ success: boolean }>('fn-care-visit-log', payload);
   }
 
   async shiftSummary(elderId: string, shiftStart: string, shiftEnd: string) {

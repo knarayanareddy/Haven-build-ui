@@ -89,7 +89,7 @@ export function useHavenActions(screenId: string) {
               elder_id: elderId,
               sender_id: elderId,
               sender_role: 'elder',
-              message_type: kind,
+              message_type: 'tekst',
               content_nl: kind === 'heart' ? '❤️' : '👍',
               content_en: kind === 'heart' ? '❤️' : '👍',
             }),

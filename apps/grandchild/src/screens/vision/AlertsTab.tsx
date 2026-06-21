@@ -30,7 +30,7 @@ export function AlertsTab({ locale, session }: AlertsTabProps) {
   useEffect(() => {
     if (!session) return;
     const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-    const elderId = process.env.EXPO_PUBLIC_FAMILY_MEMBER_ID;
+    const elderId = process.env.EXPO_PUBLIC_ELDER_ID;
     if (!url || !elderId) return;
 
     const headers = {

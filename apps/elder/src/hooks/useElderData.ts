@@ -94,14 +94,14 @@ export function useElderData(elderId: string): ElderLiveData {
         id: row.id,
         from: row.sender_role === 'family' ? 'Familie' : row.sender_role === 'carer' ? 'Verzorger' : 'HAVEN',
         body: row.content_nl ?? row.content_en ?? '',
-        kind: row.message_type === 'heart' ? 'heart' : 'text',
+        kind: (row.content_nl === '❤️' || row.content_nl?.includes('hartje')) ? 'heart' : 'text',
         unread: !row.read_at,
       }));
 
       // Fetch scam events
       const { data: scamRows } = await supabase
         .from('scam_events')
-        .select('id, source_type, summary_nl, summary_en, confidence_score, resolved_at, created_at')
+        .select('id, channel, explanation_nl, explanation_en, score_composite, resolved_at, created_at')
         .eq('elder_id', elderId)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
@@ -109,9 +109,9 @@ export function useElderData(elderId: string): ElderLiveData {
 
       const scamEvents: ScamEventRow[] = (scamRows ?? []).map((row: any) => ({
         id: row.id,
-        source: row.source_type ?? 'unknown',
-        summary: row.summary_nl ?? row.summary_en ?? '',
-        confidence: row.confidence_score ?? 0,
+        source: row.channel ?? 'unknown',
+        summary: row.explanation_nl ?? row.explanation_en ?? '',
+        confidence: row.score_composite ?? 0,
         resolved: !!row.resolved_at,
       }));
 
@@ -125,8 +125,8 @@ export function useElderData(elderId: string): ElderLiveData {
       const { data: connections } = await supabase
         .from('neighbourhood_connections')
         .select('id')
-        .eq('elder_id', elderId)
-        .eq('status', 'active');
+        .or(`initiator_elder_id.eq.${elderId},recipient_elder_id.eq.${elderId}`)
+        .eq('status', 'accepted');
 
       const buurt: BuurtRow = {
         active: buurtProfile?.is_active ?? false,
@@ -139,7 +139,7 @@ export function useElderData(elderId: string): ElderLiveData {
       // Fetch visit logs from carer_visit_logs (actual carer entries)
       const { data: visitRows } = await supabase
         .from('carer_visit_logs')
-        .select('id, visit_date, check_in_time, check_out_time, notes_nl, carer_id, profiles!carer_visit_logs_carer_id_fkey(preferred_name)')
+        .select('id, visit_date, check_in_time, check_out_time, observations_nl, carer_id, profiles!carer_visit_logs_carer_id_fkey(preferred_name)')
         .eq('elder_id', elderId)
         .order('visit_date', { ascending: false })
         .limit(10);
@@ -147,7 +147,7 @@ export function useElderData(elderId: string): ElderLiveData {
       const visits: VisitLogRow[] = (visitRows ?? []).map((row: any) => ({
         date: row.visit_date ?? (row.check_in_time ? new Date(row.check_in_time).toLocaleDateString('nl-NL') : ''),
         carer: row.profiles?.preferred_name ?? 'Verzorger',
-        note: row.notes_nl ?? '',
+        note: row.observations_nl ?? '',
       }));
 
       setData({ family, medications, tasks, messages, scamEvents, buurt, visits });

@@ -65,10 +65,10 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
     }
 
     const messageMap: Record<string, { type: string; content_nl: string; content_en: string }> = {
-      heart: { type: 'heart', content_nl: `${familyName} stuurt een hartje.`, content_en: `${familyName} sends a heart.` },
-      checkin: { type: 'check_in', content_nl: `${familyName} checkt in: Hoe gaat het?`, content_en: `${familyName} checks in: How are you?` },
-      voice: { type: 'voice_message', content_nl: `${familyName} stuurde een spraakbericht.`, content_en: `${familyName} sent a voice message.` },
-      video: { type: 'video_call', content_nl: `${familyName} wil videobellen.`, content_en: `${familyName} wants to video call.` },
+      heart: { type: 'tekst', content_nl: `${familyName} stuurt een hartje ❤️`, content_en: `${familyName} sends a heart ❤️` },
+      checkin: { type: 'tekst', content_nl: `${familyName} checkt in: Hoe gaat het?`, content_en: `${familyName} checks in: How are you?` },
+      voice: { type: 'voice_note', content_nl: `${familyName} stuurde een spraakbericht.`, content_en: `${familyName} sent a voice message.` },
+      video: { type: 'video_hallo', content_nl: `${familyName} wil videobellen.`, content_en: `${familyName} wants to video call.` },
     };
     const msg = messageMap[action];
     if (!msg) return;

@@ -62,15 +62,15 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
   // Try fetching real medications from Supabase; fall back to mock data
   useEffect(() => {
     if (!client || !elderId) return;
-    client.rest<Array<Record<string, unknown>>>(`medication_reminders?elder_id=eq.${elderId}&select=id,medication_name,dose,reminder_time,status,stock_remaining`)
+    client.rest<Array<Record<string, unknown>>>(`medications?elder_id=eq.${elderId}&is_active=eq.true&select=id,name_nl,name_en,dose_description_nl,schedule_times,current_stock`)
       .then((rows) => {
         if (rows && rows.length > 0) {
           setLiveMeds(rows.map((r) => ({
-            id: String(r.id), name: String(r.medication_name ?? ''), dose: String(r.dose ?? ''),
-            descriptionNl: String(r.medication_name ?? ''), descriptionEn: String(r.medication_name ?? ''),
-            time: String(r.reminder_time ?? '08:00').slice(0, 5),
-            status: r.status === 'taken' ? 'taken' : 'planned',
-            stock: typeof r.stock_remaining === 'number' ? r.stock_remaining : undefined,
+            id: String(r.id), name: String(r.name_nl ?? ''), dose: String(r.dose_description_nl ?? ''),
+            descriptionNl: String(r.name_nl ?? ''), descriptionEn: String(r.name_en ?? r.name_nl ?? ''),
+            time: Array.isArray(r.schedule_times) && r.schedule_times.length > 0 ? String(r.schedule_times[0]).slice(0, 5) : '08:00',
+            status: 'planned' as const,
+            stock: typeof r.current_stock === 'number' ? r.current_stock : undefined,
           })));
         }
       })
@@ -79,15 +79,15 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
 
   function refetchMeds() {
     if (!client || !elderId) return;
-    client.rest<Array<Record<string, unknown>>>(`medication_reminders?elder_id=eq.${elderId}&select=id,medication_name,dose,reminder_time,status,stock_remaining`)
+    client.rest<Array<Record<string, unknown>>>(`medications?elder_id=eq.${elderId}&is_active=eq.true&select=id,name_nl,name_en,dose_description_nl,schedule_times,current_stock`)
       .then((rows) => {
         if (rows && rows.length > 0) {
           setLiveMeds(rows.map((r) => ({
-            id: String(r.id), name: String(r.medication_name ?? ''), dose: String(r.dose ?? ''),
-            descriptionNl: String(r.medication_name ?? ''), descriptionEn: String(r.medication_name ?? ''),
-            time: String(r.reminder_time ?? '08:00').slice(0, 5),
-            status: r.status === 'taken' ? 'taken' : 'planned',
-            stock: typeof r.stock_remaining === 'number' ? r.stock_remaining : undefined,
+            id: String(r.id), name: String(r.name_nl ?? ''), dose: String(r.dose_description_nl ?? ''),
+            descriptionNl: String(r.name_nl ?? ''), descriptionEn: String(r.name_en ?? r.name_nl ?? ''),
+            time: Array.isArray(r.schedule_times) && r.schedule_times.length > 0 ? String(r.schedule_times[0]).slice(0, 5) : '08:00',
+            status: 'planned' as const,
+            stock: typeof r.current_stock === 'number' ? r.current_stock : undefined,
           })));
         }
       })
@@ -109,7 +109,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
     }
     setSubmitting(true);
     try {
-      const response = await fetch(`${url}/rest/v1/medication_reminders`, {
+      const response = await fetch(`${url}/rest/v1/medications`, {
         method: 'POST',
         headers: {
           authorization: `Bearer ${token}`,
@@ -119,10 +119,13 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
         },
         body: JSON.stringify({
           elder_id: eid,
-          medication_name: newName.trim(),
-          dose: newDose.trim() || null,
-          reminder_time: newTime,
-          status: 'pending',
+          name_nl: newName.trim(),
+          name_en: newName.trim(),
+          dose_description_nl: newDose.trim() || '1 tablet',
+          dose_description_en: newDose.trim() || '1 tablet',
+          frequency: 'dagelijks',
+          schedule_times: [`${newTime}:00`],
+          is_active: true,
         }),
       });
       if (!response.ok) throw new Error('Failed');

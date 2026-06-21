@@ -49,17 +49,17 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
     };
 
     // Fetch medications for elder
-    fetch(`${url}/rest/v1/elder_medications?elder_id=eq.${elderId}&select=*`, { headers })
+    fetch(`${url}/rest/v1/medications?elder_id=eq.${elderId}&is_active=eq.true&select=id,name_nl,dose_description_nl,schedule_times`, { headers })
       .then((r) => r.json())
       .then((rows) => {
         if (Array.isArray(rows) && rows.length > 0) {
           setLiveMeds(rows.map((r: Record<string, unknown>, i: number) => ({
             id: (r.id as string) ?? String(i),
-            name: (r.name as string) ?? 'Medication',
-            dose: (r.dose as string) ?? '',
-            times: Array.isArray(r.times) ? (r.times as string[]) : ['08:00'],
-            taken: Array.isArray(r.taken) ? (r.taken as boolean[]) : [false],
-            color: (r.color as string) ?? ['#3B82F6', '#EF4444', '#10B981', '#F59E0B'][i % 4],
+            name: (r.name_nl as string) ?? 'Medication',
+            dose: (r.dose_description_nl as string) ?? '',
+            times: Array.isArray(r.schedule_times) ? (r.schedule_times as string[]).map((t) => t.slice(0, 5)) : ['08:00'],
+            taken: Array.isArray(r.schedule_times) ? (r.schedule_times as string[]).map(() => false) : [false],
+            color: ['#3B82F6', '#EF4444', '#10B981', '#F59E0B'][i % 4],
           })));
         }
       })
@@ -67,14 +67,14 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
 
     // Fetch today's care tasks
     const today = new Date().toISOString().slice(0, 10);
-    fetch(`${url}/rest/v1/carer_tasks?elder_id=eq.${elderId}&task_date=eq.${today}&select=*`, { headers })
+    fetch(`${url}/rest/v1/tasks?elder_id=eq.${elderId}&due_date=eq.${today}&select=id,title_nl,completed`, { headers })
       .then((r) => r.json())
       .then((rows) => {
         if (Array.isArray(rows) && rows.length > 0) {
           setLiveTasks(rows.map((r: Record<string, unknown>, i: number) => ({
             id: (r.id as string) ?? String(i),
-            label: (r.label as string) ?? (r.description as string) ?? 'Task',
-            done: (r.done as boolean) ?? (r.completed as boolean) ?? false,
+            label: (r.title_nl as string) ?? 'Task',
+            done: (r.completed as boolean) ?? false,
           })));
         }
       })

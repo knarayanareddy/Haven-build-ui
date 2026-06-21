@@ -23,32 +23,22 @@ function useLiveMedications(): { meds: LiveMed[] | null; refetch: () => void } {
     const token = session?.access_token ?? process.env.EXPO_PUBLIC_FAMILY_ACCESS_TOKEN;
     const elderId = process.env.EXPO_PUBLIC_ELDER_ID;
     if (!url || !token || !elderId) return;
-    fetch(`${url}/rest/v1/medication_reminders?elder_id=eq.${elderId}&select=id,medication_name,dose,reminder_time,status,stock_remaining&order=reminder_time.asc`, {
+    fetch(`${url}/rest/v1/medications?elder_id=eq.${elderId}&is_active=eq.true&select=id,name_nl,name_en,dose_description_nl,schedule_times,current_stock&order=name_nl.asc`, {
       headers: { authorization: `Bearer ${token}`, apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? token },
     })
       .then((r) => r.json())
       .then((rows: Array<Record<string, unknown>>) => {
         if (!Array.isArray(rows) || rows.length === 0) return;
-        const grouped = new Map<string, LiveMed>();
-        for (const r of rows) {
-          const name = String(r.medication_name ?? '');
-          const key = `${name}-${r.dose ?? ''}`;
-          const existing = grouped.get(key);
-          const time = String(r.reminder_time ?? '08:00').slice(0, 5);
-          const taken = r.status === 'taken';
-          if (existing) {
-            existing.times.push(time);
-            existing.taken.push(taken);
-          } else {
-            grouped.set(key, {
-              id: String(r.id), name, dose: String(r.dose ?? ''),
-              times: [time], taken: [taken], color: '#4CAF50',
-              purpose: name, prescriber: '', nextRefill: '',
-              stock: typeof r.stock_remaining === 'number' ? r.stock_remaining : 30,
-            });
-          }
-        }
-        setLive([...grouped.values()]);
+        setLive(rows.map((r) => {
+          const name = String(r.name_nl ?? '');
+          const times = Array.isArray(r.schedule_times) ? r.schedule_times.map((t: unknown) => String(t).slice(0, 5)) : ['08:00'];
+          return {
+            id: String(r.id), name, dose: String(r.dose_description_nl ?? ''),
+            times, taken: times.map(() => false), color: '#4CAF50',
+            purpose: name, prescriber: '', nextRefill: '',
+            stock: typeof r.current_stock === 'number' ? r.current_stock : 30,
+          };
+        }));
       })
       .catch(() => {});
   }, [session, trigger]);
@@ -87,7 +77,7 @@ export function MedicationsTab({ locale }: MedicationsTabProps) {
 
     setSubmitting(true);
     try {
-      const response = await fetch(`${url}/rest/v1/medication_reminders`, {
+      const response = await fetch(`${url}/rest/v1/medications`, {
         method: 'POST',
         headers: {
           authorization: `Bearer ${token}`,
@@ -97,10 +87,13 @@ export function MedicationsTab({ locale }: MedicationsTabProps) {
         },
         body: JSON.stringify({
           elder_id: elderId,
-          medication_name: newName.trim(),
-          dose: newDose.trim() || null,
-          reminder_time: newTime,
-          status: 'pending',
+          name_nl: newName.trim(),
+          name_en: newName.trim(),
+          dose_description_nl: newDose.trim() || '1 tablet',
+          dose_description_en: newDose.trim() || '1 tablet',
+          frequency: 'dagelijks',
+          schedule_times: [`${newTime}:00`],
+          is_active: true,
         }),
       });
       if (!response.ok) throw new Error('Failed');

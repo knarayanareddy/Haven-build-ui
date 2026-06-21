@@ -72,8 +72,8 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
         const json = await response.json().catch(() => ({}));
         throw new Error((json as Record<string, string>).error ?? 'Send failed');
       }
-    } catch {
-      // Silently fail — the UI already shows "Sent!" optimistically
+    } catch (err) {
+      throw err instanceof Error ? err : new Error(String(err));
     }
   }
 

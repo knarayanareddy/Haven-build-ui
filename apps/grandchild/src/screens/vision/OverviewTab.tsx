@@ -9,7 +9,7 @@ interface OverviewTabProps {
   locale: string;
   elderName: string;
   familyName: string;
-  onSendAction: (action: string) => void;
+  onSendAction: (action: string) => Promise<void> | void;
 }
 
 const STATUS_CONFIG = {
@@ -27,10 +27,14 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
   const medicsTotal = MEDICATIONS.reduce((a, m) => a + m.taken.length, 0);
   const adherence = medicsTotal > 0 ? Math.round((medicsTaken / medicsTotal) * 100) : 0;
 
-  function handleAction(action: string) {
-    setActionSent(action);
-    onSendAction(action);
-    setTimeout(() => setActionSent(null), 3000);
+  async function handleAction(action: string) {
+    try {
+      await onSendAction(action);
+      setActionSent(action);
+      setTimeout(() => setActionSent(null), 3000);
+    } catch {
+      setActionSent(null);
+    }
   }
 
   const stats = [

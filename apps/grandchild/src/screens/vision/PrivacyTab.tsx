@@ -47,7 +47,7 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
         const state: Partial<ConsentState> = {};
         for (const row of rows) {
           const key = row.consent_type as keyof ConsentState;
-          if (key in consent) state[key] = row.granted === true;
+          if (key in consent && !(key in state)) state[key] = row.granted === true;
         }
         setConsent((prev) => ({ ...prev, ...state }));
       })
@@ -69,7 +69,7 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
           authorization: `Bearer ${session.access_token}`,
           apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? session.access_token,
           'content-type': 'application/json',
-          prefer: 'resolution=merge-duplicates',
+          prefer: 'return=minimal',
         },
         body: JSON.stringify({
           elder_id: elderId,

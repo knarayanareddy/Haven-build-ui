@@ -9,12 +9,12 @@ import { SCAM_EVENTS } from '@haven/ui/src/mockData';
 
 interface LiveAlert {
   id: string;
-  title: string;
-  description: string;
-  type: string;
-  risk_level: string;
-  risk_score: number;
-  resolved: boolean;
+  channel: string;
+  explanation_nl: string;
+  explanation_en?: string;
+  score_composite: number;
+  alert_level: string;
+  resolved_at: string | null;
   created_at: string;
 }
 
@@ -106,12 +106,12 @@ export function AlertsTab({ locale, session }: AlertsTabProps) {
       {liveAlerts
         ? liveAlerts.map((alert) => renderAlertCard({
             id: alert.id,
-            title: alert.title,
-            description: alert.description,
-            type: alert.type,
-            riskLevel: alert.risk_level,
-            riskScore: alert.risk_score,
-            resolved: alert.resolved,
+            title: alert.explanation_nl ?? alert.explanation_en ?? 'Alert',
+            description: `${alert.channel ?? 'onbekend'} — score ${alert.score_composite ?? 0}/100`,
+            type: alert.channel ?? 'unknown',
+            riskLevel: alert.alert_level === 'rood' || alert.alert_level === 'zwart' ? 'red' : alert.alert_level === 'amber' ? 'amber' : 'green',
+            riskScore: alert.score_composite ?? 0,
+            resolved: !!(alert.resolved_at),
           }))
         : SCAM_EVENTS.map((event) => renderAlertCard({
             id: event.id,

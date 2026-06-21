@@ -71,8 +71,8 @@ export function HandoverTab({ elderName, isOnline, locale }: HandoverTabProps) {
       });
       const result = await client.handoverNote({
         elder_id: elderId,
-        appetite: form.appetite ? 3 : 0,
-        mood: form.mood ? 3 : 0,
+        appetite: form.appetite ? 3 : 1,
+        mood: form.mood ? 3 : 1,
         mobility: form.mobility || undefined,
         concerns_nl: form.concerns || undefined,
         notes_nl: [form.appetite, form.mood, form.mobility, form.administered].filter(Boolean).join(' | ') || undefined,

@@ -31,13 +31,14 @@ function useLiveMedStatus(): LiveMedStatus | null {
     const token = session?.access_token ?? process.env.EXPO_PUBLIC_FAMILY_ACCESS_TOKEN;
     const elderId = process.env.EXPO_PUBLIC_ELDER_ID;
     if (!url || !token || !elderId) return;
-    fetch(`${url}/rest/v1/medication_reminders?elder_id=eq.${elderId}&select=status&scheduled_time=gte.${new Date().toISOString().slice(0, 10)}`, {
+    const today = new Date().toISOString().slice(0, 10);
+    fetch(`${url}/rest/v1/medication_reminders?elder_id=eq.${elderId}&select=status&scheduled_time=gte.${today}T00:00:00&scheduled_time=lt.${today}T23:59:59`, {
       headers: { authorization: `Bearer ${token}`, apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? token },
     })
       .then((r) => r.json())
       .then((rows: Array<{ status: string }>) => {
         if (Array.isArray(rows) && rows.length > 0) {
-          const taken = rows.filter((r) => r.status === 'taken').length;
+          const taken = rows.filter((r) => r.status === 'ingenomen' || r.status === 'laat_ingenomen').length;
           setLive({ taken, total: rows.length, adherence: Math.round((taken / rows.length) * 100) });
         }
       })
@@ -59,8 +60,8 @@ function useLiveScores(): LiveScores | null {
 
     Promise.all([
       fetch(`${url}/rest/v1/scam_events?elder_id=eq.${elderId}&created_at=gte.${weekAgo}&select=id`, { headers }).then((r) => r.json()).catch(() => []),
-      fetch(`${url}/rest/v1/daily_checkins?elder_id=eq.${elderId}&created_at=gte.${weekAgo}&select=mood_score`, { headers }).then((r) => r.json()).catch(() => []),
-      fetch(`${url}/rest/v1/buurt_matches?elder_id=eq.${elderId}&status=eq.active&select=id`, { headers }).then((r) => r.json()).catch(() => []),
+      fetch(`${url}/rest/v1/wellness_checkins?elder_id=eq.${elderId}&checked_in_at=gte.${weekAgo}&select=mood_score`, { headers }).then((r) => r.json()).catch(() => []),
+      fetch(`${url}/rest/v1/neighbourhood_connections?or=(initiator_elder_id.eq.${elderId},recipient_elder_id.eq.${elderId})&status=eq.accepted&select=id`, { headers }).then((r) => r.json()).catch(() => []),
     ]).then(([scams, checkins, buurt]) => {
       const scamCount = Array.isArray(scams) ? scams.length : 0;
       const schildScore = Math.max(0, 100 - scamCount * 18);

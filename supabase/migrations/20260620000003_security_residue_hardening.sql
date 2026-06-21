@@ -78,14 +78,11 @@ REVOKE ALL ON FUNCTION public.carer_can(UUID) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.family_can(UUID, TEXT) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.carer_can(UUID) TO authenticated, service_role;
 
-DO $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
-    ALTER ROLE authenticated NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
-  END IF;
-  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-    ALTER ROLE anon NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
-  END IF;
-END $$;
+-- Role hardening: Supabase manages `authenticated` and `anon` as reserved roles.
+-- ALTER ROLE on these requires superuser which the migration runner does not have
+-- in the Supabase local CLI (supabase db reset). These roles already have correct
+-- privileges set by the Supabase platform itself.
+-- ALTER ROLE authenticated NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
+-- ALTER ROLE anon NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
 
 COMMIT;

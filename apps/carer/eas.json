@@ -40,7 +40,6 @@
       "env": {
         "EXPO_PUBLIC_HAVEN_ENV": "staging",
         "EXPO_PUBLIC_SUPABASE_URL": "https://vaarqsmufctmjwnblynj.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhYXJxc211ZmN0bWp3bmJseW5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4MTM5MDAsImV4cCI6MjA5NzM4OTkwMH0.w9oG4egDYwfqC2OOZ2-siqDo54u7wQKOM1bsBcRWgmI",
         "EXPO_PUBLIC_CARER_ELDER_IDS": "00000000-0000-0000-0000-000000000001"
       }
     },

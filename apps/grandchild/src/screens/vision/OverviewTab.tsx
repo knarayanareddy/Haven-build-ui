@@ -1,6 +1,6 @@
 // ─── Vision Family Dashboard: Overview Tab ───
 import React, { useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge, ProgressBar } from '@haven/ui/src/visionComponents';
 import { MEDICATIONS, DAILY_STATUS, DEVICE_HEALTH, WEEKLY_DIGEST } from '@haven/ui/src/mockData';
@@ -21,6 +21,8 @@ const STATUS_CONFIG = {
 export function OverviewTab({ locale, elderName, familyName, onSendAction }: OverviewTabProps) {
   const nl = locale.startsWith('nl');
   const [actionSent, setActionSent] = useState<string | null>(null);
+  const [actionSending, setActionSending] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const sc = STATUS_CONFIG[DAILY_STATUS.status as keyof typeof STATUS_CONFIG];
 
   const medicsTaken = MEDICATIONS.reduce((a, m) => a + m.taken.filter(Boolean).length, 0);
@@ -28,12 +30,21 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
   const adherence = medicsTotal > 0 ? Math.round((medicsTaken / medicsTotal) * 100) : 0;
 
   async function handleAction(action: string) {
+    setActionSending(action);
+    setActionError(null);
     try {
       await onSendAction(action);
       setActionSent(action);
       setTimeout(() => setActionSent(null), 3000);
-    } catch {
-      setActionSent(null);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not send';
+      setActionError(msg);
+      Alert.alert(
+        locale.startsWith('nl') ? 'Verzenden mislukt' : 'Send failed',
+        msg,
+      );
+    } finally {
+      setActionSending(null);
     }
   }
 
@@ -122,17 +133,25 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
               style={{
                 width: '47%', flexDirection: 'row', alignItems: 'center', gap: 8,
                 padding: 12, borderRadius: 14,
-                backgroundColor: actionSent === act.action ? '#D1FAE5' : colors.paper,
-                borderWidth: 1, borderColor: actionSent === act.action ? '#6EE7B7' : colors.mist,
+                backgroundColor: actionSent === act.action ? '#D1FAE5' : actionSending === act.action ? '#EFF6FF' : colors.paper,
+                borderWidth: 1, borderColor: actionSent === act.action ? '#6EE7B7' : actionSending === act.action ? '#93C5FD' : colors.mist,
+                opacity: actionSending === act.action ? 0.7 : 1,
               }}
             >
-              <Text style={{ fontSize: 16 }}>{actionSent === act.action ? '✓' : act.icon}</Text>
+              <Text style={{ fontSize: 16 }}>{actionSending === act.action ? '...' : actionSent === act.action ? '✓' : act.icon}</Text>
               <Text style={{ fontSize: 12, fontWeight: '700', color: actionSent === act.action ? '#065F46' : colors.ink }}>
-                {actionSent === act.action ? (nl ? 'Verzonden!' : 'Sent!') : act.label}
+                {actionSending === act.action ? (nl ? 'Verzenden...' : 'Sending...') : actionSent === act.action ? (nl ? 'Verzonden!' : 'Sent!') : act.label}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
+        {actionError && (
+          <View style={{ backgroundColor: '#FEE2E2', borderRadius: 12, padding: 10, borderWidth: 1, borderColor: '#FECACA' }}>
+            <Text style={{ fontSize: 12, color: '#991B1B', fontWeight: '700' }}>
+              {nl ? 'Fout' : 'Error'}: {actionError}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Weekly digest */}

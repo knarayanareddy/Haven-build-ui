@@ -44,7 +44,9 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
     const familyMemberId = process.env.EXPO_PUBLIC_FAMILY_MEMBER_ID;
     const configuredElderId = process.env.EXPO_PUBLIC_ELDER_ID ?? '00000000-0000-0000-0000-000000000001';
 
-    if (!supabaseUrl || !accessToken || !familyMemberId) return;
+    if (!supabaseUrl || !accessToken || !familyMemberId) {
+      throw new Error('Missing env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_FAMILY_ACCESS_TOKEN, or EXPO_PUBLIC_FAMILY_MEMBER_ID');
+    }
 
     const messageMap: Record<string, { type: string; content_nl: string; content_en: string }> = {
       heart: { type: 'heart', content_nl: `${familyName} stuurt een hartje.`, content_en: `${familyName} sends a heart.` },

@@ -1,10 +1,11 @@
 // ─── Vision Family Dashboard: Overview Tab ───
-// DEMO: uses mock data as fallback — attempts live Supabase fetch when env vars are set
+// Uses auth session for live Supabase fetch, mock data as fallback
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge, ProgressBar } from '@haven/ui/src/visionComponents';
 import { MEDICATIONS, DAILY_STATUS, DEVICE_HEALTH, WEEKLY_DIGEST } from '@haven/ui/src/mockData';
+import { useAuth } from '../../auth/AuthProvider';
 
 interface OverviewTabProps {
   locale: string;
@@ -22,10 +23,12 @@ const STATUS_CONFIG = {
 type LiveMedStatus = { taken: number; total: number; adherence: number };
 
 function useLiveMedStatus(): LiveMedStatus | null {
+  const { session } = useAuth();
   const [live, setLive] = useState<LiveMedStatus | null>(null);
   useEffect(() => {
     const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-    const token = process.env.EXPO_PUBLIC_FAMILY_ACCESS_TOKEN;
+    // Use auth session token (preferred) or env var fallback
+    const token = session?.access_token ?? process.env.EXPO_PUBLIC_FAMILY_ACCESS_TOKEN;
     const elderId = process.env.EXPO_PUBLIC_ELDER_ID;
     if (!url || !token || !elderId) return;
     fetch(`${url}/rest/v1/medication_reminders?elder_id=eq.${elderId}&select=status&scheduled_time=gte.${new Date().toISOString().slice(0, 10)}`, {
@@ -39,7 +42,7 @@ function useLiveMedStatus(): LiveMedStatus | null {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [session]);
   return live;
 }
 

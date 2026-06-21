@@ -6,6 +6,7 @@ import type { Locale } from '@haven/contracts/src/haven';
 import { ScreenRenderer, ScreenContext, ElderProfile, FamilyMember, MedicationRow, TaskRow, MessageRow, ScamEventRow, BuurtRow, VisitLogRow } from '../renderer/ScreenRenderer';
 import { ElderStackParamList } from '../navigation/AppNavigator';
 import { useHavenActions } from '../hooks/useHavenActions';
+import { useElderData } from '../hooks/useElderData';
 import { useAuth } from '../auth/AuthProvider';
 import { initializeAndroidDozeGuard } from '../services/dozeGuard';
 
@@ -68,17 +69,18 @@ export function ElderScreen({ route, navigation }: Props) {
   const { locale, t } = useTranslation();
   const elderId = sessionUserId(session) ?? 'signed-out';
   const seed = useMemo(() => loadShell(elderId, locale, t), [elderId, locale, t]);
+  const liveData = useElderData(elderId);
   const ctx: ScreenContext = {
     locale: seed.profile.locale,
     now: new Date(),
     profile: seed.profile,
-    family: seed.family,
-    medications: seed.medications,
-    tasks: seed.tasks,
-    messages: seed.messages,
-    scamEvents: seed.scamEvents,
-    buurt: seed.buurt,
-    visits: seed.visits,
+    family: liveData.family.length > 0 ? liveData.family : seed.family,
+    medications: liveData.medications.length > 0 ? liveData.medications : seed.medications,
+    tasks: liveData.tasks.length > 0 ? liveData.tasks : seed.tasks,
+    messages: liveData.messages.length > 0 ? liveData.messages : seed.messages,
+    scamEvents: liveData.scamEvents.length > 0 ? liveData.scamEvents : seed.scamEvents,
+    buurt: liveData.buurt.active ? liveData.buurt : seed.buurt,
+    visits: liveData.visits.length > 0 ? liveData.visits : seed.visits,
     onPrimaryAction: (actionId: string) => {
       if (actionId.startsWith('NAV_')) {
         const target = actionId.replace('NAV_', '');

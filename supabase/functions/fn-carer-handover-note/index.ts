@@ -1,5 +1,5 @@
 // ─── Phase 3.3 + 3.4: Photo attachments + medication interaction check at point of care ───
-import { admin, corsHeaders, json, readJsonBody, recordMetric, safeErrorMessage, userClient } from "../_shared/core.ts";
+import { admin, corsHeaders, dispatchNotification, json, readJsonBody, recordMetric, safeErrorMessage, userClient } from "../_shared/core.ts";
 import { assertCarerCan, getJwtUserId } from "../_shared/authz.ts";
 import { assertMaxLength, MAX_STRING_FIELD, validateBody } from "../_shared/validation.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
@@ -166,6 +166,26 @@ Deno.serve(async (req: Request) => {
             console.warn(`Failed to add handover recipient ${String(rid)}: ${recipientError.message}`);
           } else {
             recipientsAdded += 1;
+          }
+        }
+
+        // ─── Cross-app push notification to family members ───
+        // Notify each family recipient that a handover note was filed
+        for (const rid of recipients) {
+          try {
+            await dispatchNotification({
+              recipient_id: String(rid),
+              elder_id: String(body.elder_id),
+              notification_type: "carer_handover",
+              title_nl: "Zorgoverdracht ontvangen",
+              title_en: "Care handover received",
+              body_nl: "Uw verzorger heeft een overdracht achtergelaten. Bekijk de details in HAVEN.",
+              body_en: "Your carer has left a handover note. View the details in HAVEN.",
+              data: { handover_id: note.id },
+            });
+          } catch (notifyErr) {
+            // Non-blocking: notification failure should not fail the handover
+            console.warn(`Push to family ${String(rid)} failed: ${String(notifyErr)}`);
           }
         }
 

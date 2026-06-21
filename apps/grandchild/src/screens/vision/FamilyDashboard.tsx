@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@haven/ui/src/tokens';
 // DEMO: mock daily status — wire to live daily_checkins table when authenticated
 import { DAILY_STATUS } from '@haven/ui/src/mockData';
+import { useAuth } from '../../auth/AuthProvider';
 import { OverviewTab } from './OverviewTab';
 import { MedicationsTab } from './MedicationsTab';
 import { AlertsTab } from './AlertsTab';
@@ -38,15 +39,27 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
   const elderName = 'Margaret';
   const familyName = 'Sarah';
   const statusDot = STATUS_DOT[DAILY_STATUS.status as keyof typeof STATUS_DOT] ?? STATUS_DOT.green;
+  const { supabase, session } = useAuth();
 
   async function handleSendAction(action: string) {
+    // Use authenticated session (preferred) or fall back to env vars
     const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-    const accessToken = process.env.EXPO_PUBLIC_FAMILY_ACCESS_TOKEN;
-    const familyMemberId = process.env.EXPO_PUBLIC_FAMILY_MEMBER_ID;
+    const accessToken = session?.access_token ?? process.env.EXPO_PUBLIC_FAMILY_ACCESS_TOKEN;
+    let familyMemberId = process.env.EXPO_PUBLIC_FAMILY_MEMBER_ID;
     const configuredElderId = process.env.EXPO_PUBLIC_ELDER_ID ?? '00000000-0000-0000-0000-000000000001';
 
+    // Extract user ID from session JWT if available
+    if (session?.access_token && !familyMemberId) {
+      try {
+        const [, payload] = session.access_token.split('.');
+        familyMemberId = JSON.parse(atob(payload))?.sub ?? undefined;
+      } catch { /* skip */ }
+    }
+
     if (!supabaseUrl || !accessToken || !familyMemberId) {
-      throw new Error('Missing env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_FAMILY_ACCESS_TOKEN, or EXPO_PUBLIC_FAMILY_MEMBER_ID');
+      throw new Error(nl
+        ? 'Log eerst in om berichten te versturen.'
+        : 'Please log in to send messages.');
     }
 
     const messageMap: Record<string, { type: string; content_nl: string; content_en: string }> = {

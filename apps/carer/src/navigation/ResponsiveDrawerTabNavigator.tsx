@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, Text } from 'react-native';
+import { Alert, View, TouchableOpacity, Text } from 'react-native';
 import { useResponsiveLayout } from '../services/platform';
 import { useAccessibilityInfo } from '../services/accessibility';
 import { useTranslation } from '@haven/i18n';
-import { getQueueSize } from '../services/offlineQueue';
+import { useAuth } from '../auth/AuthProvider';
+import { CarerClient } from '../services/havenClient';
+import { getQueueSize, enqueueOffline } from '../services/offlineQueue';
 import { VandaagTab } from '../screens/vision/VandaagTab';
 import { HandoverTab } from '../screens/vision/HandoverTab';
 import { MARTab } from '../screens/vision/MARTab';
@@ -27,6 +29,7 @@ export function ResponsiveDrawerTabNavigator({ navigation }: any) {
   const { isIpad } = useResponsiveLayout();
   const { textMultiplier } = useAccessibilityInfo();
   const { locale } = useTranslation();
+  const { session } = useAuth();
   const nl = locale.startsWith('nl');
   const TABS = getTabs(nl);
   const [activeTab, setActiveTab] = useState<TabId>('today');
@@ -47,7 +50,23 @@ export function ResponsiveDrawerTabNavigator({ navigation }: any) {
             elderName={elderName}
             isOnline={isOnline}
             offlineCount={offlineCount}
-            onCompleteVisit={() => {}}
+            onCompleteVisit={async () => {
+              const elderId = process.env.EXPO_PUBLIC_CARER_ELDER_IDS?.split(',')[0] ?? '00000000-0000-0000-0000-000000000001';
+              const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+              if (!session || !supabaseUrl) {
+                enqueueOffline('visit_log', { elder_id: elderId, completed_at: new Date().toISOString() });
+                Alert.alert('HAVEN', nl ? 'Bezoek lokaal opgeslagen.' : 'Visit saved locally.');
+                return;
+              }
+              try {
+                const client = new CarerClient({ supabaseUrl, accessToken: session.access_token });
+                await client.visitLog({ elder_id: elderId, completed_at: new Date().toISOString() });
+                Alert.alert('HAVEN', nl ? 'Bezoek afgerond en opgeslagen!' : 'Visit completed and saved!');
+              } catch {
+                enqueueOffline('visit_log', { elder_id: elderId, completed_at: new Date().toISOString() });
+                Alert.alert('HAVEN', nl ? 'Verzenden mislukt — lokaal opgeslagen.' : 'Send failed — saved locally.');
+              }
+            }}
             locale={locale}
           />
         );

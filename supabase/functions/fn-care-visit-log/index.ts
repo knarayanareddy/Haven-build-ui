@@ -1,4 +1,4 @@
-import { admin, corsHeaders, json, readJsonBody, recordMetric, safeErrorMessage, userClient } from "../_shared/core.ts";
+import { admin, corsHeaders, dispatchNotification, json, readJsonBody, recordMetric, safeErrorMessage, userClient } from "../_shared/core.ts";
 import { assertActorMatches, assertCarerPermission, getJwtUserId } from "../_shared/authz.ts";
 import { validateBody } from "../_shared/validation.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
@@ -55,6 +55,31 @@ Deno.serve(async (req: Request) => {
     }).select().single();
     
     if (error) throw error;
+
+    // ─── Cross-app push notification to family members ───
+    const { data: family } = await dbAdmin
+      .from("family_relationships")
+      .select("family_member_id")
+      .eq("elder_id", body.elder_id)
+      .eq("is_active", true)
+      .eq("elder_consented", true);
+    for (const f of family ?? []) {
+      try {
+        await dispatchNotification({
+          recipient_id: String(f.family_member_id),
+          elder_id: String(body.elder_id),
+          notification_type: "carer_visit",
+          title_nl: "Zorgbezoek afgerond",
+          title_en: "Care visit completed",
+          body_nl: "De verzorger heeft het bezoek afgerond. Bekijk het rapport in HAVEN.",
+          body_en: "The carer has completed the visit. View the report in HAVEN.",
+          data: { visit_log_id: data.id },
+        });
+      } catch {
+        // Non-blocking: notification failure should not fail the visit log
+      }
+    }
+
     await recordMetric("fn-care-visit-log", started, "success");
     return json({ success: true, visit_log_id: data.id }, 200, req);
   } catch (error) {

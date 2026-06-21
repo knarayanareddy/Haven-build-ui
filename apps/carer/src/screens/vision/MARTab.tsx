@@ -4,15 +4,19 @@ import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 // DEMO: mock MAR data — should use live medication_reminders when carer is authenticated
 import { MEDICATIONS, CARE_VISITS } from '@haven/ui/src/mockData';
+import { useAuth } from '../../auth/AuthProvider';
+import { enqueueOffline } from '../../services/offlineQueue';
 
 type MARStatus = 'given' | 'refused' | 'not_available';
 
 export function MARTab({ locale }: { locale: string }) {
   const nl = locale.startsWith('nl');
+  const { session } = useAuth();
   const [selectedMed, setSelectedMed] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [status, setStatus] = useState<MARStatus>('given');
   const [saved, setSaved] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const TIME_OPTIONS = ['06:00', '08:00', '10:00', '12:00', '14:00', '18:00', '20:00', '22:00'];
 
@@ -22,14 +26,71 @@ export function MARTab({ locale }: { locale: string }) {
     { value: 'not_available', label: nl ? 'Niet beschikbaar' : 'Not available', color: '#991B1B', bg: '#FEE2E2' },
   ];
 
-  function handleSave() {
+  async function handleSave() {
     if (!selectedMed) {
       Alert.alert('HAVEN', nl ? 'Selecteer een medicijn' : 'Select a medication');
       return;
     }
-    setSaved(true);
-    Alert.alert('HAVEN', nl ? 'MAR-registratie opgeslagen!' : 'MAR entry saved!');
-    setTimeout(() => setSaved(false), 3000);
+    const elderId = process.env.EXPO_PUBLIC_CARER_ELDER_IDS?.split(',')[0] ?? '00000000-0000-0000-0000-000000000001';
+    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    const med = MEDICATIONS.find((m) => m.id === selectedMed);
+
+    const payload = {
+      elder_id: elderId,
+      medication_id: selectedMed,
+      medication_name: med?.name ?? selectedMed,
+      administered_at: selectedTime || new Date().toISOString(),
+      status,
+    };
+
+    setSubmitting(true);
+    try {
+      if (!session || !supabaseUrl) {
+        // Offline: queue for sync
+        enqueueOffline('handover_note', payload);
+        setSaved(true);
+        Alert.alert('HAVEN', nl ? 'Lokaal opgeslagen — synchroniseert zodra online.' : 'Saved locally — will sync when online.');
+      } else {
+        // Online: write directly to Supabase
+        const response = await fetch(`${supabaseUrl}/rest/v1/medication_reminders`, {
+          method: 'POST',
+          headers: {
+            authorization: `Bearer ${session.access_token}`,
+            apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',
+            'content-type': 'application/json',
+            prefer: 'return=minimal',
+          },
+          body: JSON.stringify({
+            elder_id: elderId,
+            medication_id: selectedMed,
+            scheduled_time: selectedTime || new Date().toTimeString().slice(0, 5),
+            status: status === 'given' ? 'taken' : status === 'refused' ? 'refused' : 'missed',
+            administered_by: 'carer',
+            administered_at: new Date().toISOString(),
+          }),
+        });
+        if (!response.ok) {
+          const err = await response.text().catch(() => 'Unknown error');
+          throw new Error(err);
+        }
+        setSaved(true);
+        Alert.alert('HAVEN', nl ? 'MAR-registratie opgeslagen!' : 'MAR entry saved!');
+      }
+      setSelectedMed('');
+      setSelectedTime('');
+      setStatus('given');
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      // Fallback to offline queue
+      enqueueOffline('handover_note', payload);
+      Alert.alert('HAVEN', nl
+        ? 'Verzenden mislukt — lokaal opgeslagen voor later.'
+        : 'Send failed — saved locally for later.');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const previousEntries = CARE_VISITS[0]?.marEntries ?? [];

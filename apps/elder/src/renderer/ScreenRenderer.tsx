@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View, Alert } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { productionScreens, ScreenSchema, ScreenId } from '@haven/schema/src/screenSchema';
 import { colors as baseColors, touch } from '@haven/ui/src/tokens';
@@ -575,6 +575,32 @@ function renderScreen(ctx: ScreenContext) {
   return null;
 }
 
+// ErrorBoundary to prevent screen render crashes from force-closing the app
+class ScreenErrorBoundary extends React.Component<{ locale: Locale; children: React.ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: unknown) {
+    console.warn('[HAVEN] Screen render error caught:', error);
+  }
+  render() {
+    if (this.state.hasError) {
+      const nl = this.props.locale === 'nl-NL';
+      return (
+        <View style={{ padding: 40, alignItems: 'center', gap: 16 }}>
+          <Text style={{ fontSize: 48 }}>⚠️</Text>
+          <Text style={{ fontSize: 20, fontWeight: '900', color: baseColors.ink, textAlign: 'center' }}>
+            {nl ? 'Er ging iets mis' : 'Something went wrong'}
+          </Text>
+          <Text style={{ fontSize: 16, color: baseColors.pewter, textAlign: 'center' }}>
+            {nl ? 'Ga terug naar het startscherm.' : 'Please go back to the home screen.'}
+          </Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export interface ScreenRendererProps {
   schema: ScreenSchema;
   context: ScreenContext;
@@ -621,7 +647,9 @@ export function ScreenRenderer({ schema, context }: ScreenRendererProps) {
         <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? 'Offline-cache' : 'Offline cache'}: {schema.offlineCacheTtlSeconds}s · {schema.emergencyButton ? (locale === 'nl-NL' ? 'Noodknop aanwezig' : 'Emergency access available') : (locale === 'nl-NL' ? 'Geen noodknop' : 'No emergency access')}</Text>
       </View>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 80, gap: 12 }}>
-        {renderFor(schema.screenId, context)}
+        <ScreenErrorBoundary locale={context.locale}>
+          {renderFor(schema.screenId, context)}
+        </ScreenErrorBoundary>
       </ScrollView>
       {/* ─── Fixed Bottom Tab Bar ─── */}
       <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.paper, borderTopWidth: 1, borderTopColor: colors.mist, paddingVertical: 8, paddingHorizontal: 12 }}>

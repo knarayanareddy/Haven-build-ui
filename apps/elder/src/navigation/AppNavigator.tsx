@@ -25,7 +25,7 @@ export function AppNavigator() {
   }
 
   return (
-    <Stack.Navigator initialRouteName="HOME" screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <Stack.Navigator initialRouteName="HOME" screenOptions={{ headerShown: false, animation: 'none' }}>
       {productionScreens.map((screen) => <Stack.Screen key={screen.screenId} name={screen.screenId} component={ElderScreen} />)}
     </Stack.Navigator>
   );

@@ -84,7 +84,11 @@ export function ElderScreen({ route, navigation }: Props) {
     onPrimaryAction: (actionId: string) => {
       if (actionId.startsWith('NAV_')) {
         const target = actionId.replace('NAV_', '');
-        navigation.navigate(target);
+        try {
+          navigation.navigate(target as never);
+        } catch (e) {
+          console.warn('[HAVEN] Navigation error:', e);
+        }
         return;
       }
       actions.handlePrimaryAction(actionId);

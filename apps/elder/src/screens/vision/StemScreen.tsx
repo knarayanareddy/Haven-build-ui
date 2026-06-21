@@ -7,6 +7,7 @@ import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '@haven/ui/src/tokens';
 import { pillarGradients } from '@haven/ui/src/visionColors';
+// DEMO: mock voice memory — acceptable fixture (VAPI handles real conversations)
 import { VOICE_MEMORY } from '@haven/ui/src/mockData';
 import { useAuth } from '../../auth/AuthProvider';
 import { HavenClient } from '../../services/havenClient';

@@ -3,6 +3,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge } from '@haven/ui/src/visionComponents';
+// DEMO: mock care visits — acceptable visual fixture for hackathon
 import { CARE_VISITS } from '@haven/ui/src/mockData';
 import type { ScreenContext } from '../../renderer/ScreenRenderer';
 

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, TouchableOpacity, Text, Platform, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@haven/ui/src/tokens';
+// DEMO: mock daily status — wire to live daily_checkins table when authenticated
 import { DAILY_STATUS } from '@haven/ui/src/mockData';
 import { OverviewTab } from './OverviewTab';
 import { MedicationsTab } from './MedicationsTab';

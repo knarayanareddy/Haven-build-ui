@@ -6,6 +6,7 @@
 import React, { useRef, useState } from 'react';
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
+// DEMO: mock familiar voice status — acceptable fixture (recording UI is standalone)
 import { FAMILIAR_VOICE_STATUS } from '@haven/ui/src/mockData';
 
 interface VoiceTabProps {

@@ -1,5 +1,6 @@
 // ─── Vision Family Dashboard: Overview Tab ───
-import React, { useState } from 'react';
+// DEMO: uses mock data as fallback — attempts live Supabase fetch when env vars are set
+import React, { useEffect, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge, ProgressBar } from '@haven/ui/src/visionComponents';
@@ -18,14 +19,39 @@ const STATUS_CONFIG = {
   red: { bg: '#FEE2E2', border: '#FECACA', text: '#991B1B', dot: '#EF4444', label_nl: 'Actie nodig', label_en: 'Action needed' },
 };
 
+type LiveMedStatus = { taken: number; total: number; adherence: number };
+
+function useLiveMedStatus(): LiveMedStatus | null {
+  const [live, setLive] = useState<LiveMedStatus | null>(null);
+  useEffect(() => {
+    const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    const token = process.env.EXPO_PUBLIC_FAMILY_ACCESS_TOKEN;
+    const elderId = process.env.EXPO_PUBLIC_ELDER_ID;
+    if (!url || !token || !elderId) return;
+    fetch(`${url}/rest/v1/medication_reminders?elder_id=eq.${elderId}&select=status&scheduled_time=gte.${new Date().toISOString().slice(0, 10)}`, {
+      headers: { authorization: `Bearer ${token}`, apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? token },
+    })
+      .then((r) => r.json())
+      .then((rows: Array<{ status: string }>) => {
+        if (Array.isArray(rows) && rows.length > 0) {
+          const taken = rows.filter((r) => r.status === 'taken').length;
+          setLive({ taken, total: rows.length, adherence: Math.round((taken / rows.length) * 100) });
+        }
+      })
+      .catch(() => {});
+  }, []);
+  return live;
+}
+
 export function OverviewTab({ locale, elderName, familyName, onSendAction }: OverviewTabProps) {
   const nl = locale.startsWith('nl');
   const [actionSent, setActionSent] = useState<string | null>(null);
   const sc = STATUS_CONFIG[DAILY_STATUS.status as keyof typeof STATUS_CONFIG];
 
-  const medicsTaken = MEDICATIONS.reduce((a, m) => a + m.taken.filter(Boolean).length, 0);
-  const medicsTotal = MEDICATIONS.reduce((a, m) => a + m.taken.length, 0);
-  const adherence = medicsTotal > 0 ? Math.round((medicsTaken / medicsTotal) * 100) : 0;
+  const liveMeds = useLiveMedStatus();
+  const medicsTaken = liveMeds?.taken ?? MEDICATIONS.reduce((a, m) => a + m.taken.filter(Boolean).length, 0);
+  const medicsTotal = liveMeds?.total ?? MEDICATIONS.reduce((a, m) => a + m.taken.length, 0);
+  const adherence = liveMeds?.adherence ?? (medicsTotal > 0 ? Math.round((medicsTaken / medicsTotal) * 100) : 0);
 
   async function handleAction(action: string) {
     try {

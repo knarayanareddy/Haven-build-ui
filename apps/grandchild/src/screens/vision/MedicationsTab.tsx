@@ -1,5 +1,6 @@
 // ─── Vision Family Dashboard: Medications Tab ───
-import React from 'react';
+// DEMO: mock data fallback — attempts live Supabase fetch when env vars are set
+import React, { useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge, ProgressBar } from '@haven/ui/src/visionComponents';
@@ -9,10 +10,52 @@ interface MedicationsTabProps {
   locale: string;
 }
 
+type LiveMed = { id: string; name: string; dose: string; times: string[]; taken: boolean[]; color: string; purpose: string; prescriber: string; nextRefill: string; stock: number };
+
+function useLiveMedications(): LiveMed[] | null {
+  const [live, setLive] = useState<LiveMed[] | null>(null);
+  useEffect(() => {
+    const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    const token = process.env.EXPO_PUBLIC_FAMILY_ACCESS_TOKEN;
+    const elderId = process.env.EXPO_PUBLIC_ELDER_ID;
+    if (!url || !token || !elderId) return;
+    fetch(`${url}/rest/v1/medication_reminders?elder_id=eq.${elderId}&select=id,medication_name,dose,reminder_time,status,stock_remaining&order=reminder_time.asc`, {
+      headers: { authorization: `Bearer ${token}`, apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? token },
+    })
+      .then((r) => r.json())
+      .then((rows: Array<Record<string, unknown>>) => {
+        if (!Array.isArray(rows) || rows.length === 0) return;
+        const grouped = new Map<string, LiveMed>();
+        for (const r of rows) {
+          const name = String(r.medication_name ?? '');
+          const key = `${name}-${r.dose ?? ''}`;
+          const existing = grouped.get(key);
+          const time = String(r.reminder_time ?? '08:00').slice(0, 5);
+          const taken = r.status === 'taken';
+          if (existing) {
+            existing.times.push(time);
+            existing.taken.push(taken);
+          } else {
+            grouped.set(key, {
+              id: String(r.id), name, dose: String(r.dose ?? ''),
+              times: [time], taken: [taken], color: '#4CAF50',
+              purpose: name, prescriber: '', nextRefill: '',
+              stock: typeof r.stock_remaining === 'number' ? r.stock_remaining : 30,
+            });
+          }
+        }
+        setLive([...grouped.values()]);
+      })
+      .catch(() => {});
+  }, []);
+  return live;
+}
+
 export function MedicationsTab({ locale }: MedicationsTabProps) {
   const nl = locale.startsWith('nl');
-  const medicsTaken = MEDICATIONS.reduce((a, m) => a + m.taken.filter(Boolean).length, 0);
-  const medicsTotal = MEDICATIONS.reduce((a, m) => a + m.taken.length, 0);
+  const meds = useLiveMedications() ?? MEDICATIONS;
+  const medicsTaken = meds.reduce((a, m) => a + m.taken.filter(Boolean).length, 0);
+  const medicsTotal = meds.reduce((a, m) => a + m.taken.length, 0);
   const adherence = medicsTotal > 0 ? Math.round((medicsTaken / medicsTotal) * 100) : 0;
 
   return (
@@ -36,7 +79,7 @@ export function MedicationsTab({ locale }: MedicationsTabProps) {
       </View>
 
       {/* Medication cards */}
-      {MEDICATIONS.map((med) => (
+      {meds.map((med) => (
         <View key={med.id} style={{
           borderRadius: 18, padding: 16, backgroundColor: colors.paper,
           borderWidth: 1, borderColor: colors.mist, gap: 10,

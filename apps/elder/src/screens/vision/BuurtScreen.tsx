@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { SubTabBar, ProgressBar } from '@haven/ui/src/visionComponents';
+// DEMO: mock neighbourhood data — acceptable fixture (requires real user base)
 import { BUURT_MATCHES, COMMUNITY_EVENTS } from '@haven/ui/src/mockData';
 import type { ScreenContext } from '../../renderer/ScreenRenderer';
 

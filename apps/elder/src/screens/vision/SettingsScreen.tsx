@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { ConsentToggle } from '@haven/ui/src/visionComponents';
+// DEMO: mock consent/device — consent toggles should read/write live consent_records
 import { CONSENT_SETTINGS, FAMILIAR_VOICE_STATUS, DEVICE_HEALTH } from '@haven/ui/src/mockData';
 import type { ScreenContext } from '../../renderer/ScreenRenderer';
 

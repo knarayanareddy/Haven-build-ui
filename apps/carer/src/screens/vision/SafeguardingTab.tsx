@@ -3,6 +3,7 @@ import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge } from '@haven/ui/src/visionComponents';
+// DEMO: mock safeguarding — acceptable visual fixture for hackathon
 import { SAFEGUARDING_ITEMS } from '@haven/ui/src/mockData';
 
 const MELDCODE_STEPS = [

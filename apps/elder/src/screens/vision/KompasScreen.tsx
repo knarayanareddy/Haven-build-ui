@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { SubTabBar, StatusBadge } from '@haven/ui/src/visionComponents';
+// DEMO: mock safe zone/elder — acceptable fixture (live geofencing needs location permissions)
 import { SAFE_ZONE, ELDER } from '@haven/ui/src/mockData';
 import type { ScreenContext } from '../../renderer/ScreenRenderer';
 

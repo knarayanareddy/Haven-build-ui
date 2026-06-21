@@ -3,6 +3,7 @@ import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge, ProgressBar } from '@haven/ui/src/visionComponents';
+// DEMO: mock medications/tasks — should fetch live schedule when authenticated
 import { MEDICATIONS, TODAY_TASKS } from '@haven/ui/src/mockData';
 
 interface VandaagTabProps {

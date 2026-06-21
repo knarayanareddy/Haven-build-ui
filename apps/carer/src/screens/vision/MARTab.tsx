@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
+// DEMO: mock MAR data — should use live medication_reminders when carer is authenticated
 import { MEDICATIONS, CARE_VISITS } from '@haven/ui/src/mockData';
 
 type MARStatus = 'given' | 'refused' | 'not_available';

@@ -5,6 +5,7 @@ import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { ProgressBar } from '@haven/ui/src/visionComponents';
+// DEMO: mock vitals — acceptable fixture (requires wearable integration for live data)
 import { VITALS } from '@haven/ui/src/mockData';
 import type { ScreenContext } from '../../renderer/ScreenRenderer';
 

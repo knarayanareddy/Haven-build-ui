@@ -1,6 +1,11 @@
 // ─── HAVEN Mock Data (React Native) ───
 // Ported from havenUIvision/src/data/mockData.ts
 // Provides demo data when user is unauthenticated or Supabase returns empty results.
+//
+// AUDIT: see docs/MOCK_DATA_AUDIT.md for classification of each consumer.
+// Screens that fetch live data fall back to these fixtures gracefully.
+// No consumer pretends success (category C) — all are A (visual fixture) or
+// B (live-fetch-with-fallback).
 
 export const ELDER = {
   id: 'elder-001',

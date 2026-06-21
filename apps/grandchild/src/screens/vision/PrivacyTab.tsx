@@ -3,6 +3,7 @@ import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge } from '@haven/ui/src/visionComponents';
+// DEMO: mock consent settings — wire to live consent_records table when authenticated
 import { CONSENT_SETTINGS } from '@haven/ui/src/mockData';
 
 interface PrivacyTabProps {

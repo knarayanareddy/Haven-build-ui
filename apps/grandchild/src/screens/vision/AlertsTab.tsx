@@ -3,6 +3,7 @@ import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge } from '@haven/ui/src/visionComponents';
+// DEMO: mock scam events — wire to live scam_events table when authenticated
 import { SCAM_EVENTS } from '@haven/ui/src/mockData';
 
 interface AlertsTabProps {

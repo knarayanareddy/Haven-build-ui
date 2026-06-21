@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { SubTabBar } from '@haven/ui/src/visionComponents';
+// DEMO: mock messages/stories — messages partially wired to live; stories remain fixture
 import { FAMILY_MESSAGES, LIFE_STORIES } from '@haven/ui/src/mockData';
 import type { ScreenContext } from '../../renderer/ScreenRenderer';
 

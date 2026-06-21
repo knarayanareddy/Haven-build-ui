@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { I18nProvider } from '@haven/i18n';
+import { I18nProvider, useTranslation } from '@haven/i18n';
 import { AuthProvider, useAuth } from './src/auth/AuthProvider';
 import { FamilyDashboard } from './src/screens/vision/FamilyDashboard';
 import { LoginScreen } from './src/screens/LoginScreen';
@@ -21,7 +21,12 @@ function AppContent() {
     return <LoginScreen />;
   }
 
-  return <FamilyDashboard locale="nl-NL" />;
+  return <FamilyDashboardWithLocale />;
+}
+
+function FamilyDashboardWithLocale() {
+  const { locale } = useTranslation();
+  return <FamilyDashboard locale={locale} />;
 }
 
 export default function GrandchildApp() {

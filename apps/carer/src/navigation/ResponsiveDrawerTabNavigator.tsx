@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, Text } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, View, TouchableOpacity, Text } from 'react-native';
 import { useResponsiveLayout } from '../services/platform';
 import { useAccessibilityInfo } from '../services/accessibility';
-import { useTranslation } from '@haven/i18n';
-import { getQueueSize } from '../services/offlineQueue';
+import { useTranslation, LanguageToggle } from '@haven/i18n';
+import { useAuth } from '../auth/AuthProvider';
+import { CarerClient } from '../services/havenClient';
+import { enqueueOffline, getQueueSize } from '../services/offlineQueue';
 import { VandaagTab } from '../screens/vision/VandaagTab';
 import { HandoverTab } from '../screens/vision/HandoverTab';
 import { MARTab } from '../screens/vision/MARTab';
@@ -27,17 +29,41 @@ export function ResponsiveDrawerTabNavigator({ navigation }: any) {
   const { isIpad } = useResponsiveLayout();
   const { textMultiplier } = useAccessibilityInfo();
   const { locale } = useTranslation();
+  const { session } = useAuth();
   const nl = locale.startsWith('nl');
   const TABS = getTabs(nl);
   const [activeTab, setActiveTab] = useState<TabId>('today');
   const [isOnline] = useState(true);
   const [offlineCount, setOfflineCount] = useState(getQueueSize());
   const elderName = 'Margaret van den Berg';
+  const elderId = process.env.EXPO_PUBLIC_CARER_ELDER_IDS?.split(',')[0] ?? '00000000-0000-0000-0000-000000000001';
 
   useEffect(() => {
     const interval = setInterval(() => setOfflineCount(getQueueSize()), 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleCompleteVisit = useCallback(async () => {
+    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    if (!session || !supabaseUrl) {
+      enqueueOffline('visit_log', { elder_id: elderId, visit_date: new Date().toISOString().slice(0, 10), check_out_time: new Date().toISOString() });
+      Alert.alert('HAVEN', nl ? 'Bezoek lokaal afgerond — synchroniseert zodra online.' : 'Visit saved locally — will sync when online.');
+      return;
+    }
+    try {
+      const client = new CarerClient({ supabaseUrl, accessToken: session.access_token });
+      await client.visitLog({
+        elder_id: elderId,
+        visit_date: new Date().toISOString().slice(0, 10),
+        check_out_time: new Date().toISOString(),
+        notes_nl: 'Medicatiecontrole, Welzijnscheck',
+      });
+      Alert.alert('HAVEN', nl ? 'Bezoek succesvol afgerond en opgeslagen!' : 'Visit completed and saved successfully!');
+    } catch {
+      enqueueOffline('visit_log', { elder_id: elderId, visit_date: new Date().toISOString().slice(0, 10), check_out_time: new Date().toISOString() });
+      Alert.alert('HAVEN', nl ? 'Opslaan mislukt — lokaal bewaard voor later.' : 'Save failed — stored locally for later.');
+    }
+  }, [session, elderId, nl]);
 
   function renderTab() {
     switch (activeTab) {
@@ -47,7 +73,7 @@ export function ResponsiveDrawerTabNavigator({ navigation }: any) {
             elderName={elderName}
             isOnline={isOnline}
             offlineCount={offlineCount}
-            onCompleteVisit={() => {}}
+            onCompleteVisit={handleCompleteVisit}
             locale={locale}
           />
         );
@@ -74,15 +100,18 @@ export function ResponsiveDrawerTabNavigator({ navigation }: any) {
                 {nl ? 'Professioneel zorgportaal' : 'Professional care portal'} — {elderName}
               </Text>
             </View>
-            <View style={{
-              flexDirection: 'row', alignItems: 'center', gap: 6,
-              paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12,
-              backgroundColor: isOnline ? 'rgba(74,222,128,0.2)' : 'rgba(251,191,36,0.2)',
-            }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isOnline ? '#4ADE80' : '#FBBF24' }} />
-              <Text style={{ color: isOnline ? '#BBF7D0' : '#FDE68A', fontSize: 12 * textMultiplier, fontWeight: '700' }}>
-                {isOnline ? 'Online' : 'Offline'}
-              </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <LanguageToggle />
+              <View style={{
+                flexDirection: 'row', alignItems: 'center', gap: 6,
+                paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12,
+                backgroundColor: isOnline ? 'rgba(74,222,128,0.2)' : 'rgba(251,191,36,0.2)',
+              }}>
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isOnline ? '#4ADE80' : '#FBBF24' }} />
+                <Text style={{ color: isOnline ? '#BBF7D0' : '#FDE68A', fontSize: 12 * textMultiplier, fontWeight: '700' }}>
+                  {isOnline ? 'Online' : 'Offline'}
+                </Text>
+              </View>
             </View>
           </View>
         </View>

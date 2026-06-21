@@ -300,10 +300,18 @@ function buildAssistantConfig(locale: "en-GB" | "nl-NL") {
 
 function verifyVapiSecret(req: Request): boolean {
   const secret = Deno.env.get("VAPI_WEBHOOK_SECRET");
+  const env = Deno.env.get("HAVEN_ENV") ?? "";
+  const isDev = env === "local" || env === "dev" || env === "";
+
   if (!secret) {
-    console.warn("[fn-vapi-webhook] VAPI_WEBHOOK_SECRET not set — accepting unauthenticated requests. Set this secret before production deployment.");
-    return true;
+    if (isDev) {
+      console.warn("[fn-vapi-webhook] VAPI_WEBHOOK_SECRET not set — accepting unauthenticated requests (HAVEN_ENV=%s). Set VAPI_WEBHOOK_SECRET and HAVEN_ENV=staging|production before deploying.", env || "unset");
+      return true;
+    }
+    console.error("[fn-vapi-webhook] VAPI_WEBHOOK_SECRET not set in %s — rejecting request. Set this secret via: supabase secrets set VAPI_WEBHOOK_SECRET=<secret>", env);
+    return false;
   }
+
   const header = req.headers.get("x-vapi-secret") ?? req.headers.get("authorization")?.replace("Bearer ", "");
   if (!header) return false;
   // Constant-time comparison

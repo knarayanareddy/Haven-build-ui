@@ -1,10 +1,12 @@
 import { corsHeaders, json, readJsonBody, recordMetric, requireFields, safeErrorMessage, userClient } from "../_shared/core.ts";
 import { requireAdminBearer } from "../_shared/internal.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
+    await rateLimit(req, "fn-observability-alert");
     await requireAdminBearer(req);
     const body = await readJsonBody(req) as Record<string, unknown>;
     requireFields(body, ["alert_key", "severity", "title"]);

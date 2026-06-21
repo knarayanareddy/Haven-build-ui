@@ -1,5 +1,6 @@
 import { admin, corsHeaders, dispatchNotification, json, recordMetric, safeErrorMessage } from "../_shared/core.ts";
 import { requireInternalAccess } from "../_shared/internal.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 // ─── Phase 2.4: Weekly digest email delivery ───
 // Every Sunday 10:00, generates safety digests and sends:
@@ -90,6 +91,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
+    await rateLimit(req, "fn-weekly-digest");
     requireInternalAccess(req);
     const db = admin();
     const week = new Date();

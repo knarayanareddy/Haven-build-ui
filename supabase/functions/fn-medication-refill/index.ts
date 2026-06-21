@@ -1,5 +1,6 @@
 import { admin, corsHeaders, dispatchNotification, json, recordMetric, safeErrorMessage } from "../_shared/core.ts";
 import { requireInternalAccess } from "../_shared/internal.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 // ─── Phase 2.3: Pharmacy refill email ───
 // When stock <= threshold, notify family AND send email to pharmacy if configured.
@@ -86,6 +87,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
+    await rateLimit(req, "fn-medication-refill");
     requireInternalAccess(req);
     const body = await req.json().catch(() => ({}));
     const db = admin();

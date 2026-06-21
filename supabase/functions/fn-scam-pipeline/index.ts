@@ -3,12 +3,14 @@ import { getJwtUserId, assertElderOrFamilyCan } from "../_shared/authz.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
 import { assertNoBsnText, assertMaxLength, MAX_STRING_FIELD, validateBody } from "../_shared/validation.ts";
 import { captureException } from "../_shared/sentry.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 Deno.serve(async (req) => {
   // P0-1+P2-1 FIX: dynamic CORS + security headers via corsHeaders(req)
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
+    await rateLimit(req, "fn-scam-pipeline");
     const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, { elder_id: 'uuid', channel: 'string', signal_reference: 'string', raw_content: 'string' }, { allowUnknown: true });
     assertNoBsnText(body.raw_content);

@@ -2,11 +2,13 @@ import { admin, corsHeaders, json, readJsonBody, recordMetric, safeErrorMessage,
 import { assertSelf, getJwtUserId, invalidateRelationshipCache } from "../_shared/authz.ts";
 import { validateBody } from "../_shared/validation.ts";
 import { captureException } from "../_shared/sentry.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
+    await rateLimit(req, "fn-consent-update");
     const body = await readJsonBody(req) as Record<string, unknown>;
     validateBody(body, { elder_id: 'uuid', consent_type: 'string', granted: 'boolean' }, { allowUnknown: true });
     const userId = await getJwtUserId(req);

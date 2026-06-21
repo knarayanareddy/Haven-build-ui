@@ -2,6 +2,7 @@ import { admin, corsHeaders, dispatchNotification, json, recordMetric } from "..
 import { requireInternalAccess } from "../_shared/internal.ts";
 import { asyncWrapper } from "../_shared/async_wrapper.ts";
 import { captureException } from "../_shared/sentry.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 interface VitalRow {
   id: string;
@@ -30,6 +31,7 @@ Deno.serve(asyncWrapper("fn-vital-threshold-check", async (req: Request) => {
 
   for (const vital of vitals) {
     try {
+    await rateLimit(req, "fn-vital-threshold-check");
       // 1. Gated Family Delegate Query (Replaced can_view_medications with notify_on_crisis)
       const { data: family } = await db
         .from("family_relationships")

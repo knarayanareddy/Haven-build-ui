@@ -1,6 +1,7 @@
 import { admin, corsHeaders, json, recordMetric, safeErrorMessage, sha256 } from "../_shared/core.ts";
 import { captureException } from "../_shared/sentry.ts";
 import { requireInternalAccess } from "../_shared/internal.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 const REDIS_URL = Deno.env.get("UPSTASH_REDIS_URL");
 const REDIS_TOKEN = Deno.env.get("UPSTASH_REDIS_TOKEN");
@@ -22,6 +23,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   const started = Date.now();
   try {
+    await rateLimit(req, "fn-banking-stream-consumer");
     requireInternalAccess(req);
 
     const db = admin();

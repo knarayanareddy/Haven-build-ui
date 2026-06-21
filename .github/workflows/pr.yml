@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node & PNPM
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: '.node-version'
       - run: corepack enable
 
       - name: Install Dependencies
@@ -65,7 +65,7 @@ jobs:
       - name: Setup Node & PNPM
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: '.node-version'
       - run: corepack enable
       - run: corepack pnpm install --frozen-lockfile
 
@@ -81,7 +81,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: '.node-version'
       - run: corepack enable
       - run: corepack pnpm install --frozen-lockfile
 

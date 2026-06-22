@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View, Alert } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { productionScreens, ScreenSchema, ScreenId } from '@haven/schema/src/screenSchema';
 import { colors as baseColors, touch } from '@haven/ui/src/tokens';
 import { detectCrisisPhrase } from '../services/crisis';
@@ -604,12 +605,12 @@ class ScreenErrorBoundary extends React.Component<
           {this.props.onGoHome ? (
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel={nl ? 'Ga naar startscherm' : 'Go to home screen'}
+              accessibilityLabel={nl ? 'Ga naar Home' : 'Go to home screen'}
               onPress={this.handleGoHome}
               style={{ minHeight: 48, borderRadius: 20, backgroundColor: baseColors.slate, paddingHorizontal: 24, paddingVertical: 12, marginTop: 8 }}
             >
               <Text style={{ color: 'white', fontSize: 20, fontWeight: '900' }}>
-                {nl ? '← Startscherm' : '← Home'}
+                {nl ? 'Ga naar Home' : 'Go to Home'}
               </Text>
             </TouchableOpacity>
           ) : null}
@@ -667,10 +668,10 @@ export function ScreenRenderer({ schema, context, onBack }: ScreenRendererProps)
             accessibilityRole="button"
             accessibilityLabel={locale === 'nl-NL' ? 'Terug' : 'Back'}
             onPress={onBack}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4, minHeight: touch.minimum, paddingVertical: 12, paddingHorizontal: 12 }}
           >
-            <Text style={{ fontSize: 22, color: colors.slate, fontWeight: '900' }}>←</Text>
-            <Text style={{ fontSize: 16, color: colors.slate, fontWeight: '700' }}>{locale === 'nl-NL' ? 'Terug' : 'Back'}</Text>
+            <MaterialCommunityIcons name="arrow-left" size={22} color={colors.slate} />
+            <Text style={{ fontSize: 18, color: colors.slate, fontWeight: '700' }}>{locale === 'nl-NL' ? 'Terug' : 'Back'}</Text>
           </TouchableOpacity>
         ) : null}
         <Text accessibilityRole="header" style={{ fontSize: Math.round(30 * fontMult), fontWeight: '900', color: colors.ink }}>{locale === 'nl-NL' ? titleNl : titleEn}</Text>

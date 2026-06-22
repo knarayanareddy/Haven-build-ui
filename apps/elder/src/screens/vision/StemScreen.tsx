@@ -15,6 +15,7 @@ import { startVoiceRecording } from '../../services/voiceRecorder';
 import { translateElderError } from '../../services/errorMapper';
 import { useVapiCall } from '@haven/vapi/src/useVapiCall';
 import { VapiVoiceService } from '@haven/vapi/src/vapiClient';
+import { VapiError } from '@haven/vapi/src/VapiError';
 import type { ActiveVoiceRecording } from '../../services/voiceRecorder';
 import type { ScreenContext } from '../../renderer/ScreenRenderer';
 
@@ -149,8 +150,7 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
         try {
           await vapi.start();
         } catch (error) {
-          const msg = String((error as Error).message ?? error);
-          if (msg === 'VAPI_SDK_NOT_AVAILABLE' || msg === 'VAPI_NOT_CONFIGURED') {
+          if (error instanceof VapiError) {
             Alert.alert('HAVEN', nl ? 'Spraakdienst niet beschikbaar. Probeer het opnieuw.' : 'Voice service not available. Please try again.');
           } else {
             Alert.alert('HAVEN', translateElderError(error));

@@ -119,7 +119,7 @@ export function MedicationsTab({ locale }: MedicationsTabProps) {
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 16, gap: 12 }}>
       {medsLoading && (
         <View style={{ paddingVertical: 32, alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={colors.slate} />
+          <ActivityIndicator size="large" color={colors.brand} />
           <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', marginTop: 8 }}>{nl ? 'Laden...' : 'Loading...'}</Text>
         </View>
       )}

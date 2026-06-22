@@ -8,6 +8,7 @@ import { HavenClient } from '../services/havenClient';
 import { startVoiceRecording, type ActiveVoiceRecording } from '../services/voiceRecorder';
 import { useVapiCall } from '@haven/vapi/src/useVapiCall';
 import { VapiVoiceService } from '@haven/vapi/src/vapiClient';
+import { VapiError } from '@haven/vapi/src/VapiError';
 
 export interface FloatingVoiceButtonProps {
   locale: Locale;
@@ -117,11 +118,10 @@ function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVo
           setMacosState('listening');
           startPulse();
         } catch (error) {
-          const msg = String((error as Error).message ?? error);
-          if (msg === 'VAPI_SDK_NOT_AVAILABLE' || msg === 'VAPI_NOT_CONFIGURED') {
+          if (error instanceof VapiError) {
             setShowPrompts(true);
           } else {
-            Alert.alert('HAVEN', msg);
+            Alert.alert('HAVEN', String((error as Error).message ?? error));
           }
           stopPulse();
         }

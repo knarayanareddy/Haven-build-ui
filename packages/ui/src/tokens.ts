@@ -18,6 +18,7 @@ export const colors = {
   terracottaPale: '#FAF0E8',
   violet: '#5E4A8A',
   teal: '#2A7A6F',
+  brand: '#4A90D9',
 } as const;
 
 export const typeScale = {

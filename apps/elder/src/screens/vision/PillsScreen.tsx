@@ -152,6 +152,13 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
   const [undoMed, setUndoMed] = useState<{ id: string; name: string } | null>(null);
   const undoTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Cleanup undo timer on unmount to prevent memory leak / setState on unmounted component
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    };
+  }, []);
+
   // Confirm medication via Supabase (with offline fallback)
   async function confirmMedication(medId: string) {
     setConfirming(medId);

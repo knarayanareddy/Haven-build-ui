@@ -1,7 +1,7 @@
 // ─── Vision Family Dashboard: Overview Tab ───
 // Uses auth session for live Supabase fetch, mock data as fallback
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge, ProgressBar } from '@haven/ui/src/visionComponents';
 import { MEDICATIONS, DAILY_STATUS, DEVICE_HEALTH, WEEKLY_DIGEST } from '@haven/ui/src/mockData';
@@ -23,14 +23,18 @@ const STATUS_CONFIG = {
 type LiveMedStatus = { taken: number; total: number; adherence: number };
 type LiveScores = { schild: number; wellbeing: string; buurt: number };
 
-function useLiveMedStatus(): LiveMedStatus | null {
+function useLiveMedStatus(): { data: LiveMedStatus | null; loading: boolean; error: string | null } {
   const { session } = useAuth();
   const [live, setLive] = useState<LiveMedStatus | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
     const token = session?.access_token ?? process.env.EXPO_PUBLIC_FAMILY_ACCESS_TOKEN;
     const elderId = process.env.EXPO_PUBLIC_ELDER_ID;
     if (!url || !token || !elderId) return;
+    setLoading(true);
+    setError(null);
     const today = new Date().toISOString().slice(0, 10);
     fetch(`${url}/rest/v1/medication_reminders?elder_id=eq.${elderId}&select=status&scheduled_time=gte.${today}T00:00:00&scheduled_time=lt.${today}T23:59:59`, {
       headers: { authorization: `Bearer ${token}`, apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? token },
@@ -42,19 +46,24 @@ function useLiveMedStatus(): LiveMedStatus | null {
           setLive({ taken, total: rows.length, adherence: Math.round((taken / rows.length) * 100) });
         }
       })
-      .catch(() => {});
+      .catch(() => setError('Failed to load medication status'))
+      .finally(() => setLoading(false));
   }, [session]);
-  return live;
+  return { data: live, loading, error };
 }
 
-function useLiveScores(): LiveScores | null {
+function useLiveScores(): { data: LiveScores | null; loading: boolean; error: string | null } {
   const { session } = useAuth();
   const [scores, setScores] = useState<LiveScores | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
     const token = session?.access_token ?? process.env.EXPO_PUBLIC_FAMILY_ACCESS_TOKEN;
     const elderId = process.env.EXPO_PUBLIC_ELDER_ID;
     if (!url || !token || !elderId) return;
+    setLoading(true);
+    setError(null);
     const headers = { authorization: `Bearer ${token}`, apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? token };
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
@@ -72,9 +81,11 @@ function useLiveScores(): LiveScores | null {
       }
       const buurtCount = Array.isArray(buurt) ? buurt.length : 0;
       setScores({ schild: schildScore, wellbeing, buurt: buurtCount });
-    }).catch(() => {});
+    })
+      .catch(() => setError('Failed to load scores'))
+      .finally(() => setLoading(false));
   }, [session]);
-  return scores;
+  return { data: scores, loading, error };
 }
 
 export function OverviewTab({ locale, elderName, familyName, onSendAction }: OverviewTabProps) {
@@ -84,8 +95,10 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
   const [actionError, setActionError] = useState<string | null>(null);
   const sc = STATUS_CONFIG[DAILY_STATUS.status as keyof typeof STATUS_CONFIG];
 
-  const liveMeds = useLiveMedStatus();
-  const liveScores = useLiveScores();
+  const { data: liveMeds, loading: medsLoading, error: medsError } = useLiveMedStatus();
+  const { data: liveScores, loading: scoresLoading, error: scoresError } = useLiveScores();
+  const isLoading = medsLoading || scoresLoading;
+  const fetchError = medsError ?? scoresError;
   const medicsTaken = liveMeds?.taken ?? MEDICATIONS.reduce((a, m) => a + m.taken.filter(Boolean).length, 0);
   const medicsTotal = liveMeds?.total ?? MEDICATIONS.reduce((a, m) => a + m.taken.length, 0);
   const adherence = liveMeds?.adherence ?? (medicsTotal > 0 ? Math.round((medicsTaken / medicsTotal) * 100) : 0);
@@ -132,6 +145,17 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 16, gap: 14 }}>
+      {isLoading && (
+        <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.brand} />
+          <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', marginTop: 8 }}>{nl ? 'Laden...' : 'Loading...'}</Text>
+        </View>
+      )}
+      {fetchError && (
+        <View style={{ backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 16, padding: 12 }}>
+          <Text style={{ fontSize: 14, color: '#991B1B', fontWeight: '700' }}>{fetchError}</Text>
+        </View>
+      )}
       {/* Daily status pill */}
       <View style={{ borderRadius: 20, padding: 16, backgroundColor: sc.bg, borderWidth: 1, borderColor: sc.border }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>

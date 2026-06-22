@@ -6,7 +6,7 @@ export const colors = {
   paper: '#FFFFFF',
   ink: '#1A1F2E',
   graphite: '#3D4558',
-  pewter: '#6B7490',
+  pewter: '#525A70',
   mist: '#E8EBF2',
   sage: '#4A7B5A',
   sagePale: '#EBF4EE',
@@ -18,6 +18,7 @@ export const colors = {
   terracottaPale: '#FAF0E8',
   violet: '#5E4A8A',
   teal: '#2A7A6F',
+  brand: '#4A90D9',
 } as const;
 
 export const typeScale = {

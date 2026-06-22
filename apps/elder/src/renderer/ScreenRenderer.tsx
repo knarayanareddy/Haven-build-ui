@@ -168,7 +168,7 @@ function tile(label: string, hint: string, color: 'safe' | 'amber' | 'rose' | 'p
     <TouchableOpacity onPress={onPress} accessibilityRole="button" accessibilityLabel={label} style={{ minHeight: touch.minimum * 2, borderRadius: 22, backgroundColor: bg, padding: 18, gap: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 22, fontWeight: '900', color: colors.ink }}>{label}</Text>
-        <Text style={{ fontSize: 16, color: colors.pewter, fontWeight: '700' }}>{hint}</Text>
+        <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{hint}</Text>
       </View>
       {badge ? (
         <View style={{ minWidth: 28, height: 28, borderRadius: 14, backgroundColor: colors.slate, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 6 }}>
@@ -251,7 +251,7 @@ function renderToday(ctx: ScreenContext) {
             <Text style={{ fontSize: 28 }}>{task.icon}</Text>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 20, fontWeight: '800', color: colors.ink }}>{titleRendered}</Text>
-              <Text style={{ fontSize: 16, color: colors.pewter, fontWeight: '700' }}>{task.subtitle}</Text>
+              <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{task.subtitle}</Text>
             </View>
             <TouchableOpacity
               accessibilityRole="button"
@@ -296,7 +296,7 @@ function renderPills(ctx: ScreenContext) {
         <Text style={{ fontSize: 64, fontWeight: '900', color: colors.slate, letterSpacing: -2 }}>{current.time}</Text>
         <Text style={{ fontSize: 28, fontWeight: '900', color: colors.ink, marginTop: 4 }}>{current.name} {current.dose}</Text>
         <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700', textAlign: 'center' }}>{locale === 'nl-NL' ? current.descriptionNl : current.descriptionEn}</Text>
-        <Text style={{ fontSize: 14, color: badge.color, fontWeight: '900', marginTop: 8 }}>{badge.text.toUpperCase()}</Text>
+        <Text style={{ fontSize: 18, color: badge.color, fontWeight: '900', marginTop: 8 }}>{badge.text.toUpperCase()}</Text>
       </View>
       <View style={{ gap: 6 }}>
         {actionButton(t(locale, 'iHaveTaken'), 'safe', `TAKE:${current.id}`, ctx.onPrimaryAction, `${t(locale, 'iHaveTaken')} ${current.name}`)}
@@ -317,9 +317,9 @@ function renderPills(ctx: ScreenContext) {
               <Text style={{ fontSize: 24 }}>💊</Text>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{med.name} {med.dose}</Text>
-                <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700' }}>{pillTime(med.time, locale)}</Text>
+                <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{pillTime(med.time, locale)}</Text>
               </View>
-              <Text style={{ fontSize: 14, color: medBadge.color, fontWeight: '900' }}>{medBadge.text}</Text>
+              <Text style={{ fontSize: 18, color: medBadge.color, fontWeight: '900' }}>{medBadge.text}</Text>
             </View>
           );
         })}
@@ -339,7 +339,7 @@ function renderShield(ctx: ScreenContext) {
       <View style={{ borderRadius: 26, padding: 22, backgroundColor: bg, borderWidth: 1, borderColor: colors.mist }}>
         <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>{t(locale, 'shieldCentre')}</Text>
         <Text style={{ fontSize: 38, fontWeight: '900', color: colors.slate, marginTop: 8 }}>{top?.score ?? 0}</Text>
-        <Text style={{ fontSize: 16, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? 'samengestelde risicoscore' : 'composite risk score'}</Text>
+        <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? 'samengestelde risicoscore' : 'composite risk score'}</Text>
         {top ? <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700', marginTop: 8 }}>{top.explanation}</Text> : null}
       </View>
       {actionButton(t(locale, 'reviewAlerts'), tone === 'rose' ? 'danger' : 'primary', 'REVIEW_ALERTS', ctx.onPrimaryAction, t(locale, 'reviewAlerts'))}
@@ -350,13 +350,13 @@ function renderShield(ctx: ScreenContext) {
             <Text style={{ fontSize: 24 }}>📄</Text>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{doc.label}</Text>
-              <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700' }}>{t(locale, 'privacyNoBsn')}</Text>
+              <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{t(locale, 'privacyNoBsn')}</Text>
             </View>
-            <Text style={{ fontSize: 14, color: colors.sage, fontWeight: '900' }}>✓</Text>
+            <Text style={{ fontSize: 18, color: colors.sage, fontWeight: '900' }}>✓</Text>
           </View>
         ))}
       </View>
-      <Text style={{ fontSize: 14, color: colors.graphite, fontWeight: '700' }}>{t(locale, 'privacyNoBsn')}</Text>
+      <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700' }}>{t(locale, 'privacyNoBsn')}</Text>
     </View>
   );
 }
@@ -374,7 +374,7 @@ function renderFamily(ctx: ScreenContext) {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 22, fontWeight: '900', color: colors.ink }}>{f.name}</Text>
-              <Text style={{ fontSize: 16, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? 'verbonden' : 'connected'}</Text>
+              <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? 'verbonden' : 'connected'}</Text>
             </View>
           </View>
         ))}
@@ -390,7 +390,7 @@ function renderFamily(ctx: ScreenContext) {
             <Text style={{ fontSize: 24 }}>{msg.kind === 'video' ? '🎥' : msg.kind === 'voice' ? '🎙️' : msg.kind === 'heart' ? '💙' : '💬'}</Text>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{msg.from}</Text>
-              <Text style={{ fontSize: 16, color: colors.graphite, fontWeight: '700' }} numberOfLines={2}>{msg.body}</Text>
+              <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700' }} numberOfLines={2}>{msg.body}</Text>
             </View>
             {msg.unread ? <Text style={{ color: colors.rose, fontWeight: '900', fontSize: 24 }}>•</Text> : null}
           </View>
@@ -419,7 +419,7 @@ function renderBuurt(ctx: ScreenContext) {
       <Text accessibilityRole="header" style={{ fontSize: 30, fontWeight: '900', color: colors.ink }}>{t(locale, 'buurtTitle')}</Text>
       <View style={{ borderRadius: 22, padding: 18, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist }}>
         <Text style={{ fontSize: 22, fontWeight: '900', color: colors.ink }}>{buurt.nearbyCount} {t(locale, 'nearbyCount')}</Text>
-        <Text style={{ fontSize: 16, color: colors.pewter, fontWeight: '700' }}>{buurt.tags.join(' · ')}</Text>
+        <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{buurt.tags.join(' · ')}</Text>
       </View>
       <View style={{ gap: 6 }}>
         {actionButton('🚶 ' + t(locale, 'findWalkBuddy'), 'safe', 'BUURT_MATCH', ctx.onPrimaryAction, t(locale, 'findWalkBuddy'))}
@@ -432,12 +432,12 @@ function renderBuurt(ctx: ScreenContext) {
             <Text style={{ fontSize: 24 }}>📚</Text>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{event.title}</Text>
-              <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700' }}>{event.distanceLabel} · {event.date}</Text>
+              <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{event.distanceLabel} · {event.date}</Text>
             </View>
           </View>
         ))}
       </View>
-      <Text style={{ fontSize: 14, color: colors.graphite, fontWeight: '700' }}>{t(locale, 'privacyFuzzed')}</Text>
+      <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700' }}>{t(locale, 'privacyFuzzed')}</Text>
     </View>
   );
 }
@@ -450,9 +450,9 @@ function renderKompas(ctx: ScreenContext) {
       <Text accessibilityRole="header" style={{ fontSize: 30, fontWeight: '900', color: colors.ink }}>{t(locale, 'compass')}</Text>
       <View style={{ borderRadius: 22, height: 220, backgroundColor: colors.sagePale, borderWidth: 1, borderColor: colors.mist, padding: 18, justifyContent: 'center', alignItems: 'center' }}>
         <Text style={{ fontSize: 20, fontWeight: '900', color: colors.sage }}>{t(locale, 'safeZone')}</Text>
-        <Text style={{ fontSize: 16, color: colors.graphite, fontWeight: '700' }}>{profile.safeZoneLabel ?? 'Thuis'}</Text>
+        <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700' }}>{profile.safeZoneLabel ?? 'Thuis'}</Text>
       </View>
-      <Text style={{ fontSize: 14, color: colors.graphite, fontWeight: '700' }}>{t(locale, 'privacyFuzzed')}</Text>
+      <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700' }}>{t(locale, 'privacyFuzzed')}</Text>
       <View style={{ gap: 6 }}>
         {actionButton('📞 ' + (primary ? `${t(locale, 'callFamilyBtn')}: ${primary.name}` : t(locale, 'helpLine')), 'danger', 'CALL_FAMILY', ctx.onPrimaryAction, t(locale, 'callFamilyBtn'))}
         {actionButton('📷 ' + t(locale, 'whatIsThis'), 'secondary', 'SCAN_DOC', ctx.onPrimaryAction, t(locale, 'whatIsThis'))}
@@ -484,7 +484,7 @@ function renderStem(ctx: ScreenContext) {
         {actionButton('🎙️ ' + t(locale, 'askHaven'), 'primary', 'TALK', ctx.onPrimaryAction, t(locale, 'askHaven'))}
         {actionButton('🛟 ' + t(locale, 'crisis'), 'danger', 'CRISIS', ctx.onPrimaryAction, t(locale, 'crisis'))}
       </View>
-      <Text style={{ fontSize: 14, color: colors.graphite, fontWeight: '700' }}>{locale === 'nl-NL' ? detectCrisisPhrase('ik ben gevallen').distressDetected ? 'Noodzinnen worden herkend.' : 'Geen noodzinnen gedetecteerd.' : 'Crisis phrases are detected automatically.'}</Text>
+      <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700' }}>{locale === 'nl-NL' ? detectCrisisPhrase('ik ben gevallen').distressDetected ? 'Noodzinnen worden herkend.' : 'Geen noodzinnen gedetecteerd.' : 'Crisis phrases are detected automatically.'}</Text>
     </View>
   );
 }
@@ -507,13 +507,13 @@ function renderWacht(ctx: ScreenContext) {
             <Text style={{ fontSize: 24 }}>📝</Text>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{visit.carer}</Text>
-              <Text style={{ fontSize: 16, color: colors.graphite, fontWeight: '700' }}>{visit.date}</Text>
-              <Text style={{ fontSize: 16, color: colors.graphite, fontWeight: '700', marginTop: 4 }}>{visit.note}</Text>
+              <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700' }}>{visit.date}</Text>
+              <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700', marginTop: 4 }}>{visit.note}</Text>
             </View>
           </View>
         ))}
       </View>
-      {carer ? <Text style={{ fontSize: 14, color: colors.graphite, fontWeight: '700' }}>{carer.name} — {t(locale, 'carerPortal')}</Text> : null}
+      {carer ? <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700' }}>{carer.name} — {t(locale, 'carerPortal')}</Text> : null}
     </View>
   );
 }
@@ -539,9 +539,9 @@ function renderSettings(ctx: ScreenContext) {
       </View>
       <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>{t(locale, 'privacy')}</Text>
       <View style={{ borderRadius: 22, backgroundColor: colors.sagePale, borderWidth: 1, borderColor: colors.mist, padding: 16, gap: 6 }}>
-        <Text style={{ fontSize: 16, color: colors.ink, fontWeight: '700' }}>{t(locale, 'privacyFuzzed')}</Text>
-        <Text style={{ fontSize: 16, color: colors.ink, fontWeight: '700' }}>{t(locale, 'privacyNoBsn')}</Text>
-        <Text style={{ fontSize: 16, color: colors.ink, fontWeight: '700' }}>{locale === 'nl-NL' ? `Naam: ${profile.preferredName}` : `Name: ${profile.preferredName}`}</Text>
+        <Text style={{ fontSize: 18, color: colors.ink, fontWeight: '700' }}>{t(locale, 'privacyFuzzed')}</Text>
+        <Text style={{ fontSize: 18, color: colors.ink, fontWeight: '700' }}>{t(locale, 'privacyNoBsn')}</Text>
+        <Text style={{ fontSize: 18, color: colors.ink, fontWeight: '700' }}>{locale === 'nl-NL' ? `Naam: ${profile.preferredName}` : `Name: ${profile.preferredName}`}</Text>
       </View>
     </View>
   );
@@ -599,7 +599,7 @@ class ScreenErrorBoundary extends React.Component<
           <Text style={{ fontSize: 20, fontWeight: '900', color: baseColors.ink, textAlign: 'center' }}>
             {nl ? 'Er ging iets mis' : 'Something went wrong'}
           </Text>
-          <Text style={{ fontSize: 16, color: baseColors.pewter, textAlign: 'center' }}>
+          <Text style={{ fontSize: 18, color: baseColors.pewter, textAlign: 'center' }}>
             {nl ? 'Ga terug naar het startscherm.' : 'Please go back to the home screen.'}
           </Text>
           {this.props.onGoHome ? (
@@ -675,8 +675,8 @@ export function ScreenRenderer({ schema, context, onBack }: ScreenRendererProps)
           </TouchableOpacity>
         ) : null}
         <Text accessibilityRole="header" style={{ fontSize: Math.round(30 * fontMult), fontWeight: '900', color: colors.ink }}>{locale === 'nl-NL' ? titleNl : titleEn}</Text>
-        <Text style={{ fontSize: 16, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? `${titleEn} · ${schema.maxPrimaryItems} kaarten` : `${titleNl} · ${schema.maxPrimaryItems} cards`}</Text>
-        <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? 'Offline-cache' : 'Offline cache'}: {schema.offlineCacheTtlSeconds}s · {schema.emergencyButton ? (locale === 'nl-NL' ? 'Noodknop aanwezig' : 'Emergency access available') : (locale === 'nl-NL' ? 'Geen noodknop' : 'No emergency access')}</Text>
+        <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? `${titleEn} · ${schema.maxPrimaryItems} kaarten` : `${titleNl} · ${schema.maxPrimaryItems} cards`}</Text>
+        <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? 'Offline-cache' : 'Offline cache'}: {schema.offlineCacheTtlSeconds}s · {schema.emergencyButton ? (locale === 'nl-NL' ? 'Noodknop aanwezig' : 'Emergency access available') : (locale === 'nl-NL' ? 'Geen noodknop' : 'No emergency access')}</Text>
       </View>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 80, gap: 12 }}>
         <ScreenErrorBoundary locale={context.locale} onGoHome={() => context.onPrimaryAction('NAV_HOME')}>
@@ -689,8 +689,8 @@ export function ScreenRenderer({ schema, context, onBack }: ScreenRendererProps)
           {productionScreens
             .filter((screen) => screen.isPrimary && screen.screenId !== 'MORE')
             .map((screen) => (
-            <TouchableOpacity key={screen.screenId} accessibilityRole="button" accessibilityLabel={`Open ${locale === 'nl-NL' ? screen.titleNl : screen.titleEn}`} onPress={() => context.onPrimaryAction(`NAV_${screen.screenId}`)} style={{ minHeight: 48, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 24, backgroundColor: schema.screenId === screen.screenId ? colors.slate : 'transparent' }}>
-              <Text style={{ color: schema.screenId === screen.screenId ? 'white' : colors.slate, fontSize: 15, fontWeight: '900' }}>{locale === 'nl-NL' ? screen.titleNl : screen.titleEn}</Text>
+            <TouchableOpacity key={screen.screenId} accessibilityRole="button" accessibilityLabel={`Open ${locale === 'nl-NL' ? screen.titleNl : screen.titleEn}`} onPress={() => context.onPrimaryAction(`NAV_${screen.screenId}`)} style={{ minHeight: 72, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 24, backgroundColor: schema.screenId === screen.screenId ? colors.slate : 'transparent', justifyContent: 'center' }}>
+              <Text style={{ color: schema.screenId === screen.screenId ? 'white' : colors.slate, fontSize: 18, fontWeight: '900' }}>{locale === 'nl-NL' ? screen.titleNl : screen.titleEn}</Text>
             </TouchableOpacity>
           ))}
           <TouchableOpacity
@@ -699,13 +699,14 @@ export function ScreenRenderer({ schema, context, onBack }: ScreenRendererProps)
             accessibilityLabel={locale === 'nl-NL' ? 'Meer' : 'More'}
             onPress={() => context.onPrimaryAction('NAV_MORE')}
             style={{
-              minHeight: 48, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 24,
+              minHeight: 72, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 24,
               backgroundColor: schema.screenId === 'MORE' ? colors.slate : 'transparent',
               flexDirection: 'row', alignItems: 'center', gap: 6,
+              justifyContent: 'center',
             }}
           >
-            <Text style={{ fontSize: 16 }}>⋯</Text>
-            <Text style={{ color: schema.screenId === 'MORE' ? 'white' : colors.slate, fontSize: 15, fontWeight: '900' }}>
+            <Text style={{ fontSize: 18 }}>⋯</Text>
+            <Text style={{ color: schema.screenId === 'MORE' ? 'white' : colors.slate, fontSize: 18, fontWeight: '900' }}>
               {locale === 'nl-NL' ? 'Meer' : 'More'}
             </Text>
           </TouchableOpacity>
@@ -729,8 +730,9 @@ export function ScreenRenderer({ schema, context, onBack }: ScreenRendererProps)
         voiceFallback={locale === 'nl-NL' ? schema.voiceFallbackNl : schema.voiceFallbackEn}
       />
       {schema.emergencyButton ? (
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel={t(locale, 'emergency')} onPress={() => context.onPrimaryAction('EMERGENCY')} style={{ position: 'absolute', right: 18, bottom: 90, minWidth: 72, minHeight: 72, borderRadius: 36, backgroundColor: colors.rose, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }}>
-          <Text style={{ color: 'white', fontSize: 28, fontWeight: '900' }}>🆘</Text>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel={t(locale, 'emergency')} onPress={() => context.onPrimaryAction('EMERGENCY')} style={{ position: 'absolute', right: 18, bottom: 90, minWidth: touch.emergency, minHeight: touch.emergency, borderRadius: touch.emergency / 2, backgroundColor: colors.rose, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }}>
+          <Text style={{ color: 'white', fontSize: 36, fontWeight: '900' }}>🆘</Text>
+          <Text style={{ color: 'white', fontSize: 18, fontWeight: '900', marginTop: 2 }}>SOS</Text>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -746,7 +748,7 @@ function renderOnboarding(ctx: ScreenContext) {
     <View style={{ gap: 14 }}>
       <View style={{ borderRadius: 26, padding: 22, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist }}>
         <Text style={{ fontSize: 22, fontWeight: '900', color: colors.sage }}>{locale === 'nl-NL' ? 'Welkom bij HAVEN' : 'Welcome to HAVEN'}, {profile.preferredName}</Text>
-        <Text style={{ fontSize: 16, color: colors.pewter, fontWeight: '700', marginTop: 6 }}>{locale === 'nl-NL' ? `Stap ${completedCount + 1} van ${totalCount}` : `Step ${completedCount + 1} of ${totalCount}`}</Text>
+        <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700', marginTop: 6 }}>{locale === 'nl-NL' ? `Stap ${completedCount + 1} van ${totalCount}` : `Step ${completedCount + 1} of ${totalCount}`}</Text>
       </View>
       {pack ? (
         <View style={{ borderRadius: 22, padding: 24, backgroundColor: colors.sagePale, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
@@ -765,7 +767,7 @@ function renderOnboarding(ctx: ScreenContext) {
           {actionButton(locale === 'nl-NL' ? 'Naar start' : 'Go to home', 'primary', 'NAV_HOME', ctx.onPrimaryAction, locale === 'nl-NL' ? 'Naar start' : 'Go to home')}
         </View>
       )}
-      <Text style={{ fontSize: 14, color: colors.graphite, fontWeight: '700' }}>{locale === 'nl-NL' ? 'U kunt later altijd terugkomen in Instellingen om dit te veranderen.' : 'You can always change this later in Settings.'}</Text>
+      <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700' }}>{locale === 'nl-NL' ? 'U kunt later altijd terugkomen in Instellingen om dit te veranderen.' : 'You can always change this later in Settings.'}</Text>
     </View>
   );
 }
@@ -781,7 +783,7 @@ function renderIncomingCall(ctx: ScreenContext) {
         </View>
         <Text accessibilityRole="header" style={{ fontSize: 36, fontWeight: '900', color: colors.ink, marginTop: 12 }}>{call?.from_name ?? (locale === 'nl-NL' ? 'lemand' : 'someone')}</Text>
         <Text style={{ fontSize: 22, color: colors.pewter, fontWeight: '700', marginTop: 4 }}>{locale === 'nl-NL' ? 'belt u met video' : 'is calling with video'}</Text>
-        {call?.is_test ? <Text style={{ fontSize: 14, color: colors.graphite, fontWeight: '700', marginTop: 12 }}>{locale === 'nl-NL' ? '(testoproep)' : '(test call)'}</Text> : null}
+        {call?.is_test ? <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700', marginTop: 12 }}>{locale === 'nl-NL' ? '(testoproep)' : '(test call)'}</Text> : null}
       </View>
       <View style={{ flexDirection: 'row', gap: 18, justifyContent: 'space-around', marginBottom: 32 }}>
         <View style={{ alignItems: 'center', gap: 8 }}>
@@ -801,7 +803,7 @@ function renderMore(ctx: ScreenContext) {
   return (
     <View style={{ gap: 14 }}>
       <Text accessibilityRole="header" style={{ fontSize: 30, fontWeight: '900', color: colors.ink }}>{locale === 'nl-NL' ? 'Meer' : 'More'}</Text>
-      <Text style={{ fontSize: 16, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? 'Aanvullende functies van HAVEN' : 'Additional HAVEN features'}</Text>
+      <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? 'Aanvullende functies van HAVEN' : 'Additional HAVEN features'}</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {secondary.map((screen) => (
           <TouchableOpacity
@@ -812,7 +814,7 @@ function renderMore(ctx: ScreenContext) {
             style={{ minHeight: 72, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 20, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, flex: 1, minWidth: '44%' }}
           >
             <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>{locale === 'nl-NL' ? screen.titleNl : screen.titleEn}</Text>
-            <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', marginTop: 4 }} numberOfLines={2}>{locale === 'nl-NL' ? screen.helpTextNl : screen.helpTextEn}</Text>
+            <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700', marginTop: 4 }} numberOfLines={2}>{locale === 'nl-NL' ? screen.helpTextNl : screen.helpTextEn}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -885,7 +887,7 @@ function renderFallResponseCard(ctx: ScreenContext) {
       <Text style={{ fontSize: 26, fontWeight: '900', color: colors.ink }}>
         {locale === 'nl-NL' ? 'Gaat het goed met u?' : 'Are you ok?'}
       </Text>
-      <Text style={{ fontSize: 16, color: colors.graphite, fontWeight: '700' }}>
+      <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700' }}>
         {locale === 'nl-NL' ? 'We hebben een val gedetecteerd. Is alles in orde?' : 'We detected a possible fall. Are you alright?'}
       </Text>
       <View style={{ gap: 8, marginTop: 8 }}>

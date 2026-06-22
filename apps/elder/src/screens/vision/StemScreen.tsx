@@ -15,6 +15,7 @@ import { startVoiceRecording } from '../../services/voiceRecorder';
 import { translateElderError } from '../../services/errorMapper';
 import { useVapiCall } from '@haven/vapi/src/useVapiCall';
 import { VapiVoiceService } from '@haven/vapi/src/vapiClient';
+import { VapiError } from '@haven/vapi/src/VapiError';
 import type { ActiveVoiceRecording } from '../../services/voiceRecorder';
 import type { ScreenContext } from '../../renderer/ScreenRenderer';
 
@@ -149,8 +150,7 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
         try {
           await vapi.start();
         } catch (error) {
-          const msg = String((error as Error).message ?? error);
-          if (msg === 'VAPI_SDK_NOT_AVAILABLE' || msg === 'VAPI_NOT_CONFIGURED') {
+          if (error instanceof VapiError) {
             Alert.alert('HAVEN', nl ? 'Spraakdienst niet beschikbaar. Probeer het opnieuw.' : 'Voice service not available. Please try again.');
           } else {
             Alert.alert('HAVEN', translateElderError(error));
@@ -212,7 +212,7 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
       {vapiAvailable && (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981' }} />
-          <Text style={{ fontSize: 12, fontWeight: '700', color: '#10B981' }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: '#10B981' }}>
             {nl ? 'Realtime spraak actief' : 'Real-time voice active'}
           </Text>
         </View>
@@ -243,7 +243,7 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
         {/* Live transcript during VAPI call */}
         {vapiAvailable && effectiveListening && vapi.state.transcript && (
           <View style={{ marginTop: 8, paddingHorizontal: 20, paddingVertical: 8, borderRadius: 12, backgroundColor: colors.mist }}>
-            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.graphite, fontStyle: 'italic', textAlign: 'center' }}>
+            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.graphite, fontStyle: 'italic', textAlign: 'center' }}>
               "{vapi.state.transcript}"
             </Text>
           </View>
@@ -264,7 +264,7 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
                 disabled={effectiveSending || effectiveListening}
                 style={{ paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, opacity: effectiveSending ? 0.5 : 1 }}
               >
-                <Text style={{ fontSize: 14, fontWeight: '700', color: colors.slate }}>
+                <Text style={{ fontSize: 18, fontWeight: '700', color: colors.slate }}>
                   {nl ? p.text : p.textEn}
                 </Text>
               </TouchableOpacity>
@@ -292,13 +292,13 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
         <View key={mem.id} style={{ borderRadius: 18, padding: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
             <Text style={{ fontSize: 16 }}>🗣️</Text>
-            <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink, flex: 1 }}>{mem.query}</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: colors.ink, flex: 1 }}>{mem.query}</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start', marginLeft: 24 }}>
             <Text style={{ fontSize: 16 }}>⌂</Text>
-            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.graphite, flex: 1 }}>{mem.response}</Text>
+            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.graphite, flex: 1 }}>{mem.response}</Text>
           </View>
-          <Text style={{ fontSize: 11, color: colors.pewter, textAlign: 'right' }}>
+          <Text style={{ fontSize: 18, color: colors.pewter, textAlign: 'right' }}>
             {mem.timestamp instanceof Date ? mem.timestamp.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : ''}
           </Text>
         </View>

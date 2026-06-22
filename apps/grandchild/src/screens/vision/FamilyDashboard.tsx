@@ -162,13 +162,15 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
             onPress={() => setActiveTab(tab.id)}
             style={{
               flex: 1, paddingVertical: 10, alignItems: 'center',
+              minHeight: 72,
+              justifyContent: 'center',
               borderTopWidth: 2,
               borderTopColor: activeTab === tab.id ? '#3B82F6' : 'transparent',
             }}
           >
             <Text style={{ fontSize: 20 }}>{tab.icon}</Text>
             <Text style={{
-              fontSize: 10, fontWeight: '700',
+              fontSize: 14, fontWeight: '700',
               color: activeTab === tab.id ? '#3B82F6' : '#6B7280',
               marginTop: 2,
             }}>{tab.label}</Text>

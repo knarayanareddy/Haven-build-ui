@@ -1,7 +1,7 @@
 // ─── Vision Family Dashboard: Privacy Tab ───
 // Toggles persist to Supabase consent_records table when authenticated
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge } from '@haven/ui/src/visionComponents';
 import { useAuth } from '../../auth/AuthProvider';
@@ -28,6 +28,8 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
     weeklyDigest: (CONSENT_SETTINGS as Record<string, boolean>).weeklyDigest ?? true,
   });
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(!!session);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!session) return;
@@ -35,6 +37,8 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
     const elderId = process.env.EXPO_PUBLIC_ELDER_ID ?? process.env.EXPO_PUBLIC_FAMILY_MEMBER_ID;
     if (!url || !elderId) return;
 
+    setLoading(true);
+    setFetchError(null);
     fetch(`${url}/rest/v1/consent_records?elder_id=eq.${elderId}&select=consent_type,granted&order=created_at.desc`, {
       headers: {
         authorization: `Bearer ${session.access_token}`,
@@ -51,7 +55,8 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
         }
         setConsent((prev) => ({ ...prev, ...state }));
       })
-      .catch(() => {});
+      .catch(() => setFetchError(nl ? 'Toestemmingen laden mislukt.' : 'Failed to load consent settings.'))
+      .finally(() => setLoading(false));
   }, [session]);
 
   async function toggleConsent(key: keyof ConsentState, value: boolean) {
@@ -126,6 +131,17 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 16, gap: 12 }}>
+      {loading && (
+        <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.brand} />
+          <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', marginTop: 8 }}>{nl ? 'Laden...' : 'Loading...'}</Text>
+        </View>
+      )}
+      {fetchError && (
+        <View style={{ backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 16, padding: 12 }}>
+          <Text style={{ fontSize: 14, color: '#991B1B', fontWeight: '700' }}>{fetchError}</Text>
+        </View>
+      )}
       {/* Consent notice */}
       <View style={{ backgroundColor: '#DBEAFE', borderWidth: 1, borderColor: '#93C5FD', borderRadius: 16, padding: 12, gap: 4 }}>
         <Text style={{ fontSize: 13, fontWeight: '800', color: '#1E40AF' }}>🔒 {nl ? 'Toestemming-beperkte toegang' : 'Consent-scoped access'}</Text>

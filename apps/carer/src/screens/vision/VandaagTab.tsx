@@ -1,7 +1,7 @@
 // ─── Vision Carer: Vandaag (Today) Tab ───
 // Fetches live medication schedule + task progress from Supabase when authenticated
 import React, { useEffect, useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge, ProgressBar } from '@haven/ui/src/visionComponents';
 import { useAuth } from '../../auth/AuthProvider';
@@ -37,6 +37,8 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
   const [liveMeds, setLiveMeds] = useState<LiveMedication[] | null>(null);
   const [liveTasks, setLiveTasks] = useState<LiveTask[] | null>(null);
   const [visitCheckedIn, setVisitCheckedIn] = useState(false);
+  const [loading, setLoading] = useState(!!session);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!session) return;
@@ -48,43 +50,42 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
       apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? session.access_token,
     };
 
-    // Fetch medications for elder
-    fetch(`${url}/rest/v1/medications?elder_id=eq.${elderId}&is_active=eq.true&select=id,name_nl,dose_description_nl,schedule_times`, { headers })
-      .then((r) => r.json())
-      .then((rows) => {
-        if (Array.isArray(rows) && rows.length > 0) {
-          setLiveMeds(rows.map((r: Record<string, unknown>, i: number) => ({
-            id: (r.id as string) ?? String(i),
-            name: (r.name_nl as string) ?? 'Medication',
-            dose: (r.dose_description_nl as string) ?? '',
-            times: Array.isArray(r.schedule_times) ? (r.schedule_times as string[]).map((t) => t.slice(0, 5)) : ['08:00'],
-            taken: Array.isArray(r.schedule_times) ? (r.schedule_times as string[]).map(() => false) : [false],
-            color: ['#3B82F6', '#EF4444', '#10B981', '#F59E0B'][i % 4],
-          })));
-        }
-      })
-      .catch(() => {});
-
-    // Fetch today's care tasks
+    setLoading(true);
+    setFetchError(null);
     const today = new Date().toISOString().slice(0, 10);
-    fetch(`${url}/rest/v1/tasks?elder_id=eq.${elderId}&due_date=eq.${today}&select=id,title_nl,completed`, { headers })
-      .then((r) => r.json())
-      .then((rows) => {
-        if (Array.isArray(rows) && rows.length > 0) {
-          setLiveTasks(rows.map((r: Record<string, unknown>, i: number) => ({
-            id: (r.id as string) ?? String(i),
-            label: (r.title_nl as string) ?? 'Task',
-            done: (r.completed as boolean) ?? false,
-          })));
-        }
-      })
-      .catch(() => {});
 
-    // Check if we have an active visit today
-    fetch(`${url}/rest/v1/carer_visit_logs?elder_id=eq.${elderId}&visit_date=eq.${today}&check_out_time=is.null&limit=1`, { headers })
-      .then((r) => r.json())
-      .then((rows) => { if (Array.isArray(rows) && rows.length > 0) setVisitCheckedIn(true); })
-      .catch(() => {});
+    Promise.all([
+      fetch(`${url}/rest/v1/medications?elder_id=eq.${elderId}&is_active=eq.true&select=id,name_nl,dose_description_nl,schedule_times`, { headers })
+        .then((r) => r.json())
+        .then((rows) => {
+          if (Array.isArray(rows) && rows.length > 0) {
+            setLiveMeds(rows.map((r: Record<string, unknown>, i: number) => ({
+              id: (r.id as string) ?? String(i),
+              name: (r.name_nl as string) ?? 'Medication',
+              dose: (r.dose_description_nl as string) ?? '',
+              times: Array.isArray(r.schedule_times) ? (r.schedule_times as string[]).map((t) => t.slice(0, 5)) : ['08:00'],
+              taken: Array.isArray(r.schedule_times) ? (r.schedule_times as string[]).map(() => false) : [false],
+              color: ['#3B82F6', '#EF4444', '#10B981', '#F59E0B'][i % 4],
+            })));
+          }
+        }),
+      fetch(`${url}/rest/v1/tasks?elder_id=eq.${elderId}&due_date=eq.${today}&select=id,title_nl,completed`, { headers })
+        .then((r) => r.json())
+        .then((rows) => {
+          if (Array.isArray(rows) && rows.length > 0) {
+            setLiveTasks(rows.map((r: Record<string, unknown>, i: number) => ({
+              id: (r.id as string) ?? String(i),
+              label: (r.title_nl as string) ?? 'Task',
+              done: (r.completed as boolean) ?? false,
+            })));
+          }
+        }),
+      fetch(`${url}/rest/v1/carer_visit_logs?elder_id=eq.${elderId}&visit_date=eq.${today}&check_out_time=is.null&limit=1`, { headers })
+        .then((r) => r.json())
+        .then((rows) => { if (Array.isArray(rows) && rows.length > 0) setVisitCheckedIn(true); }),
+    ])
+      .catch(() => setFetchError(nl ? 'Gegevens laden mislukt.' : 'Failed to load data.'))
+      .finally(() => setLoading(false));
   }, [session]);
 
   const medications = liveMeds ?? MEDICATIONS;
@@ -101,6 +102,17 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 16, gap: 12 }}>
+      {loading && (
+        <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.brand} />
+          <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', marginTop: 8 }}>{nl ? 'Laden...' : 'Loading...'}</Text>
+        </View>
+      )}
+      {fetchError && (
+        <View style={{ backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 16, padding: 12 }}>
+          <Text style={{ fontSize: 14, color: '#991B1B', fontWeight: '700' }}>{fetchError}</Text>
+        </View>
+      )}
       {/* Online/offline banner */}
       {!isOnline && (
         <View style={{ backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FDE68A', borderRadius: 16, padding: 12 }}>
@@ -136,7 +148,7 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
                 {item.icon}
               </Text>
             </View>
-            <Text style={{ fontSize: 14, color: colors.ink, fontWeight: '600' }}>{item.label}</Text>
+            <Text style={{ fontSize: 14, color: colors.ink, fontWeight: '600', minHeight: 20 }}>{item.label}</Text>
           </View>
         ))}
       </View>
@@ -179,7 +191,7 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
       <View style={{ borderRadius: 20, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
         <Text style={{ fontSize: 15, fontWeight: '800', color: colors.graphite }}>🩺 {nl ? 'Medicijnschema vandaag' : 'Medication schedule today'}</Text>
         {medications.map((med) => (
-          <View key={med.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.mist }}>
+          <View key={med.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.mist, minHeight: 48 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: med.color }} />
               <Text style={{ fontSize: 13, color: colors.ink, fontWeight: '600' }}>{med.name} {med.dose}</Text>
@@ -187,8 +199,9 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
             <View style={{ flexDirection: 'row', gap: 4 }}>
               {med.times.map((time, i) => (
                 <View key={i} style={{
-                  paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
+                  paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10,
                   backgroundColor: med.taken[i] ? '#D1FAE5' : '#FEF3C7',
+                  minHeight: 36,
                 }}>
                   <Text style={{ fontSize: 11, fontWeight: '700', color: med.taken[i] ? '#065F46' : '#92400E' }}>
                     {time} {med.taken[i] ? '✓' : '○'}

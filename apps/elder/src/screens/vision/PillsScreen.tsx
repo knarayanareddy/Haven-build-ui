@@ -149,6 +149,15 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
 
   const [confirmMed, setConfirmMed] = useState<string | null>(null);
   const confirmingMed = meds.find((m) => m.id === confirmMed);
+  const [undoMed, setUndoMed] = useState<{ id: string; name: string } | null>(null);
+  const undoTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup undo timer on unmount to prevent memory leak / setState on unmounted component
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    };
+  }, []);
 
   // Confirm medication via Supabase (with offline fallback)
   async function confirmMedication(medId: string) {
@@ -160,8 +169,14 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
         enqueueOfflineAction('CONFIRM_MEDICATION', { medication_id: medId, screen_id: 'PILLS' });
       }
       // Update local state to show taken
+      const med = meds.find((m) => m.id === medId);
       if (liveMeds) {
         setLiveMeds((prev) => prev?.map((m) => m.id === medId ? { ...m, status: 'taken' } : m) ?? null);
+      }
+      if (med) {
+        setUndoMed({ id: medId, name: med.name });
+        if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+        undoTimerRef.current = setTimeout(() => setUndoMed(null), 5000);
       }
     } catch (error) {
       if (classifyNetworkError(error) === 'offline') {
@@ -202,17 +217,17 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
               <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: isTaken ? colors.sage : colors.amber }} />
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>{med.name}</Text>
-                <Text style={{ fontSize: 15, color: colors.pewter, fontWeight: '700' }}>{med.dose} — {locale === 'nl-NL' ? med.descriptionNl : med.descriptionEn}</Text>
+                <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{med.dose} — {locale === 'nl-NL' ? med.descriptionNl : med.descriptionEn}</Text>
               </View>
-              <Text style={{ fontSize: 14, fontWeight: '900', color: isTaken ? colors.sage : colors.slate }}>
+              <Text style={{ fontSize: 18, fontWeight: '900', color: isTaken ? colors.sage : colors.slate }}>
                 {isTaken ? '✓' : med.time}
               </Text>
             </View>
 
             {isLowStock && !isTaken && (
               <View style={{ backgroundColor: colors.amberPale, borderRadius: 10, padding: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ fontSize: 14 }}>⚠️</Text>
-                <Text style={{ fontSize: 13, fontWeight: '800', color: colors.amber }}>
+                <Text style={{ fontSize: 18 }}>⚠️</Text>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: colors.amber }}>
                   {locale === 'nl-NL' ? `Nog ${med.stock} over — bestel bij` : `${med.stock} left — reorder soon`}
                 </Text>
               </View>
@@ -278,7 +293,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
               {locale === 'nl-NL' ? 'Nieuw medicijn' : 'New medication'}
             </Text>
             <View style={{ gap: 4 }}>
-              <Text style={{ fontSize: 14, fontWeight: '800', color: colors.graphite }}>
+              <Text style={{ fontSize: 18, fontWeight: '800', color: colors.graphite }}>
                 {locale === 'nl-NL' ? 'Naam *' : 'Name *'}
               </Text>
               <TextInput
@@ -290,7 +305,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
               />
             </View>
             <View style={{ gap: 4 }}>
-              <Text style={{ fontSize: 14, fontWeight: '800', color: colors.graphite }}>
+              <Text style={{ fontSize: 18, fontWeight: '800', color: colors.graphite }}>
                 {locale === 'nl-NL' ? 'Dosering' : 'Dosage'}
               </Text>
               <TextInput
@@ -302,7 +317,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
               />
             </View>
             <View style={{ gap: 4 }}>
-              <Text style={{ fontSize: 14, fontWeight: '800', color: colors.graphite }}>
+              <Text style={{ fontSize: 18, fontWeight: '800', color: colors.graphite }}>
                 {locale === 'nl-NL' ? 'Tijd' : 'Time'}
               </Text>
               <TextInput
@@ -333,6 +348,31 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
           </View>
         </View>
       </Modal>
+
+      {/* Undo toast */}
+      {undoMed && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: 18, padding: 16, backgroundColor: colors.ink, gap: 12 }}>
+          <Text style={{ fontSize: 18, color: '#fff', fontWeight: '700', flex: 1 }}>
+            {locale === 'nl-NL' ? `${undoMed.name} als ingenomen gemarkeerd` : `${undoMed.name} marked as taken`}
+          </Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={locale === 'nl-NL' ? 'Ongedaan maken' : 'Undo'}
+            onPress={() => {
+              if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+              if (liveMeds) {
+                setLiveMeds((prev) => prev?.map((m) => m.id === undoMed.id ? { ...m, status: 'planned' } : m) ?? null);
+              }
+              setUndoMed(null);
+            }}
+            style={{ backgroundColor: colors.amber, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 }}
+          >
+            <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900' }}>
+              {locale === 'nl-NL' ? 'Ongedaan maken' : 'Undo'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Confirm modal */}
       <Modal visible={!!confirmMed} transparent animationType="fade">

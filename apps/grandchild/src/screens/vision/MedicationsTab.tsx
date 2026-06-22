@@ -1,7 +1,7 @@
 // ─── Vision Family Dashboard: Medications Tab ───
 // Uses auth session for live Supabase fetch + CRUD, mock data as fallback
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge, ProgressBar } from '@haven/ui/src/visionComponents';
 import { MEDICATIONS } from '@haven/ui/src/mockData';
@@ -13,9 +13,11 @@ interface MedicationsTabProps {
 
 type LiveMed = { id: string; name: string; dose: string; times: string[]; taken: boolean[]; color: string; purpose: string; prescriber: string; nextRefill: string; stock: number };
 
-function useLiveMedications(): { meds: LiveMed[] | null; refetch: () => void } {
+function useLiveMedications(): { meds: LiveMed[] | null; loading: boolean; error: string | null; refetch: () => void } {
   const { session } = useAuth();
   const [live, setLive] = useState<LiveMed[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [trigger, setTrigger] = useState(0);
 
   useEffect(() => {
@@ -23,6 +25,8 @@ function useLiveMedications(): { meds: LiveMed[] | null; refetch: () => void } {
     const token = session?.access_token ?? process.env.EXPO_PUBLIC_FAMILY_ACCESS_TOKEN;
     const elderId = process.env.EXPO_PUBLIC_ELDER_ID;
     if (!url || !token || !elderId) return;
+    setLoading(true);
+    setError(null);
     fetch(`${url}/rest/v1/medications?elder_id=eq.${elderId}&is_active=eq.true&select=id,name_nl,name_en,dose_description_nl,schedule_times,current_stock&order=name_nl.asc`, {
       headers: { authorization: `Bearer ${token}`, apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? token },
     })
@@ -40,16 +44,17 @@ function useLiveMedications(): { meds: LiveMed[] | null; refetch: () => void } {
           };
         }));
       })
-      .catch(() => {});
+      .catch(() => setError('Failed to load medications'))
+      .finally(() => setLoading(false));
   }, [session, trigger]);
 
-  return { meds: live, refetch: () => setTrigger((t) => t + 1) };
+  return { meds: live, loading, error, refetch: () => setTrigger((t) => t + 1) };
 }
 
 export function MedicationsTab({ locale }: MedicationsTabProps) {
   const nl = locale.startsWith('nl');
   const { session } = useAuth();
-  const { meds: liveMeds, refetch } = useLiveMedications();
+  const { meds: liveMeds, loading: medsLoading, error: medsError, refetch } = useLiveMedications();
   const meds = liveMeds ?? MEDICATIONS;
   const medicsTaken = meds.reduce((a, m) => a + m.taken.filter(Boolean).length, 0);
   const medicsTotal = meds.reduce((a, m) => a + m.taken.length, 0);
@@ -112,6 +117,17 @@ export function MedicationsTab({ locale }: MedicationsTabProps) {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 16, gap: 12 }}>
+      {medsLoading && (
+        <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.brand} />
+          <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', marginTop: 8 }}>{nl ? 'Laden...' : 'Loading...'}</Text>
+        </View>
+      )}
+      {medsError && (
+        <View style={{ backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 16, padding: 12 }}>
+          <Text style={{ fontSize: 14, color: '#991B1B', fontWeight: '700' }}>{medsError}</Text>
+        </View>
+      )}
       {/* Consent notice */}
       <View style={{ backgroundColor: '#DBEAFE', borderWidth: 1, borderColor: '#93C5FD', borderRadius: 16, padding: 12 }}>
         <Text style={{ fontSize: 12, color: '#1E40AF', fontWeight: '700' }}>

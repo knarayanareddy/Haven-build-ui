@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { VapiVoiceService, type VapiCallState, type VapiConfig } from './vapiClient';
+import { VapiError } from './VapiError';
 
 export interface UseVapiCallReturn {
   state: VapiCallState;
@@ -43,7 +44,7 @@ export function useVapiCall(config: Omit<VapiConfig, 'apiKey' | 'assistantId'> |
       : (process.env.EXPO_PUBLIC_VAPI_ASSISTANT_ID_EN ?? process.env.EXPO_PUBLIC_VAPI_ASSISTANT_ID);
 
     if (!apiKey || !assistantId) {
-      throw new Error('VAPI_NOT_CONFIGURED');
+      throw new VapiError('VAPI_NOT_CONFIGURED');
     }
 
     const service = new VapiVoiceService({

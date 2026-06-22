@@ -40,7 +40,7 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
           </TouchableOpacity>
         </View>
         <View style={{ borderRadius: 16, padding: 12, backgroundColor: colors.sagePale }}>
-          <Text style={{ fontSize: 13, color: colors.sage, fontWeight: '700' }}>
+          <Text style={{ fontSize: 18, color: colors.sage, fontWeight: '700' }}>
             {locale === 'nl-NL' ? 'Uw exacte adres wordt nooit gedeeld — alleen uw PC4 postcode.' : 'Your exact address is never shared — only your PC4 postal code.'}
           </Text>
         </View>
@@ -52,8 +52,8 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
     <View style={{ gap: 14 }}>
       {/* Privacy banner */}
       <View style={{ borderRadius: 14, padding: 10, backgroundColor: colors.sagePale, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <Text style={{ fontSize: 14 }}>🔒</Text>
-        <Text style={{ fontSize: 13, color: colors.sage, fontWeight: '700' }}>
+        <Text style={{ fontSize: 18 }}>🔒</Text>
+        <Text style={{ fontSize: 18, color: colors.sage, fontWeight: '700' }}>
           {locale === 'nl-NL' ? 'Locatie vervaagd — alleen PC4' : 'Location fuzzed — PC4 only'}
         </Text>
       </View>
@@ -74,17 +74,17 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
                   </View>
                   <View>
                     <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{match.alias}</Text>
-                    <Text style={{ fontSize: 13, color: colors.pewter, fontWeight: '700' }}>{match.distance} · {match.lastActive}</Text>
+                    <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{match.distance} · {match.lastActive}</Text>
                   </View>
                 </View>
                 <View style={{ backgroundColor: colors.sagePale, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '900', color: colors.sage }}>{match.matchScore}%</Text>
+                  <Text style={{ fontSize: 18, fontWeight: '900', color: colors.sage }}>{match.matchScore}%</Text>
                 </View>
               </View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                 {match.interests.map((i) => (
                   <View key={i} style={{ backgroundColor: colors.mist, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: colors.ink }}>{i}</Text>
+                    <Text style={{ fontSize: 18, fontWeight: '700', color: colors.ink }}>{i}</Text>
                   </View>
                 ))}
               </View>
@@ -111,11 +111,11 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
                 <Text style={{ fontSize: 24 }}>{event.emoji}</Text>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{event.title}</Text>
-                  <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700' }}>{event.date} · {event.location}</Text>
+                  <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{event.date} · {event.location}</Text>
                 </View>
               </View>
-              <Text style={{ fontSize: 14, color: colors.graphite, fontWeight: '600' }}>{event.description}</Text>
-              <Text style={{ fontSize: 13, color: colors.sage, fontWeight: '800' }}>{event.attending} {locale === 'nl-NL' ? 'deelnemers' : 'attending'}</Text>
+              <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '600' }}>{event.description}</Text>
+              <Text style={{ fontSize: 18, color: colors.sage, fontWeight: '800' }}>{event.attending} {locale === 'nl-NL' ? 'deelnemers' : 'attending'}</Text>
             </View>
           ))}
         </View>
@@ -133,7 +133,7 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
                 onPress={() => ctx.onPrimaryAction(`BUURT_INTEREST:${interest}`)}
                 style={{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist }}
               >
-                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.ink }}>{interest}</Text>
+                <Text style={{ fontSize: 18, fontWeight: '700', color: colors.ink }}>{interest}</Text>
               </TouchableOpacity>
             ))}
           </View>

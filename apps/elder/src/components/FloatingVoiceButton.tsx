@@ -8,6 +8,7 @@ import { useHavenClient } from '../hooks/useHavenClient';
 import { startVoiceRecording, type ActiveVoiceRecording } from '../services/voiceRecorder';
 import { useVapiCall } from '@haven/vapi/src/useVapiCall';
 import { VapiVoiceService } from '@haven/vapi/src/vapiClient';
+import { VapiError } from '@haven/vapi/src/VapiError';
 
 export interface FloatingVoiceButtonProps {
   locale: Locale;
@@ -24,6 +25,13 @@ function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVo
   const [isListening, setListening] = useState(false);
   const [macosVoiceState, setMacosState] = useState<'idle' | 'listening' | 'processing'>('idle');
   const [isProcessing, setProcessing] = useState(false);
+  const [showPrompts, setShowPrompts] = useState(false);
+  const nl = locale === 'nl-NL';
+  const textPrompts = [
+    nl ? 'Hoe laat moet ik mijn medicijnen nemen?' : 'When should I take my medications?',
+    nl ? 'Bel mijn dochter' : 'Call my daughter',
+    nl ? 'Wat heb ik gisteren gedaan?' : 'What did I do yesterday?',
+  ];
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const lastRenderTime = useRef(Date.now());
   const lastHapticStep = useRef<number>(0);
@@ -110,7 +118,11 @@ function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVo
           setMacosState('listening');
           startPulse();
         } catch (error) {
-          Alert.alert('HAVEN', String((error as Error).message ?? error));
+          if (error instanceof VapiError) {
+            setShowPrompts(true);
+          } else {
+            Alert.alert('HAVEN', String((error as Error).message ?? error));
+          }
           stopPulse();
         }
       }
@@ -136,7 +148,7 @@ function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVo
           if (recordingRef.current) void submitRecording(recordingRef.current);
         }, 60_000);
       } catch (error) {
-        Alert.alert('HAVEN', String((error as Error).message ?? error));
+        setShowPrompts(true);
         recordingRef.current = null;
         setListening(false);
         setMacosState('idle');
@@ -232,9 +244,23 @@ function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVo
 
   return (
     <View style={{ position: 'absolute', left: 18, bottom: 90, alignItems: 'center' }}>
-      {isListening && (
+      {showPrompts && (
+        <View style={{ position: 'absolute', bottom: 80, backgroundColor: colors.paper, borderRadius: 18, padding: 14, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, borderWidth: 1, borderColor: colors.mist, width: 260, gap: 8 }}>
+          <Text style={{ fontSize: 18, fontWeight: '800', color: colors.ink }}>{nl ? 'Spraak niet beschikbaar' : 'Voice unavailable'}</Text>
+          <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '600' }}>{nl ? 'Probeer een van deze:' : 'Try one of these:'}</Text>
+          {textPrompts.map((prompt, i) => (
+            <TouchableOpacity key={i} onPress={() => { setShowPrompts(false); Alert.alert('HAVEN', prompt); }} style={{ backgroundColor: colors.slatePale, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, minHeight: 44 }}>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: colors.slate }}>{prompt}</Text>
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity onPress={() => setShowPrompts(false)} style={{ alignSelf: 'flex-end', paddingVertical: 4 }}>
+            <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{nl ? 'Sluiten' : 'Close'}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      {isListening && !showPrompts && (
         <View style={{ position: 'absolute', bottom: 80, backgroundColor: colors.sage, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 8, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
-          <Text style={{ color: 'white', fontSize: 14, fontWeight: '700' }}>{hint}</Text>
+          <Text style={{ color: 'white', fontSize: 18, fontWeight: '700' }}>{hint}</Text>
         </View>
       )}
       <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>

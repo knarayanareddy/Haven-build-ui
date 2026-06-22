@@ -3,6 +3,7 @@
 // When VAPI_API_KEY is not set, falls back to the existing record-upload-wait flow.
 
 import { EventEmitter } from 'events';
+import { VapiError } from './VapiError';
 
 export interface VapiConfig {
   apiKey: string;
@@ -60,7 +61,7 @@ export class VapiVoiceService extends EventEmitter {
       // Dynamic import: @vapi-ai/react-native may not be installed
       const VapiModule = await import('@vapi-ai/react-native').catch(() => null);
       if (!VapiModule) {
-        throw new Error('VAPI_SDK_NOT_AVAILABLE');
+        throw new VapiError('VAPI_SDK_NOT_AVAILABLE');
       }
 
       const VapiClass = VapiModule.default ?? VapiModule.Vapi;

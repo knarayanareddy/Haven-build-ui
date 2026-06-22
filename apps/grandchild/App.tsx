@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -11,6 +11,12 @@ import { AuthProvider, useAuth } from './src/auth/AuthProvider';
 import { FamilyDashboard } from './src/screens/vision/FamilyDashboard';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { GrandchildErrorBoundary } from './src/components/GrandchildErrorBoundary';
+
+// Apply Nunito as the default font for all Text components
+(Text as any).defaultProps = {
+  ...((Text as any).defaultProps || {}),
+  style: { fontFamily: 'Nunito' },
+};
 
 SplashScreen.preventAutoHideAsync();
 

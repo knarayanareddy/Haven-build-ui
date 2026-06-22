@@ -14,6 +14,12 @@ import { ResponsiveDrawerTabNavigator } from './src/navigation/ResponsiveDrawerT
 import { LoginScreen } from './src/screens/LoginScreen';
 import { CarerErrorBoundary } from './src/components/CarerErrorBoundary';
 
+// Apply Nunito as the default font for all Text components
+(Text as any).defaultProps = {
+  ...((Text as any).defaultProps || {}),
+  style: { fontFamily: 'Nunito' },
+};
+
 SplashScreen.preventAutoHideAsync();
 
 type CarerScreen =

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { fontFamily } from '@haven/ui/src/tokens';
 import { useAuth } from '../auth/AuthProvider';
 
 export function LoginScreen() {
@@ -160,6 +161,7 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 42,
     fontWeight: '800',
+    fontFamily: fontFamily.bold,
     color: '#fff',
     letterSpacing: 4,
   },
@@ -172,11 +174,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
+    fontFamily: fontFamily.bold,
     color: '#fff',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
+    fontFamily: fontFamily.regular,
     color: '#8BBAD4',
     marginBottom: 24,
   },
@@ -210,6 +214,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+    fontFamily: fontFamily.bold,
   },
   backLink: {
     marginTop: 16,

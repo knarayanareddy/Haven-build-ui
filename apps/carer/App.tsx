@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Platform, StatusBar, View, ActivityIndicator } from 'react-native';
+import { Platform, StatusBar, View, ActivityIndicator, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -14,6 +14,12 @@ import { HandoverForm } from './src/screens/HandoverForm';
 import { ShiftSummary } from './src/screens/ShiftSummary';
 import { ResponsiveDrawerTabNavigator } from './src/navigation/ResponsiveDrawerTabNavigator';
 import { LoginScreen } from './src/screens/LoginScreen';
+
+// Apply Nunito as the default font for all Text components
+(Text as any).defaultProps = {
+  ...((Text as any).defaultProps || {}),
+  style: { fontFamily: 'Nunito' },
+};
 
 SplashScreen.preventAutoHideAsync();
 

@@ -88,6 +88,7 @@
     "typescript-eslint": "^8.61.0"
   },
   "dependencies": {
+    "@expo-google-fonts/nunito": "^0.4.2",
     "unimodules-app-loader": "56.0.1"
   }
 }

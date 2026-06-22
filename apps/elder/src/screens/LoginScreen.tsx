@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { fontFamily } from '@haven/ui/src/tokens';
 import { useAuth } from '../auth/AuthProvider';
 
 export function LoginScreen() {
@@ -53,8 +55,9 @@ export function LoginScreen() {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.inner}>
         <View style={styles.logoContainer}>
+          <MaterialCommunityIcons name="heart-pulse" size={48} color="#4A7B5A" style={{ marginBottom: 12 }} />
           <Text style={styles.logo}>HAVEN</Text>
-          <Text style={styles.tagline}>always there</Text>
+          <Text style={styles.tagline}>Uw veilige thuis</Text>
         </View>
 
         <Text style={styles.title}>
@@ -113,27 +116,29 @@ export function LoginScreen() {
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity
-          style={[styles.demoButton, loading && styles.buttonDisabled]}
-          onPress={async () => {
-            setLoading(true);
-            setError(null);
-            try {
-              const { error: signInError } = await supabase.auth.signInWithPassword({
-                email: 'demo-elder@haven.nl',
-                password: 'HavenDemo2026!',
-              });
-              if (signInError) throw signInError;
-            } catch (e: any) {
-              setError(e?.message ?? 'Demo login mislukt');
-            } finally {
-              setLoading(false);
-            }
-          }}
-          disabled={loading}
-        >
-          <Text style={styles.demoButtonText}>Demo Mode</Text>
-        </TouchableOpacity>
+        {(process.env.EXPO_PUBLIC_ENABLE_DEMO === 'true' || __DEV__) && (
+          <TouchableOpacity
+            style={[styles.demoButton, loading && styles.buttonDisabled]}
+            onPress={async () => {
+              setLoading(true);
+              setError(null);
+              try {
+                const { error: signInError } = await supabase.auth.signInWithPassword({
+                  email: 'demo-elder@haven.nl',
+                  password: 'HavenDemo2026!',
+                });
+                if (signInError) throw signInError;
+              } catch (e: any) {
+                setError(e?.message ?? 'Demo login mislukt');
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+          >
+            <Text style={styles.demoButtonText}>Demo Mode</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </KeyboardAvoidingView>
   );
@@ -156,6 +161,7 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 42,
     fontWeight: '800',
+    fontFamily: fontFamily.bold,
     color: '#fff',
     letterSpacing: 4,
   },
@@ -168,11 +174,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
+    fontFamily: fontFamily.bold,
     color: '#fff',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
+    fontFamily: fontFamily.regular,
     color: '#8BA4C4',
     marginBottom: 24,
   },
@@ -193,7 +201,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   button: {
-    backgroundColor: '#4A90D9',
+    backgroundColor: '#4A7B5A',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -206,6 +214,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+    fontFamily: fontFamily.bold,
   },
   backLink: {
     marginTop: 16,
@@ -218,14 +227,14 @@ const styles = StyleSheet.create({
   demoButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#4A90D9',
+    borderColor: '#4A7B5A',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 24,
   },
   demoButtonText: {
-    color: '#4A90D9',
+    color: '#4A7B5A',
     fontSize: 16,
     fontWeight: '600',
   },

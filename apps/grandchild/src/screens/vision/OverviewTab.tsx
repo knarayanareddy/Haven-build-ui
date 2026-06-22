@@ -2,8 +2,10 @@
 // Uses auth session for live Supabase fetch, mock data as fallback
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, semanticColors } from '@haven/ui/src/tokens';
 import { StatusBadge, ProgressBar } from '@haven/ui/src/visionComponents';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { havenIcons } from '@haven/ui/src/icons';
 import { MEDICATIONS, DAILY_STATUS, DEVICE_HEALTH, WEEKLY_DIGEST } from '@haven/ui/src/mockData';
 import { useAuth } from '../../auth/AuthProvider';
 
@@ -130,17 +132,17 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
     : (nl ? 'Recente meldingen gedetecteerd' : 'Recent threats detected');
 
   const stats = [
-    { label: nl ? 'Med. naleving' : 'Med adherence', value: `${adherence}%`, icon: '💊', color: '#059669', sub: `${medicsTaken}/${medicsTotal} ${nl ? 'genomen vandaag' : 'taken today'}` },
-    { label: nl ? 'Schild score' : 'Shield score', value: String(schildScore), icon: '🛡️', color: '#7C3AED', sub: schildSub },
-    { label: nl ? 'Welzijn gem.' : 'Wellbeing avg', value: wellbeingVal, icon: '❤️', color: '#E11D48', sub: nl ? 'Deze week' : 'This week' },
-    { label: 'BUURT', value: `${buurtCount} ${nl ? 'dichtbij' : 'nearby'}`, icon: '🏘️', color: '#0D9488', sub: nl ? 'Interesse matches' : 'Interest matches' },
+    { label: nl ? 'Med. naleving' : 'Med adherence', value: `${adherence}%`, icon: havenIcons.pills, color: '#059669', sub: `${medicsTaken}/${medicsTotal} ${nl ? 'genomen vandaag' : 'taken today'}` },
+    { label: nl ? 'Schild score' : 'Shield score', value: String(schildScore), icon: havenIcons.shield, color: '#7C3AED', sub: schildSub },
+    { label: nl ? 'Welzijn gem.' : 'Wellbeing avg', value: wellbeingVal, icon: havenIcons.heart, color: '#E11D48', sub: nl ? 'Deze week' : 'This week' },
+    { label: 'BUURT', value: `${buurtCount} ${nl ? 'dichtbij' : 'nearby'}`, icon: havenIcons.neighbourhood, color: '#0D9488', sub: nl ? 'Interesse matches' : 'Interest matches' },
   ];
 
   const actions = [
-    { icon: '❤️', label: nl ? 'Stuur hartje' : 'Send heart', action: 'heart' },
-    { icon: '💬', label: nl ? 'Spraakbericht' : 'Voice message', action: 'voice' },
-    { icon: '✅', label: nl ? 'Vriendelijk inchecken' : 'Gentle check-in', action: 'checkin' },
-    { icon: '📹', label: nl ? 'Video bellen' : 'Video call', action: 'video' },
+    { icon: 'heart-outline', label: nl ? 'Stuur hartje' : 'Send heart', action: 'heart' },
+    { icon: 'chat-outline', label: nl ? 'Spraakbericht' : 'Voice message', action: 'voice' },
+    { icon: 'check-circle-outline', label: nl ? 'Vriendelijk inchecken' : 'Gentle check-in', action: 'checkin' },
+    { icon: 'video-outline', label: nl ? 'Video bellen' : 'Video call', action: 'video' },
   ];
 
   return (
@@ -170,7 +172,7 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
             <Text style={{ fontSize: 12, color: sc.text, opacity: 0.8 }}>{nl ? 'Waarom' : 'Why'}: {DAILY_STATUS.why}</Text>
             <Text style={{ fontSize: 12, color: sc.text, opacity: 0.8 }}>{nl ? 'Wat nu' : 'What next'}: {DAILY_STATUS.whatNext}</Text>
           </View>
-          <Text style={{ fontSize: 28 }}>{DAILY_STATUS.status === 'green' ? '🟢' : DAILY_STATUS.status === 'amber' ? '🟡' : '🔴'}</Text>
+          <MaterialCommunityIcons name="circle" size={28} color={sc.dot} />
         </View>
       </View>
 
@@ -179,7 +181,7 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
         {stats.map((stat) => (
           <View key={stat.label} style={{ width: '47%', borderRadius: 16, padding: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <Text style={{ fontSize: 18 }}>{stat.icon}</Text>
+              <MaterialCommunityIcons name={stat.icon as any} size={18} color={stat.color} />
               <Text style={{ fontSize: 22, fontWeight: '900', color: stat.color }}>{stat.value}</Text>
             </View>
             <Text style={{ fontSize: 12, fontWeight: '800', color: colors.ink }}>{stat.label}</Text>
@@ -190,7 +192,10 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
 
       {/* Trust Signal */}
       <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
-        <Text style={{ fontSize: 15, fontWeight: '900', color: colors.ink }}>📡 {nl ? 'Vertrouwenssignaal' : 'Trust Signal'}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <MaterialCommunityIcons name="access-point" size={16} color={colors.ink} />
+          <Text style={{ fontSize: 15, fontWeight: '900', color: colors.ink }}>{nl ? 'Vertrouwenssignaal' : 'Trust Signal'}</Text>
+        </View>
         {[
           { label: nl ? 'Apparaat laatst gezien' : 'Device last seen', value: `${Math.floor((Date.now() - DEVICE_HEALTH.lastSeen.getTime()) / 60000)} min ${nl ? 'geleden' : 'ago'}`, color: '#059669' },
           { label: nl ? 'Batterij' : 'Battery', value: `${DEVICE_HEALTH.batteryLevel}%`, color: DEVICE_HEALTH.batteryLevel > 30 ? '#059669' : '#DC2626' },
@@ -225,21 +230,21 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
               style={{
                 width: '47%', flexDirection: 'row', alignItems: 'center', gap: 8,
                 padding: 12, borderRadius: 14,
-                backgroundColor: actionSent === act.action ? '#D1FAE5' : actionSending === act.action ? '#EFF6FF' : colors.paper,
-                borderWidth: 1, borderColor: actionSent === act.action ? '#6EE7B7' : actionSending === act.action ? '#93C5FD' : colors.mist,
+                backgroundColor: actionSent === act.action ? semanticColors.successBg : actionSending === act.action ? '#EFF6FF' : colors.paper,
+                borderWidth: 1, borderColor: actionSent === act.action ? semanticColors.successBorder : actionSending === act.action ? '#93C5FD' : colors.mist,
                 opacity: actionSending === act.action ? 0.7 : 1,
               }}
             >
-              <Text style={{ fontSize: 16 }}>{actionSending === act.action ? '...' : actionSent === act.action ? '✓' : act.icon}</Text>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: actionSent === act.action ? '#065F46' : colors.ink }}>
+              {actionSending === act.action ? <Text style={{ fontSize: 16 }}>...</Text> : actionSent === act.action ? <MaterialCommunityIcons name="check" size={16} color={semanticColors.successText} /> : <MaterialCommunityIcons name={act.icon as any} size={16} color={colors.ink} />}
+              <Text style={{ fontSize: 12, fontWeight: '700', color: actionSent === act.action ? semanticColors.successText : colors.ink }}>
                 {actionSending === act.action ? (nl ? 'Verzenden...' : 'Sending...') : actionSent === act.action ? (nl ? 'Verzonden!' : 'Sent!') : act.label}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
         {actionError && (
-          <View style={{ backgroundColor: '#FEE2E2', borderRadius: 12, padding: 10, borderWidth: 1, borderColor: '#FECACA' }}>
-            <Text style={{ fontSize: 12, color: '#991B1B', fontWeight: '700' }}>
+          <View style={{ backgroundColor: semanticColors.dangerBg, borderRadius: 12, padding: 10, borderWidth: 1, borderColor: semanticColors.dangerBorder }}>
+            <Text style={{ fontSize: 12, color: semanticColors.dangerText, fontWeight: '700' }}>
               {nl ? 'Fout' : 'Error'}: {actionError}
             </Text>
           </View>
@@ -248,24 +253,27 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
 
       {/* Weekly digest */}
       <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 10 }}>
-        <Text style={{ fontSize: 15, fontWeight: '900', color: colors.ink }}>📊 {nl ? 'Weekoverzicht' : 'Weekly Digest'} — {WEEKLY_DIGEST.period}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <MaterialCommunityIcons name="chart-bar" size={16} color={colors.ink} />
+          <Text style={{ fontSize: 15, fontWeight: '900', color: colors.ink }}>{nl ? 'Weekoverzicht' : 'Weekly Digest'} — {WEEKLY_DIGEST.period}</Text>
+        </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {[
-            { label: nl ? 'Oplichting dreigingen' : 'Scam threats', value: WEEKLY_DIGEST.scamEvents.toString(), icon: '🛡️', color: '#059669' },
-            { label: nl ? 'Med. naleving' : 'Med adherence', value: `${WEEKLY_DIGEST.medicationAdherence}%`, icon: '💊', color: '#2563EB' },
-            { label: nl ? 'Familie interacties' : 'Family interactions', value: WEEKLY_DIGEST.familyInteractions.toString(), icon: '💬', color: '#7C3AED' },
-            { label: nl ? 'Zorgbezoeken' : 'Carer visits', value: WEEKLY_DIGEST.carerVisits.toString(), icon: '👩‍⚕️', color: '#E11D48' },
+            { label: nl ? 'Oplichting dreigingen' : 'Scam threats', value: WEEKLY_DIGEST.scamEvents.toString(), icon: havenIcons.shield, color: '#059669' },
+            { label: nl ? 'Med. naleving' : 'Med adherence', value: `${WEEKLY_DIGEST.medicationAdherence}%`, icon: havenIcons.pills, color: '#2563EB' },
+            { label: nl ? 'Familie interacties' : 'Family interactions', value: WEEKLY_DIGEST.familyInteractions.toString(), icon: havenIcons.chat, color: '#7C3AED' },
+            { label: nl ? 'Zorgbezoeken' : 'Carer visits', value: WEEKLY_DIGEST.carerVisits.toString(), icon: havenIcons.stethoscope, color: '#E11D48' },
           ].map((item) => (
             <View key={item.label} style={{ width: '47%', backgroundColor: colors.mist, borderRadius: 14, padding: 10 }}>
-              <Text style={{ fontSize: 16 }}>{item.icon}</Text>
+              <MaterialCommunityIcons name={item.icon as any} size={16} color={item.color} />
               <Text style={{ fontSize: 22, fontWeight: '900', color: item.color, marginTop: 4 }}>{item.value}</Text>
               <Text style={{ fontSize: 11, color: colors.pewter, fontWeight: '600' }}>{item.label}</Text>
             </View>
           ))}
         </View>
         {WEEKLY_DIGEST.highlightMoment && (
-          <View style={{ backgroundColor: '#FEF3C7', borderRadius: 12, padding: 10 }}>
-            <Text style={{ fontSize: 12, color: '#92400E', fontWeight: '700' }}>✨ {nl ? 'Hoogtepunt' : 'Highlight'}: {WEEKLY_DIGEST.highlightMoment}</Text>
+          <View style={{ backgroundColor: semanticColors.warningBg, borderRadius: 12, padding: 10 }}>
+            <Text style={{ fontSize: 12, color: semanticColors.warningText, fontWeight: '700' }}>{nl ? 'Hoogtepunt' : 'Highlight'}: {WEEKLY_DIGEST.highlightMoment}</Text>
           </View>
         )}
       </View>

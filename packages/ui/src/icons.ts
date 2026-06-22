@@ -1,6 +1,6 @@
 // ─── Haven Icon Mapping ───
 // Maps semantic icon names to MaterialCommunityIcons glyph names.
-// All navigation, tab, and category icons use outline style for consistency.
+// Outline variants for in-screen use where detail is visible at larger sizes.
 
 export const havenIcons = {
   home: 'home-outline',
@@ -31,6 +31,21 @@ export const havenIcons = {
   emergency: 'alarm-light-outline',
   settings: 'cog-outline',
   more: 'dots-horizontal',
+} as const;
+
+// Filled variants for bottom navigation bar where icons render at ≤24px.
+// Solid fills are more legible for elderly users at small sizes.
+export const havenNavIcons = {
+  home: 'home',
+  pills: 'pill',
+  shield: 'shield',
+  family: 'account-group',
+  microphone: 'microphone',
+  calendar: 'calendar',
+  compass: 'compass',
+  stethoscope: 'stethoscope',
+  lock: 'lock',
+  settings: 'cog',
 } as const;
 
 export type HavenIconName = keyof typeof havenIcons;

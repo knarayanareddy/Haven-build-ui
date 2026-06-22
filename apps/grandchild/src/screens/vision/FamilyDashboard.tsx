@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, semanticColors } from '@haven/ui/src/tokens';
 import { LanguageToggle } from '@haven/i18n';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { havenIcons } from '@haven/ui/src/icons';
+import { havenIcons, havenNavIcons } from '@haven/ui/src/icons';
 // DEMO: mock daily status — wire to live daily_checkins table when authenticated
 import { DAILY_STATUS } from '@haven/ui/src/mockData';
 import { useAuth } from '../../auth/AuthProvider';
@@ -26,12 +26,12 @@ const STATUS_DOT = { green: '#22C55E', amber: '#F59E0B', red: '#EF4444' };
 
 function getTabs(nl: boolean): Array<{ id: TabId; label: string; icon: string }> {
   return [
-    { id: 'overview', label: nl ? 'Overzicht' : 'Overview', icon: havenIcons.home },
-    { id: 'medications', label: nl ? 'Medicatie' : 'Medications', icon: havenIcons.pills },
-    { id: 'alerts', label: nl ? 'Meldingen' : 'Alerts', icon: havenIcons.shield },
-    { id: 'care', label: nl ? 'Zorg' : 'Care', icon: havenIcons.stethoscope },
-    { id: 'voice', label: nl ? 'Stem' : 'Voice', icon: havenIcons.microphone },
-    { id: 'privacy', label: 'Privacy', icon: havenIcons.lock },
+    { id: 'overview', label: nl ? 'Overzicht' : 'Overview', icon: havenNavIcons.home },
+    { id: 'medications', label: nl ? 'Medicatie' : 'Medications', icon: havenNavIcons.pills },
+    { id: 'alerts', label: nl ? 'Meldingen' : 'Alerts', icon: havenNavIcons.shield },
+    { id: 'care', label: nl ? 'Zorg' : 'Care', icon: havenNavIcons.stethoscope },
+    { id: 'voice', label: nl ? 'Stem' : 'Voice', icon: havenNavIcons.microphone },
+    { id: 'privacy', label: 'Privacy', icon: havenNavIcons.lock },
   ];
 }
 

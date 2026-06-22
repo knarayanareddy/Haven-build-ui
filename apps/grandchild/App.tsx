@@ -1,11 +1,24 @@
-import React from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, ActivityIndicator, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { Nunito_400Regular } from '@expo-google-fonts/nunito/400Regular';
+import { Nunito_700Bold } from '@expo-google-fonts/nunito/700Bold';
+import { Nunito_900Black } from '@expo-google-fonts/nunito/900Black';
 import { I18nProvider, useTranslation } from '@haven/i18n';
 import { AuthProvider, useAuth } from './src/auth/AuthProvider';
 import { FamilyDashboard } from './src/screens/vision/FamilyDashboard';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { GrandchildErrorBoundary } from './src/components/GrandchildErrorBoundary';
+
+// Apply Nunito as the default font for all Text components
+(Text as any).defaultProps = {
+  ...((Text as any).defaultProps || {}),
+  style: { fontFamily: 'Nunito' },
+};
+
+SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
   const { session, isReady } = useAuth();
@@ -31,10 +44,24 @@ function FamilyDashboardWithLocale() {
 }
 
 export default function GrandchildApp() {
+  const [fontsLoaded] = useFonts({
+    Nunito: Nunito_400Regular,
+    'Nunito-Bold': Nunito_700Bold,
+    'Nunito-Black': Nunito_900Black,
+  });
+
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
   return (
     <AuthProvider>
       <I18nProvider>
-        <SafeAreaProvider>
+        <SafeAreaProvider onLayout={onLayoutRootView}>
           <GrandchildErrorBoundary>
             <AppContent />
           </GrandchildErrorBoundary>

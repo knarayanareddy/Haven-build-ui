@@ -2,8 +2,10 @@
 import React, { useState } from 'react';
 import { Alert, View, TouchableOpacity, Text, Platform, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, semanticColors } from '@haven/ui/src/tokens';
 import { LanguageToggle } from '@haven/i18n';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { havenIcons, havenNavIcons } from '@haven/ui/src/icons';
 // DEMO: mock daily status — wire to live daily_checkins table when authenticated
 import { DAILY_STATUS } from '@haven/ui/src/mockData';
 import { useAuth } from '../../auth/AuthProvider';
@@ -24,12 +26,12 @@ const STATUS_DOT = { green: '#22C55E', amber: '#F59E0B', red: '#EF4444' };
 
 function getTabs(nl: boolean): Array<{ id: TabId; label: string; icon: string }> {
   return [
-    { id: 'overview', label: nl ? 'Overzicht' : 'Overview', icon: '🏠' },
-    { id: 'medications', label: nl ? 'Medicatie' : 'Medications', icon: '💊' },
-    { id: 'alerts', label: nl ? 'Meldingen' : 'Alerts', icon: '🛡️' },
-    { id: 'care', label: nl ? 'Zorg' : 'Care', icon: '🩺' },
-    { id: 'voice', label: nl ? 'Stem' : 'Voice', icon: '🎙️' },
-    { id: 'privacy', label: 'Privacy', icon: '🔒' },
+    { id: 'overview', label: nl ? 'Overzicht' : 'Overview', icon: havenNavIcons.home },
+    { id: 'medications', label: nl ? 'Medicatie' : 'Medications', icon: havenNavIcons.pills },
+    { id: 'alerts', label: nl ? 'Meldingen' : 'Alerts', icon: havenNavIcons.shield },
+    { id: 'care', label: nl ? 'Zorg' : 'Care', icon: havenNavIcons.stethoscope },
+    { id: 'voice', label: nl ? 'Stem' : 'Voice', icon: havenNavIcons.microphone },
+    { id: 'privacy', label: 'Privacy', icon: havenNavIcons.lock },
   ];
 }
 
@@ -121,7 +123,7 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>
-              {nl ? `Goedemorgen, ${familyName}` : `Good morning, ${familyName}`} 👋
+              {nl ? `Goedemorgen, ${familyName}` : `Good morning, ${familyName}`}
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
               <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '600' }}>
@@ -133,14 +135,14 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
           <View style={{
             flexDirection: 'row', alignItems: 'center', gap: 6,
             paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
-            backgroundColor: DAILY_STATUS.status === 'green' ? '#D1FAE5' : DAILY_STATUS.status === 'amber' ? '#FEF3C7' : '#FEE2E2',
+            backgroundColor: DAILY_STATUS.status === 'green' ? semanticColors.successBg : DAILY_STATUS.status === 'amber' ? semanticColors.warningBg : semanticColors.dangerBg,
             borderWidth: 1,
-            borderColor: DAILY_STATUS.status === 'green' ? '#6EE7B7' : DAILY_STATUS.status === 'amber' ? '#FDE68A' : '#FECACA',
+            borderColor: DAILY_STATUS.status === 'green' ? semanticColors.successBorder : DAILY_STATUS.status === 'amber' ? semanticColors.warningBorder : semanticColors.dangerBorder,
           }}>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: statusDot }} />
             <Text style={{
               fontSize: 13, fontWeight: '800',
-              color: DAILY_STATUS.status === 'green' ? '#065F46' : DAILY_STATUS.status === 'amber' ? '#92400E' : '#991B1B',
+              color: DAILY_STATUS.status === 'green' ? semanticColors.successText : DAILY_STATUS.status === 'amber' ? semanticColors.warningText : semanticColors.dangerText,
             }}>
               {DAILY_STATUS.status === 'green' ? (nl ? 'Alles goed' : 'All well') : DAILY_STATUS.status === 'amber' ? (nl ? 'Aandacht' : 'Attention') : (nl ? 'Actie nodig' : 'Action needed')}
             </Text>
@@ -166,7 +168,7 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
               borderTopColor: activeTab === tab.id ? '#3B82F6' : 'transparent',
             }}
           >
-            <Text style={{ fontSize: 20 }}>{tab.icon}</Text>
+            <MaterialCommunityIcons name={tab.icon as any} size={20} color={activeTab === tab.id ? '#3B82F6' : '#6B7280'} />
             <Text style={{
               fontSize: 10, fontWeight: '700',
               color: activeTab === tab.id ? '#3B82F6' : '#6B7280',

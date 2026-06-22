@@ -58,6 +58,27 @@ export const radius = {
   full: 999,
 } as const;
 
+export const fontFamily = {
+  regular: 'Nunito',
+  bold: 'Nunito-Bold',
+  black: 'Nunito-Black',
+} as const;
+
+export const semanticColors = {
+  successBg: '#D1FAE5',
+  successText: '#065F46',
+  successBorder: '#6EE7B7',
+  warningBg: '#FEF3C7',
+  warningText: '#92400E',
+  warningBorder: '#FDE68A',
+  dangerBg: '#FEE2E2',
+  dangerText: '#991B1B',
+  dangerBorder: '#FECACA',
+  danger: '#DC2626',
+  infoBg: '#DBEAFE',
+  infoText: '#1E40AF',
+} as const;
+
 export function assertContrastTokenPair(foreground: string, background: string) {
   if (!foreground.startsWith('#') || !background.startsWith('#')) throw new Error('Tokens must be hex colours');
   return true;

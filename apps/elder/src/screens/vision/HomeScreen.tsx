@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '@haven/ui/src/tokens';
 import { pillarGradients } from '@haven/ui/src/visionColors';
 import { GradientCard, StatusBadge, MoodPicker } from '@haven/ui/src/visionComponents';
+import { havenIcons } from '@haven/ui/src/icons';
 import type { ScreenContext } from '../../renderer/ScreenRenderer';
 
 function greeting(now: Date, locale: string, name: string) {
@@ -67,7 +68,7 @@ export function renderVisionHome(ctx: ScreenContext): React.ReactNode {
         <View style={{ flex: 1 }}>
           <GradientCard
             gradient={pillarGradients.pills}
-            icon="💊"
+            icon={havenIcons.pills}
             title={locale === 'nl-NL' ? 'Mijn Pillen' : 'My Pills'}
             subtitle={`${pending} ${locale === 'nl-NL' ? 'te nemen' : 'due'}`}
             badge={pending}
@@ -77,7 +78,7 @@ export function renderVisionHome(ctx: ScreenContext): React.ReactNode {
         <View style={{ flex: 1 }}>
           <GradientCard
             gradient={pillarGradients.today}
-            icon="📅"
+            icon={havenIcons.calendar}
             title={locale === 'nl-NL' ? 'Vandaag' : 'Today'}
             subtitle={`${tasks.length} ${locale === 'nl-NL' ? 'taken' : 'tasks'}`}
             onPress={() => ctx.onPrimaryAction('NAV_TODAY')}
@@ -88,7 +89,7 @@ export function renderVisionHome(ctx: ScreenContext): React.ReactNode {
         <View style={{ flex: 1 }}>
           <GradientCard
             gradient={pillarGradients.shield}
-            icon="🛡️"
+            icon={havenIcons.shield}
             title={locale === 'nl-NL' ? 'Schild' : 'Shield'}
             subtitle={statusLabel}
             onPress={() => ctx.onPrimaryAction('NAV_SHIELD')}
@@ -97,7 +98,7 @@ export function renderVisionHome(ctx: ScreenContext): React.ReactNode {
         <View style={{ flex: 1 }}>
           <GradientCard
             gradient={pillarGradients.family}
-            icon="👨‍👩‍👧"
+            icon={havenIcons.family}
             title={locale === 'nl-NL' ? 'Familie' : 'Family'}
             subtitle={`${unread} ${locale === 'nl-NL' ? 'nieuw' : 'new'}`}
             badge={unread}
@@ -109,10 +110,10 @@ export function renderVisionHome(ctx: ScreenContext): React.ReactNode {
       {/* Secondary nav row */}
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {[
-          { id: 'BUURT', icon: '🏘️', label: locale === 'nl-NL' ? 'Buurt' : 'Neighbourhood' },
-          { id: 'KOMPAS', icon: '🧭', label: locale === 'nl-NL' ? 'Kompas' : 'Compass' },
-          { id: 'STEM', icon: '🎙️', label: locale === 'nl-NL' ? 'Stem' : 'Voice' },
-          { id: 'WACHT', icon: '🏥', label: locale === 'nl-NL' ? 'Zorg' : 'Care' },
+          { id: 'BUURT', icon: havenIcons.neighbourhood, label: locale === 'nl-NL' ? 'Buurt' : 'Neighbourhood' },
+          { id: 'KOMPAS', icon: havenIcons.compass, label: locale === 'nl-NL' ? 'Kompas' : 'Compass' },
+          { id: 'STEM', icon: havenIcons.microphone, label: locale === 'nl-NL' ? 'Stem' : 'Voice' },
+          { id: 'WACHT', icon: havenIcons.hospital, label: locale === 'nl-NL' ? 'Zorg' : 'Care' },
         ].map((item) => (
           <GradientCard
             key={item.id}
@@ -128,7 +129,7 @@ export function renderVisionHome(ctx: ScreenContext): React.ReactNode {
       {/* Are you OK? button */}
       <GradientCard
         gradient={['#ef4444', '#dc2626']}
-        icon="❤️"
+        icon={havenIcons.heart}
         title={locale === 'nl-NL' ? 'Bent u oké?' : 'Are you OK?'}
         subtitle={locale === 'nl-NL' ? 'Druk als u hulp nodig heeft' : 'Press if you need help'}
         onPress={() => ctx.onPrimaryAction('EMERGENCY')}

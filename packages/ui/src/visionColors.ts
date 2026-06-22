@@ -15,11 +15,11 @@ export const pillarGradients: Record<string, [string, string]> = {
 };
 
 export const statusColors = {
-  green: '#22c55e',
+  green: '#166534',
   greenBg: '#dcfce7',
-  amber: '#f59e0b',
+  amber: '#92400E',
   amberBg: '#fef3c7',
-  red: '#ef4444',
+  red: '#991B1B',
   redBg: '#fee2e2',
 } as const;
 

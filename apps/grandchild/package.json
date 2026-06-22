@@ -7,14 +7,18 @@
     "start": "expo start"
   },
   "dependencies": {
+    "@expo/vector-icons": "15.1.1",
     "@haven/contracts": "workspace:*",
     "@haven/i18n": "workspace:*",
     "@haven/ui": "workspace:*",
     "@supabase/supabase-js": "2.108.1",
+    "@expo-google-fonts/nunito": "^0.4.2",
     "expo": "~56.0.12",
     "expo-audio": "~56.0.12",
     "expo-file-system": "56.0.8",
+    "expo-font": "~56.0.7",
     "expo-linear-gradient": "~56.0.4",
+    "expo-splash-screen": "~56.0.10",
     "expo-secure-store": "56.0.4",
     "react": "19.2.3",
     "react-native": "0.85.3",

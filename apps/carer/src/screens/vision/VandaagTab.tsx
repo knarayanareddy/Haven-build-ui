@@ -2,8 +2,9 @@
 // Fetches live medication schedule + task progress from Supabase when authenticated
 import React, { useEffect, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, semanticColors } from '@haven/ui/src/tokens';
 import { StatusBadge, ProgressBar } from '@haven/ui/src/visionComponents';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../../auth/AuthProvider';
 // DEMO: mock medications/tasks — fallback when not authenticated
 import { MEDICATIONS, TODAY_TASKS } from '@haven/ui/src/mockData';
@@ -103,36 +104,39 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 16, gap: 12 }}>
       {/* Online/offline banner */}
       {!isOnline && (
-        <View style={{ backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FDE68A', borderRadius: 16, padding: 12 }}>
-          <Text style={{ fontSize: 13, color: '#92400E', fontWeight: '700' }}>
-            📴 {nl ? 'Offline-first mode — notities worden lokaal opgeslagen en gesynchroniseerd zodra u weer online bent.' : 'Offline-first mode — notes are stored locally and synced when back online.'}
+        <View style={{ backgroundColor: semanticColors.warningBg, borderWidth: 1, borderColor: semanticColors.warningBorder, borderRadius: 16, padding: 12 }}>
+          <Text style={{ fontSize: 13, color: semanticColors.warningText, fontWeight: '700' }}>
+            {nl ? 'Offline-first mode — notities worden lokaal opgeslagen en gesynchroniseerd zodra u weer online bent.' : 'Offline-first mode — notes are stored locally and synced when back online.'}
           </Text>
         </View>
       )}
       {offlineCount > 0 && isOnline && (
-        <View style={{ backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FDE68A', borderRadius: 14, padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={{ fontSize: 12, color: '#92400E', fontWeight: '700' }}>{offlineCount} offline acties wachten op sync</Text>
+        <View style={{ backgroundColor: semanticColors.warningBg, borderWidth: 1, borderColor: semanticColors.warningBorder, borderRadius: 14, padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={{ fontSize: 12, color: semanticColors.warningText, fontWeight: '700' }}>{offlineCount} offline acties wachten op sync</Text>
           <StatusBadge status="amber" label="Sync" />
         </View>
       )}
 
       {/* Live data indicator */}
       {liveMeds && (
-        <View style={{ backgroundColor: '#D1FAE5', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', color: '#065F46' }}>● {nl ? 'Live data' : 'Live data'}</Text>
+        <View style={{ backgroundColor: semanticColors.successBg, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' }}>
+          <Text style={{ fontSize: 11, fontWeight: '700', color: semanticColors.successText }}>● {nl ? 'Live data' : 'Live data'}</Text>
         </View>
       )}
 
       {/* Current visit card */}
       <View style={{ borderRadius: 20, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 10 }}>
-        <Text style={{ fontSize: 15, fontWeight: '800', color: colors.graphite }}>📅 {nl ? 'Huidig bezoek' : 'Current visit'} — {elderName}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <MaterialCommunityIcons name="calendar-outline" size={16} color={colors.graphite} />
+          <Text style={{ fontSize: 15, fontWeight: '800', color: colors.graphite }}>{nl ? 'Huidig bezoek' : 'Current visit'} — {elderName}</Text>
+        </View>
         {checklist.map((item, idx) => (
           <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <View style={{
               width: 22, height: 22, borderRadius: 11, justifyContent: 'center', alignItems: 'center',
-              backgroundColor: item.done ? colors.sage : item.icon === '!' ? colors.amber : '#DBEAFE',
+              backgroundColor: item.done ? colors.sage : item.icon === '!' ? colors.amber : semanticColors.infoBg,
             }}>
-              <Text style={{ color: item.done ? '#fff' : item.icon === '!' ? '#fff' : '#2563EB', fontSize: 11, fontWeight: '900' }}>
+              <Text style={{ color: item.done ? '#fff' : item.icon === '!' ? '#fff' : semanticColors.infoText, fontSize: 11, fontWeight: '900' }}>
                 {item.icon}
               </Text>
             </View>
@@ -143,7 +147,10 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
 
       {/* Care plan overview */}
       <View style={{ borderRadius: 20, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 6 }}>
-        <Text style={{ fontSize: 15, fontWeight: '800', color: colors.graphite }}>📋 {nl ? 'Zorgplan overzicht' : 'Care plan overview'}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <MaterialCommunityIcons name="clipboard-text-outline" size={16} color={colors.graphite} />
+          <Text style={{ fontSize: 15, fontWeight: '800', color: colors.graphite }}>{nl ? 'Zorgplan overzicht' : 'Care plan overview'}</Text>
+        </View>
         {(nl ? [
           '• Mobiliteit: gang-kleed opgelost',
           '• Voeding: ontbijt gelogd',
@@ -161,7 +168,10 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
 
       {/* Today's task progress */}
       <View style={{ borderRadius: 20, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
-        <Text style={{ fontSize: 15, fontWeight: '800', color: colors.graphite }}>📊 {nl ? 'Dagvoortgang' : 'Daily progress'}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <MaterialCommunityIcons name="chart-bar" size={16} color={colors.graphite} />
+          <Text style={{ fontSize: 15, fontWeight: '800', color: colors.graphite }}>{nl ? 'Dagvoortgang' : 'Daily progress'}</Text>
+        </View>
         <ProgressBar progress={totalTasks > 0 ? doneTasks / totalTasks : 0} color={colors.sage} showLabel />
         {liveTasks && (
           <View style={{ gap: 4 }}>
@@ -177,7 +187,10 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
 
       {/* Medication schedule today */}
       <View style={{ borderRadius: 20, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
-        <Text style={{ fontSize: 15, fontWeight: '800', color: colors.graphite }}>🩺 {nl ? 'Medicijnschema vandaag' : 'Medication schedule today'}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <MaterialCommunityIcons name="stethoscope" size={16} color={colors.graphite} />
+          <Text style={{ fontSize: 15, fontWeight: '800', color: colors.graphite }}>{nl ? 'Medicijnschema vandaag' : 'Medication schedule today'}</Text>
+        </View>
         {medications.map((med) => (
           <View key={med.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.mist }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -188,9 +201,9 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
               {med.times.map((time, i) => (
                 <View key={i} style={{
                   paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
-                  backgroundColor: med.taken[i] ? '#D1FAE5' : '#FEF3C7',
+                  backgroundColor: med.taken[i] ? semanticColors.successBg : semanticColors.warningBg,
                 }}>
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: med.taken[i] ? '#065F46' : '#92400E' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: med.taken[i] ? semanticColors.successText : semanticColors.warningText }}>
                     {time} {med.taken[i] ? '✓' : '○'}
                   </Text>
                 </View>
@@ -203,7 +216,7 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
       {/* Complete visit button */}
       <TouchableOpacity
         onPress={onCompleteVisit}
-        style={{ backgroundColor: '#DC2626', borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+        style={{ backgroundColor: semanticColors.danger, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
       >
         <Text style={{ color: '#fff', fontSize: 16, fontWeight: '900' }}>✓ {nl ? 'Bezoek afronden & opslaan' : 'Complete visit & save'}</Text>
       </TouchableOpacity>

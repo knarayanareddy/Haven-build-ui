@@ -2,8 +2,9 @@
 // Toggles persist to Supabase consent_records table when authenticated
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, semanticColors } from '@haven/ui/src/tokens';
 import { StatusBadge } from '@haven/ui/src/visionComponents';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../../auth/AuthProvider';
 // DEMO: mock consent settings — fallback when not authenticated
 import { CONSENT_SETTINGS } from '@haven/ui/src/mockData';
@@ -88,35 +89,35 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
 
   const items: Array<{ icon: string; label: string; key: keyof ConsentState | null; description: string; alwaysHidden: boolean }> = [
     {
-      icon: '💊',
+      icon: 'pill',
       label: nl ? 'Medicatieweergave' : 'Medication view',
       key: 'medicationView',
       description: nl ? 'Verleend door toestemming van de oudere' : 'Granted by elder consent',
       alwaysHidden: false,
     },
     {
-      icon: '📍',
+      icon: 'map-marker-outline',
       label: nl ? 'Locatieweergave (vaag)' : 'Location view (fuzzed)',
       key: 'locationView',
       description: nl ? 'Alleen vage gebeurtenissen; nauwkeurig veld geblokkeerd' : 'Fuzzed events only; precise field blocked',
       alwaysHidden: false,
     },
     {
-      icon: '🧠',
+      icon: 'brain',
       label: nl ? 'Metgezel geheugen' : 'Companion memory',
       key: null,
       description: nl ? 'Privé voor de oudere. Niet zichtbaar voor familie.' : 'Private to elder. Not visible to family.',
       alwaysHidden: true,
     },
     {
-      icon: '🤝',
+      icon: 'handshake-outline',
       label: nl ? 'BUURT identiteiten derden' : 'BUURT third-party identities',
       key: null,
       description: nl ? 'Nooit zichtbaar in familiedashboard.' : 'Never visible in family dashboard.',
       alwaysHidden: true,
     },
     {
-      icon: '📊',
+      icon: 'chart-bar',
       label: nl ? 'Weekoverzicht' : 'Weekly digest',
       key: 'weeklyDigest',
       description: nl ? 'Anonieme gezondheidssamenvatting' : 'Anonymous health summary',
@@ -127,8 +128,11 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 16, gap: 12 }}>
       {/* Consent notice */}
-      <View style={{ backgroundColor: '#DBEAFE', borderWidth: 1, borderColor: '#93C5FD', borderRadius: 16, padding: 12, gap: 4 }}>
-        <Text style={{ fontSize: 13, fontWeight: '800', color: '#1E40AF' }}>🔒 {nl ? 'Toestemming-beperkte toegang' : 'Consent-scoped access'}</Text>
+      <View style={{ backgroundColor: semanticColors.infoBg, borderWidth: 1, borderColor: '#93C5FD', borderRadius: 16, padding: 12, gap: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <MaterialCommunityIcons name="lock-outline" size={14} color={semanticColors.infoText} />
+          <Text style={{ fontSize: 13, fontWeight: '800', color: semanticColors.infoText }}>{nl ? 'Toestemming-beperkte toegang' : 'Consent-scoped access'}</Text>
+        </View>
         <Text style={{ fontSize: 12, color: '#1D4ED8', fontWeight: '600' }}>
           {nl
             ? `U ziet alleen wat ${elderName} heeft verleend. Zij kan deze op elk moment wijzigen.`
@@ -138,8 +142,8 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
 
       {/* Live data indicator */}
       {session && (
-        <View style={{ backgroundColor: '#D1FAE5', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', color: '#065F46' }}>● {nl ? 'Live — wijzigingen worden opgeslagen' : 'Live — changes are saved'}</Text>
+        <View style={{ backgroundColor: semanticColors.successBg, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' }}>
+          <Text style={{ fontSize: 11, fontWeight: '700', color: semanticColors.successText }}>● {nl ? 'Live — wijzigingen worden opgeslagen' : 'Live — changes are saved'}</Text>
         </View>
       )}
 
@@ -152,7 +156,7 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
             borderWidth: 1, borderColor: colors.mist,
             flexDirection: 'row', alignItems: 'center', gap: 12,
           }}>
-            <Text style={{ fontSize: 28 }}>{item.icon}</Text>
+            <MaterialCommunityIcons name={item.icon as any} size={28} color={colors.ink} />
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>{item.label}</Text>
               <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600' }}>{item.description}</Text>

@@ -5,6 +5,8 @@ import React, { useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { colors } from '@haven/ui/src/tokens';
 import { SubTabBar } from '@haven/ui/src/visionComponents';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { havenIcons } from '@haven/ui/src/icons';
 // DEMO: mock messages/stories — messages partially wired to live; stories remain fixture
 import { FAMILY_MESSAGES, LIFE_STORIES } from '@haven/ui/src/mockData';
 import type { ScreenContext } from '../../renderer/ScreenRenderer';
@@ -22,9 +24,9 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
     : FAMILY_MESSAGES;
 
   const tabs = [
-    { id: 'messages', label: locale === 'nl-NL' ? 'Berichten' : 'Messages', icon: '💬' },
-    { id: 'call', label: locale === 'nl-NL' ? 'Bellen' : 'Call', icon: '📞' },
-    { id: 'stories', label: locale === 'nl-NL' ? 'Verhalen' : 'Stories', icon: '📖' },
+    { id: 'messages', label: locale === 'nl-NL' ? 'Berichten' : 'Messages', icon: havenIcons.chat },
+    { id: 'call', label: locale === 'nl-NL' ? 'Bellen' : 'Call', icon: havenIcons.phone },
+    { id: 'stories', label: locale === 'nl-NL' ? 'Verhalen' : 'Stories', icon: havenIcons.book },
   ];
 
   return (
@@ -37,14 +39,14 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
           onPress={() => ctx.onPrimaryAction('SEND_HEART')}
           style={{ flex: 1, backgroundColor: colors.rosePale, borderRadius: 16, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 }}
         >
-          <Text style={{ fontSize: 18 }}>❤️</Text>
+          <MaterialCommunityIcons name="heart" size={18} color={colors.rose} />
           <Text style={{ color: colors.rose, fontWeight: '900' }}>{locale === 'nl-NL' ? 'Stuur hartje' : 'Send heart'}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => ctx.onPrimaryAction('SEND_OK')}
           style={{ flex: 1, backgroundColor: colors.sagePale, borderRadius: 16, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 }}
         >
-          <Text style={{ fontSize: 18 }}>👍</Text>
+          <MaterialCommunityIcons name="thumb-up-outline" size={18} color={colors.sage} />
           <Text style={{ color: colors.sage, fontWeight: '900' }}>{locale === 'nl-NL' ? 'Ik ben oké' : "I'm okay"}</Text>
         </TouchableOpacity>
       </View>
@@ -109,7 +111,7 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
         <View style={{ gap: 14 }}>
           {/* Video call placeholder */}
           <View style={{ borderRadius: 22, height: 200, backgroundColor: colors.slatePale, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.mist }}>
-            <Text style={{ fontSize: 48 }}>📹</Text>
+            <MaterialCommunityIcons name="video-outline" size={48} color={colors.slate} />
             <Text style={{ fontSize: 18, fontWeight: '800', color: colors.slate, marginTop: 8 }}>
               {locale === 'nl-NL' ? 'Video bellen' : 'Video Call'}
             </Text>
@@ -121,13 +123,13 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
               style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, flexDirection: 'row', alignItems: 'center', gap: 12 }}
             >
               <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: colors.sagePale, justifyContent: 'center', alignItems: 'center' }}>
-                <Text style={{ fontSize: 24 }}>{f.relation === 'kind' ? '👩' : f.relation === 'kleinkind' ? '🧒' : '👤'}</Text>
+                <MaterialCommunityIcons name={f.relation === 'kind' ? 'account' : f.relation === 'kleinkind' ? 'account' : 'account-outline'} size={24} color={colors.sage} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{f.name}</Text>
                 <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? 'Bellen' : 'Call'}</Text>
               </View>
-              <Text style={{ fontSize: 24 }}>📞</Text>
+              <MaterialCommunityIcons name="phone-outline" size={24} color={colors.slate} />
             </TouchableOpacity>
           ))}
         </View>
@@ -139,7 +141,7 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
             onPress={() => ctx.onPrimaryAction('RECORD_STORY')}
             style={{ borderRadius: 18, padding: 16, backgroundColor: colors.amberPale, borderWidth: 1, borderColor: colors.amber, flexDirection: 'row', alignItems: 'center', gap: 10 }}
           >
-            <Text style={{ fontSize: 22 }}>🎙️</Text>
+            <MaterialCommunityIcons name="microphone-outline" size={22} color={colors.ink} />
             <Text style={{ fontSize: 16, fontWeight: '900', color: colors.ink }}>
               {locale === 'nl-NL' ? 'Nieuw verhaal opnemen' : 'Record new story'}
             </Text>

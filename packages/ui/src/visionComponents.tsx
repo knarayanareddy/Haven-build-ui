@@ -131,7 +131,7 @@ export function SubTabBar({ tabs, activeTab, onTabChange }: SubTabBarProps) {
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             {tab.icon ? <MaterialCommunityIcons name={tab.icon as any} size={16} color={tab.id === activeTab ? colors.ink : colors.pewter} /> : null}
-            <Text style={{ fontSize: typeScale.caption, fontWeight: tab.id === activeTab ? '900' : '700', fontFamily: tab.id === activeTab ? fontFamily.black : fontFamily.bold, color: tab.id === activeTab ? colors.ink : colors.pewter }}>
+            <Text numberOfLines={1} ellipsizeMode="tail" style={{ fontSize: 16, fontWeight: tab.id === activeTab ? '900' : '700', fontFamily: tab.id === activeTab ? fontFamily.black : fontFamily.bold, color: tab.id === activeTab ? colors.ink : colors.pewter }}>
               {tab.label}
             </Text>
           </View>
@@ -180,12 +180,12 @@ export function BottomNavBar({ items, activeScreen, onNavigate }: BottomNavBarPr
             <View>
               <MaterialCommunityIcons name={item.icon as any} size={24} color={active ? colors.slate : colors.pewter} />
               {item.badge !== undefined && item.badge > 0 ? (
-                <View style={{ position: 'absolute', top: -4, right: -8, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: '#ef4444', justifyContent: 'center', alignItems: 'center' }}>
-                  <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900' }}>{item.badge > 9 ? '9+' : item.badge}</Text>
+                <View style={{ position: 'absolute', top: -4, right: -8, minWidth: 22, height: 22, borderRadius: 11, backgroundColor: '#ef4444', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4 }}>
+                  <Text style={{ color: '#fff', fontSize: typeScale.badge, fontWeight: '900' }}>{item.badge > 9 ? '9+' : item.badge}</Text>
                 </View>
               ) : null}
             </View>
-            <Text style={{ fontSize: typeScale.caption, fontWeight: active ? '900' : '600', fontFamily: active ? fontFamily.black : fontFamily.regular, color: active ? colors.slate : colors.pewter }}>{item.label}</Text>
+            <Text style={{ fontSize: typeScale.navLabel, fontWeight: active ? '900' : '600', fontFamily: active ? fontFamily.black : fontFamily.regular, color: active ? colors.slate : colors.pewter }}>{item.label}</Text>
           </TouchableOpacity>
         );
       })}

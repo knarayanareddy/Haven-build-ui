@@ -31,6 +31,9 @@ export const typeScale = {
   body: 24,
   label: 22,
   caption: 18,
+  navLabel: 14,
+  badge: 12,
+  detail: 14,
 } as const;
 
 export const spacing = {

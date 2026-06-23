@@ -44,7 +44,7 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
         style={{ borderRadius: 22, padding: 22, alignItems: 'center' }}
       >
         <Text style={{ fontSize: 48, fontWeight: '900', fontFamily: 'Nunito-Black', color: '#FFFFFF' }}>{totalScore}</Text>
-        <Text style={{ fontSize: typeScale.caption, fontWeight: '700', fontFamily: 'Nunito-Black', color: 'rgba(255,255,255,0.85)' }}>
+        <Text style={{ fontSize: typeScale.caption, fontWeight: '700', fontFamily: 'Nunito-Bold', color: 'rgba(255,255,255,0.85)' }}>
 
           {locale === 'nl-NL' ? 'Schildscore' : 'Shield Score'} / 100
         </Text>

@@ -78,7 +78,7 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
                   borderWidth: isElder || isSystem ? 0 : 1, borderColor: colors.mist,
                 }}>
                   {!isElder && <Text style={{ fontSize: typeScale.caption, fontWeight: '800', fontFamily: 'Nunito-Bold', color: isSystem ? colors.pewter : colors.ink, marginBottom: 4 }}>{msg.from}</Text>}
-                  <Text style={{ fontSize: typeScale.caption, fontWeight: '600', fontFamily: 'Nunito-Bold', color: isElder ? '#fff' : colors.ink }}>{msg.content}</Text>
+                  <Text style={{ fontSize: typeScale.caption, fontWeight: '600', fontFamily: 'Nunito-SemiBold', color: isElder ? '#fff' : colors.ink }}>{msg.content}</Text>
                   <Text style={{ fontSize: typeScale.caption, color: isElder ? 'rgba(255,255,255,0.6)' : colors.pewter, marginTop: 4 }}>
 
                     {msg.timestamp instanceof Date ? msg.timestamp.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : ''}
@@ -136,7 +136,7 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>{f.name}</Text>
-                <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Black' }}>{locale === 'nl-NL' ? 'Bellen' : 'Call'}</Text>
+                <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>{locale === 'nl-NL' ? 'Bellen' : 'Call'}</Text>
 
               </View>
               <MaterialCommunityIcons name="phone-outline" size={24} color={colors.slate} />
@@ -166,7 +166,7 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
                 <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>{story.title}</Text>
               </View>
               <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>{story.date}</Text>
-              <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-Bold' }} numberOfLines={3}>{story.content}</Text>
+              <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }} numberOfLines={3}>{story.content}</Text>
 
             </View>
           ))}

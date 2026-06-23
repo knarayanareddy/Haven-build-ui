@@ -96,8 +96,8 @@ export function renderVisionToday(ctx: ScreenContext): React.ReactNode {
           }}>
             <Text style={{ fontSize: 20 }}>{vital.emoji}</Text>
             <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>{vital.value}</Text>
-            <Text style={{ fontSize: typeScale.caption, fontWeight: '700', fontFamily: 'Nunito-Black', color: colors.pewter }}>{vital.label}</Text>
-            <Text style={{ fontSize: typeScale.caption, fontWeight: '700', fontFamily: 'Nunito-Black', color: vital.status === 'low' ? colors.amber : colors.sage }}>
+            <Text style={{ fontSize: typeScale.caption, fontWeight: '700', fontFamily: 'Nunito-Bold', color: colors.pewter }}>{vital.label}</Text>
+            <Text style={{ fontSize: typeScale.caption, fontWeight: '700', fontFamily: 'Nunito-Bold', color: vital.status === 'low' ? colors.amber : colors.sage }}>
 
               {vital.trend === 'up' ? '↑' : vital.trend === 'down' ? '↓' : '→'} {vital.unit}
             </Text>

@@ -11,6 +11,7 @@ import { Nunito_900Black } from '@expo-google-fonts/nunito/900Black';
 import { I18nProvider } from '@haven/i18n';
 import { AuthProvider } from './src/auth/AuthProvider';
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { ElderErrorBoundary } from './src/components/ElderErrorBoundary';
 
 // Apply Nunito as the default font for all Text components
 (Text as any).defaultProps = {
@@ -39,7 +40,9 @@ export default function App() {
   const content = (
     <AuthProvider>
       <I18nProvider initialLocale="nl-NL">
-        <AppNavigator />
+        <ElderErrorBoundary>
+          <AppNavigator />
+        </ElderErrorBoundary>
       </I18nProvider>
     </AuthProvider>
   );

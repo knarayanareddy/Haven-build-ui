@@ -14,6 +14,8 @@ interface ElderLiveData {
   scamEvents: ScamEventRow[];
   buurt: BuurtRow;
   visits: VisitLogRow[];
+  loading: boolean;
+  error: string | null;
 }
 
 const EMPTY_DATA: ElderLiveData = {
@@ -24,6 +26,8 @@ const EMPTY_DATA: ElderLiveData = {
   scamEvents: [],
   buurt: { active: false, nearbyCount: 0, tags: [], walkBuddyCount: 0, events: [] },
   visits: [],
+  loading: true,
+  error: null,
 };
 
 function scoreToLevel(score: number): 'none' | 'amber' | 'rood' | 'zwart' {
@@ -33,7 +37,7 @@ function scoreToLevel(score: number): 'none' | 'amber' | 'rood' | 'zwart' {
   return 'none';
 }
 
-export function useElderData(elderId: string): ElderLiveData {
+export function useElderData(elderId: string): ElderLiveData & { retry: () => void } {
   const { supabase, session } = useAuth();
   const [data, setData] = useState<ElderLiveData>(EMPTY_DATA);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -43,7 +47,7 @@ export function useElderData(elderId: string): ElderLiveData {
   const fetchFamily = useCallback(async () => {
     const { data: familyRows } = await supabase
       .from('family_relationships')
-      .select('id, family_member_id, relation_type, profiles!family_relationships_family_member_id_fkey(preferred_name)')
+      .select('id, family_member_id, relation_type, is_primary, profiles!family_relationships_family_member_id_fkey(preferred_name)')
       .eq('elder_id', elderId)
       .is('deleted_at', null);
 
@@ -51,6 +55,7 @@ export function useElderData(elderId: string): ElderLiveData {
       id: row.family_member_id,
       name: row.profiles?.preferred_name ?? 'Familie',
       relation: row.relation_type ?? 'kind',
+      isPrimary: !!row.is_primary,
     }));
     setData((prev) => ({ ...prev, family }));
   }, [supabase, elderId]);
@@ -124,7 +129,7 @@ export function useElderData(elderId: string): ElderLiveData {
   const fetchScamEvents = useCallback(async () => {
     const { data: scamRows } = await supabase
       .from('scam_events')
-      .select('id, channel, explanation_nl, explanation_en, score_composite, resolved_at, created_at')
+      .select('id, channel, explanation_nl, explanation_en, score_composite, family_notified, created_at')
       .eq('elder_id', elderId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -136,7 +141,7 @@ export function useElderData(elderId: string): ElderLiveData {
       channel: row.channel ?? 'unknown',
       score: row.score_composite ?? 0,
       explanation: row.explanation_nl ?? row.explanation_en ?? '',
-      notified: !!row.resolved_at,
+      notified: !!row.family_notified,
     }));
     setData((prev) => ({ ...prev, scamEvents }));
   }, [supabase, elderId]);
@@ -182,6 +187,7 @@ export function useElderData(elderId: string): ElderLiveData {
 
   const fetchAll = useCallback(async () => {
     if (!session || elderId === 'signed-out') return;
+    setData((prev) => ({ ...prev, loading: true, error: null }));
     try {
       await Promise.all([
         fetchFamily(),
@@ -192,8 +198,11 @@ export function useElderData(elderId: string): ElderLiveData {
         fetchBuurt(),
         fetchVisits(),
       ]);
+      setData((prev) => ({ ...prev, loading: false }));
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Gegevens ophalen mislukt';
       console.warn('[useElderData] fetch failed, using fallback:', error);
+      setData((prev) => ({ ...prev, loading: false, error: message }));
     }
   }, [session, elderId, fetchFamily, fetchMedications, fetchTasks, fetchMessages, fetchScamEvents, fetchBuurt, fetchVisits]);
 
@@ -204,7 +213,11 @@ export function useElderData(elderId: string): ElderLiveData {
       return;
     }
 
-    fetchAll();
+    fetchAll().then(() => {
+      setData((prev) => ({ ...prev, loading: false }));
+    }).catch(() => {
+      setData((prev) => ({ ...prev, loading: false }));
+    });
 
     const channel = supabase
       .channel(`elder-${elderId}`)
@@ -256,5 +269,9 @@ export function useElderData(elderId: string): ElderLiveData {
     };
   }, [session, elderId, supabase, fetchAll, fetchMessages, fetchMedications, fetchScamEvents, fetchTasks, fetchVisits]);
 
-  return data;
+  const retry = useCallback(() => {
+    fetchAll();
+  }, [fetchAll]);
+
+  return { ...data, retry };
 }

@@ -27,6 +27,10 @@ declare module 'react-native' {
     currentState: string;
     addEventListener: (event: string, handler: (state: string) => void) => { remove: () => void };
   };
+  export const BackHandler: {
+    addEventListener: (event: string, handler: () => boolean) => { remove: () => void };
+    exitApp: () => void;
+  };
 }
 
 declare module '@react-native-async-storage/async-storage' {

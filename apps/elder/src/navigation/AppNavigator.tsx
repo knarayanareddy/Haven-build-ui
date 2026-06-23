@@ -1,14 +1,16 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { ActivityIndicator, BackHandler, View } from 'react-native';
 import { productionScreens } from '@haven/schema/src/screenSchema';
 import { ElderScreen } from '../screens/ElderScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { useAuth } from '../auth/AuthProvider';
+import { useOfflineSync } from '../hooks/useOfflineSync';
 
 export type ElderStackParamList = Record<string, undefined>;
 
 export function AppNavigator() {
   const { session, isReady } = useAuth();
+  useOfflineSync();
   const [activeScreenId, setActiveScreenId] = useState('HOME');
   const historyRef = useRef<string[]>(['HOME']);
 
@@ -26,6 +28,17 @@ export function AppNavigator() {
   }, []);
 
   const canGoBack = historyRef.current.length > 1;
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (historyRef.current.length > 1) {
+        onBack();
+        return true;
+      }
+      return false;
+    });
+    return () => subscription.remove();
+  }, [onBack]);
 
   if (!isReady) {
     return (

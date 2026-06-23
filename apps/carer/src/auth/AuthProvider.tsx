@@ -56,12 +56,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     SecureStore.getItemAsync(SESSION_KEY).then(async (stored: string | null) => {
       if (!mounted || !supabase) return;
       if (stored) {
-        const parsed = JSON.parse(stored) as Session;
-        setSession(parsed);
-        await supabase.auth.setSession({
-          access_token: parsed.access_token,
-          refresh_token: parsed.refresh_token,
-        });
+        try {
+          const parsed = JSON.parse(stored) as Session;
+          setSession(parsed);
+          await supabase.auth.setSession({
+            access_token: parsed.access_token,
+            refresh_token: parsed.refresh_token,
+          });
+        } catch {
+          await SecureStore.deleteItemAsync(SESSION_KEY);
+        }
       }
       setReady(true);
     });

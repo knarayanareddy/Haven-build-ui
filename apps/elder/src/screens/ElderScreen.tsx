@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { productionScreens } from '@haven/schema/src/screenSchema';
 import { useTranslation } from '@haven/i18n';
 import type { Locale } from '@haven/contracts/src/haven';
@@ -72,6 +73,16 @@ export function ElderScreen({ screenId, onNavigate, onBack }: Props) {
   const elderId = sessionUserId(session) ?? 'signed-out';
   const seed = useMemo(() => loadShell(elderId, locale, t), [elderId, locale, t]);
   const liveData = useElderData(elderId);
+
+  if (liveData.loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1A2B4C' }}>
+        <ActivityIndicator size="large" color="#4A90D9" />
+        <Text style={{ color: '#FFFFFF', marginTop: 12, fontSize: 18 }}>Laden...</Text>
+      </View>
+    );
+  }
+
   const ctx: ScreenContext = {
     locale: seed.profile.locale,
     now: new Date(),
@@ -92,5 +103,23 @@ export function ElderScreen({ screenId, onNavigate, onBack }: Props) {
       actions.handlePrimaryAction(actionId);
     },
   };
-  return <ScreenRenderer schema={schema} context={ctx} onBack={onBack} />;
+
+  return (
+    <View style={{ flex: 1 }}>
+      {liveData.error && (
+        <View style={{ backgroundColor: '#DC2626', padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={{ color: '#FFFFFF', fontSize: 14, flex: 1 }}>{liveData.error}</Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Opnieuw proberen"
+            onPress={liveData.retry}
+            style={{ marginLeft: 12, backgroundColor: '#FFFFFF', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 }}
+          >
+            <Text style={{ color: '#DC2626', fontWeight: '700', fontSize: 14 }}>Opnieuw</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      <ScreenRenderer schema={schema} context={ctx} onBack={onBack} />
+    </View>
+  );
 }

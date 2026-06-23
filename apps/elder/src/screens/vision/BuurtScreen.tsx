@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, typeScale, touch } from '@haven/ui/src/tokens';
+
 import { SubTabBar, ProgressBar } from '@haven/ui/src/visionComponents';
 // DEMO: mock neighbourhood data — acceptable fixture (requires real user base)
 import { BUURT_MATCHES, COMMUNITY_EVENTS } from '@haven/ui/src/mockData';
@@ -28,14 +29,18 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
           <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
             {locale === 'nl-NL' ? 'Buurtverbinder' : 'Neighbourhood Connector'}
           </Text>
-          <Text style={{ fontSize: 16, color: colors.graphite, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
+          <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
+
             {locale === 'nl-NL' ? 'Ontmoet buren in uw buurt die dezelfde interesses hebben. Uw privacy is altijd beschermd.' : 'Meet neighbours nearby who share your interests. Your privacy is always protected.'}
           </Text>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={locale === 'nl-NL' ? 'Activeer buurtverbinder' : 'Activate neighbourhood'}
             onPress={() => ctx.onPrimaryAction('OPT_IN_BUURT')}
-            style={{ backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center', marginTop: 8 }}
+            style={{ backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center', marginTop: 8, minHeight: touch.minimum }}
           >
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
+            <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
+
               {locale === 'nl-NL' ? 'Activeer buurtverbinder' : 'Activate neighbourhood'}
             </Text>
           </TouchableOpacity>
@@ -91,8 +96,10 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
               </View>
               {match.available && (
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={locale === 'nl-NL' ? `Maak contact met ${match.alias}` : `Connect with ${match.alias}`}
                   onPress={() => ctx.onPrimaryAction(`BUURT_CONNECT:${match.id}`)}
-                  style={{ backgroundColor: colors.sage, borderRadius: 14, paddingVertical: 10, alignItems: 'center' }}
+                  style={{ backgroundColor: colors.sage, borderRadius: 14, paddingVertical: 10, alignItems: 'center', minHeight: touch.minimum }}
                 >
                   <Text style={{ color: '#fff', fontWeight: '900', fontFamily: 'Nunito-Black' }}>
                     {locale === 'nl-NL' ? 'Maak contact' : 'Connect'}
@@ -124,15 +131,18 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
 
       {activeTab === 'interests' && (
         <View style={{ gap: 10 }}>
-          <Text style={{ fontSize: 16, color: colors.graphite, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
+          <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
+
             {locale === 'nl-NL' ? 'Selecteer uw interesses om betere matches te krijgen:' : 'Select your interests for better matches:'}
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {['Walking', 'Gardening', 'Reading', 'Coffee', 'Music', 'Cooking', 'Card games', 'Crafts', 'Photography'].map((interest) => (
               <TouchableOpacity
                 key={interest}
+                accessibilityRole="button"
+                accessibilityLabel={interest}
                 onPress={() => ctx.onPrimaryAction(`BUURT_INTEREST:${interest}`)}
-                style={{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist }}
+                style={{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, minHeight: touch.minimum }}
               >
                 <Text style={{ fontSize: 18, fontWeight: '700', fontFamily: 'Nunito-Bold', color: colors.ink }}>{interest}</Text>
               </TouchableOpacity>

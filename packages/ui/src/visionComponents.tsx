@@ -6,7 +6,7 @@ import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { colors, fontFamily, radius, touch } from './tokens';
+import { colors, fontFamily, radius, touch, typeScale } from './tokens';
 import { statusColors } from './visionColors';
 
 // ─── GradientCard ───
@@ -46,11 +46,11 @@ export function GradientCard({ gradient, icon, title, subtitle, badge, onPress, 
         <View style={{ flex: 1, gap: 4 }}>
           {icon ? <MaterialCommunityIcons name={icon as any} size={28} color="#FFFFFF" /> : null}
           <Text style={{ fontSize: 20, fontWeight: '900', fontFamily: fontFamily.black, color: '#FFFFFF' }}>{title}</Text>
-          {subtitle ? <Text style={{ fontSize: 14, fontWeight: '700', fontFamily: fontFamily.bold, color: 'rgba(255,255,255,0.85)' }}>{subtitle}</Text> : null}
+          {subtitle ? <Text style={{ fontSize: typeScale.caption, fontWeight: '700', fontFamily: fontFamily.bold, color: 'rgba(255,255,255,0.85)' }}>{subtitle}</Text> : null}
         </View>
         {badge !== undefined && badge > 0 ? (
           <View style={{ minWidth: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.3)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 6 }}>
-            <Text style={{ color: '#FFFFFF', fontWeight: '900', fontFamily: fontFamily.black, fontSize: 14 }}>{badge}</Text>
+            <Text style={{ color: '#FFFFFF', fontWeight: '900', fontFamily: fontFamily.black, fontSize: typeScale.caption }}>{badge}</Text>
           </View>
         ) : null}
       </LinearGradient>
@@ -71,7 +71,7 @@ export function StatusBadge({ status, label }: StatusBadgeProps) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: bg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, alignSelf: 'flex-start' }}>
       <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: fg }} />
-      <Text style={{ fontSize: 14, fontWeight: '800', fontFamily: fontFamily.bold, color: fg }}>{label}</Text>
+      <Text style={{ fontSize: typeScale.caption, fontWeight: '800', fontFamily: fontFamily.bold, color: fg }}>{label}</Text>
     </View>
   );
 }
@@ -92,7 +92,7 @@ export function ProgressBar({ progress, color, height = 10, showLabel }: Progres
       <View style={{ height, borderRadius: height / 2, backgroundColor: colors.mist, overflow: 'hidden' }}>
         <View style={{ height, borderRadius: height / 2, backgroundColor: fg, width: `${pct * 100}%` }} />
       </View>
-      {showLabel ? <Text style={{ fontSize: 13, fontWeight: '800', fontFamily: fontFamily.bold, color: fg, textAlign: 'right' }}>{Math.round(pct * 100)}%</Text> : null}
+      {showLabel ? <Text style={{ fontSize: typeScale.caption, fontWeight: '800', fontFamily: fontFamily.bold, color: fg, textAlign: 'right' }}>{Math.round(pct * 100)}%</Text> : null}
     </View>
   );
 }
@@ -131,7 +131,7 @@ export function SubTabBar({ tabs, activeTab, onTabChange }: SubTabBarProps) {
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             {tab.icon ? <MaterialCommunityIcons name={tab.icon as any} size={16} color={tab.id === activeTab ? colors.ink : colors.pewter} /> : null}
-            <Text style={{ fontSize: 14, fontWeight: tab.id === activeTab ? '900' : '700', fontFamily: tab.id === activeTab ? fontFamily.black : fontFamily.bold, color: tab.id === activeTab ? colors.ink : colors.pewter }}>
+            <Text style={{ fontSize: typeScale.caption, fontWeight: tab.id === activeTab ? '900' : '700', fontFamily: tab.id === activeTab ? fontFamily.black : fontFamily.bold, color: tab.id === activeTab ? colors.ink : colors.pewter }}>
               {tab.label}
             </Text>
           </View>
@@ -181,11 +181,11 @@ export function BottomNavBar({ items, activeScreen, onNavigate }: BottomNavBarPr
               <MaterialCommunityIcons name={item.icon as any} size={24} color={active ? colors.slate : colors.pewter} />
               {item.badge !== undefined && item.badge > 0 ? (
                 <View style={{ position: 'absolute', top: -4, right: -8, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: '#ef4444', justifyContent: 'center', alignItems: 'center' }}>
-                  <Text style={{ color: '#fff', fontSize: 11, fontWeight: '900' }}>{item.badge > 9 ? '9+' : item.badge}</Text>
+                  <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900' }}>{item.badge > 9 ? '9+' : item.badge}</Text>
                 </View>
               ) : null}
             </View>
-            <Text style={{ fontSize: 11, fontWeight: active ? '900' : '600', fontFamily: active ? fontFamily.black : fontFamily.regular, color: active ? colors.slate : colors.pewter }}>{item.label}</Text>
+            <Text style={{ fontSize: typeScale.caption, fontWeight: active ? '900' : '600', fontFamily: active ? fontFamily.black : fontFamily.regular, color: active ? colors.slate : colors.pewter }}>{item.label}</Text>
           </TouchableOpacity>
         );
       })}
@@ -256,11 +256,12 @@ export function ConsentToggle({ label, description, value, onChange }: ConsentTo
         paddingVertical: 12,
         borderBottomWidth: 1,
         borderBottomColor: colors.mist,
+        minHeight: touch.minimum,
       }}
     >
       <View style={{ flex: 1, marginRight: 12 }}>
-        <Text style={{ fontSize: 16, fontWeight: '800', fontFamily: fontFamily.bold, color: colors.ink }}>{label}</Text>
-        <Text style={{ fontSize: 13, fontWeight: '600', fontFamily: fontFamily.regular, color: colors.pewter, marginTop: 2 }}>{description}</Text>
+        <Text style={{ fontSize: typeScale.caption, fontWeight: '800', fontFamily: fontFamily.bold, color: colors.ink }}>{label}</Text>
+        <Text style={{ fontSize: typeScale.caption, fontWeight: '600', fontFamily: fontFamily.regular, color: colors.pewter, marginTop: 2 }}>{description}</Text>
       </View>
       <View style={{
         width: 48,

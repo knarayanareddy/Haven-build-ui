@@ -77,22 +77,13 @@ export function useHavenActions(screenId: string) {
       }
       if (client && elderId) {
         try {
-          await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/rest/v1/family_messages`, {
-            method: 'POST',
-            headers: {
-              authorization: `Bearer ${session?.access_token}`,
-              apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? session?.access_token ?? '',
-              'content-type': 'application/json',
-              prefer: 'return=minimal',
-            },
-            body: JSON.stringify({
-              elder_id: elderId,
-              sender_id: elderId,
-              sender_role: 'elder',
-              message_type: 'tekst',
-              content_nl: kind === 'heart' ? '❤️' : '👍',
-              content_en: kind === 'heart' ? '❤️' : '👍',
-            }),
+          await client.sendFamilyMessage({
+            elder_id: elderId,
+            sender_id: elderId,
+            sender_role: 'elder',
+            message_type: 'tekst',
+            content_nl: kind === 'heart' ? '❤️' : '👍',
+            content_en: kind === 'heart' ? '❤️' : '👍',
           });
         } catch (_) {
           // Queued offline, will sync later

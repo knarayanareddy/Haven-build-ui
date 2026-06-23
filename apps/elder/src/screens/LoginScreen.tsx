@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { fontFamily, typeScale } from '@haven/ui/src/tokens';
+import { fontFamily, typeScale, touch } from '@haven/ui/src/tokens';
 import { useAuth } from '../auth/AuthProvider';
 
 export function LoginScreen() {
@@ -100,6 +100,8 @@ export function LoginScreen() {
           style={[styles.button, loading && styles.buttonDisabled]}
           onPress={step === 'phone' ? handleSendOtp : handleVerifyOtp}
           disabled={loading}
+          accessibilityRole="button"
+          accessibilityLabel={step === 'phone' ? 'Verstuur code' : 'Verifieer code'}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
@@ -111,7 +113,12 @@ export function LoginScreen() {
         </TouchableOpacity>
 
         {step === 'otp' && (
-          <TouchableOpacity style={styles.backLink} onPress={() => { setStep('phone'); setOtp(''); setError(null); }}>
+          <TouchableOpacity
+            style={styles.backLink}
+            onPress={() => { setStep('phone'); setOtp(''); setError(null); }}
+            accessibilityRole="button"
+            accessibilityLabel="Terug"
+          >
             <Text style={styles.backLinkText}>← Ander nummer gebruiken</Text>
           </TouchableOpacity>
         )}
@@ -135,6 +142,8 @@ export function LoginScreen() {
               }
             }}
             disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel="Demo modus"
           >
             <Text style={styles.demoButtonText}>Demo Mode</Text>
           </TouchableOpacity>
@@ -206,6 +215,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
+    minHeight: touch.minimum,
+    justifyContent: 'center',
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -219,6 +230,9 @@ const styles = StyleSheet.create({
   backLink: {
     marginTop: 16,
     alignItems: 'center',
+    minHeight: touch.minimum,
+    paddingVertical: 12,
+    justifyContent: 'center',
   },
   backLinkText: {
     color: '#8BA4C4',
@@ -232,6 +246,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 24,
+    minHeight: touch.minimum,
+    justifyContent: 'center',
   },
   demoButtonText: {
     color: '#4A7B5A',

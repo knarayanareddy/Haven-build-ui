@@ -29,14 +29,14 @@ export function HelpOverlay({ screenTitle, helpText }: HelpOverlayProps) {
         }}
         style={{
           position: 'absolute', top: 20, right: 12,
-          minWidth: 48, minHeight: 48, borderRadius: 24,
+          minWidth: 72, minHeight: 72, borderRadius: 36,
           backgroundColor: colors.paper, borderWidth: 2, borderColor: colors.sage,
           justifyContent: 'center', alignItems: 'center',
           shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
           zIndex: 100,
         }}
       >
-        <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: fontFamily.black, color: colors.sage }}>?</Text>
+        <Text style={{ fontSize: 28, fontWeight: '900', fontFamily: fontFamily.black, color: colors.sage }}>?</Text>
       </TouchableOpacity>
 
       <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
@@ -56,7 +56,7 @@ export function HelpOverlay({ screenTitle, helpText }: HelpOverlayProps) {
               {helpText}
             </Text>
             <View style={{ backgroundColor: colors.sagePale, borderRadius: 14, padding: 16, marginTop: 8 }}>
-              <Text style={{ fontSize: 15, color: colors.graphite, fontWeight: '700', fontFamily: fontFamily.bold }}>
+              <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700', fontFamily: fontFamily.bold }}>
                 {t('helpOverlayEmergencyHint')}
               </Text>
             </View>

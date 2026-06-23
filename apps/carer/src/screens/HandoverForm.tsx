@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { colors, fontFamily} from '@haven/ui/src/tokens';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useTranslation } from '@haven/i18n';
 import { useAuth } from '../auth/AuthProvider';
 import { useCarerClient } from '../hooks/useCarerClient';
@@ -160,7 +161,7 @@ export function HandoverForm({ route, navigation }: HandoverFormProps) {
       {interactionWarning && (
         <View style={{ borderRadius: 16, padding: 16, backgroundColor: interactionWarning.includes('CRITICAL') ? '#FAE8E8' : '#FDF3E0', borderWidth: 1, borderColor: interactionWarning.includes('CRITICAL') ? '#C94A4A' : '#A56A00' }}>
           <Text style={{ fontSize: 16, fontWeight: '900', fontFamily: fontFamily.black, color: colors.ink }}>
-            ⚠️ {interactionWarning}
+            <MaterialCommunityIcons name="alert" size={16} color={colors.ink} /> {interactionWarning}
           </Text>
         </View>
       )}
@@ -211,7 +212,7 @@ export function HandoverForm({ route, navigation }: HandoverFormProps) {
           backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist,
         }}
       >
-        <Text style={{ fontSize: 20 }}>📷</Text>
+        <MaterialCommunityIcons name="camera" size={20} color={colors.ink} />
         <Text style={{ fontSize: 16, fontWeight: '700', fontFamily: fontFamily.bold, color: colors.ink }}>
           {photosCount > 0 ? t('handover.photo.added', { count: photosCount }) : t('handover.photo.add')}
         </Text>

@@ -462,7 +462,7 @@ function renderKompas(ctx: ScreenContext) {
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {actionButton('😊', 'secondary', 'WELLNESS_GOOD', ctx.onPrimaryAction, locale === 'nl-NL' ? 'Goed' : 'Good')}
         {actionButton('😐', 'secondary', 'WELLNESS_OK', ctx.onPrimaryAction, locale === 'nl-NL' ? 'Oké' : 'Okay')}
-        {actionButton('🧠', 'secondary', 'COGNITIVE', ctx.onPrimaryAction, t(locale, 'quickQuestion'))}
+        {actionButton('?', 'secondary', 'COGNITIVE', ctx.onPrimaryAction, t(locale, 'quickQuestion'))}
       </View>
     </View>
   );

@@ -29,7 +29,7 @@ export class GrandchildErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.ink, padding: 40, gap: 16 }}>
-          <Text style={{ fontSize: 22, fontWeight: '900', color: colors.paper, textAlign: 'center' }}>
+          <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.paper, textAlign: 'center' }}>
             Er ging iets mis
           </Text>
           <Text style={{ fontSize: 16, color: colors.pewter, textAlign: 'center' }}>
@@ -41,7 +41,7 @@ export class GrandchildErrorBoundary extends React.Component<Props, State> {
             onPress={this.handleReset}
             style={{ minHeight: 48, borderRadius: 20, backgroundColor: colors.slateLight, paddingHorizontal: 24, paddingVertical: 12, marginTop: 8 }}
           >
-            <Text style={{ color: 'white', fontSize: 20, fontWeight: '900' }}>
+            <Text style={{ color: 'white', fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
               Probeer opnieuw
             </Text>
           </TouchableOpacity>

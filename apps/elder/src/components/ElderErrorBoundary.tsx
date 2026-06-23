@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { colors, typeScale, touch } from '@haven/ui/src/tokens';
 
 interface Props {
   children: React.ReactNode;
@@ -27,20 +28,20 @@ export class ElderErrorBoundary extends React.Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1A2B4C', padding: 40, gap: 16 }}>
-          <Text style={{ fontSize: 22, fontWeight: '900', color: '#FFFFFF', textAlign: 'center' }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.slate, padding: 40, gap: 16 }}>
+          <Text style={{ fontSize: typeScale.label, fontWeight: '900', color: colors.paper, textAlign: 'center' }}>
             Applicatiefout
           </Text>
-          <Text style={{ fontSize: 16, color: '#94A3B8', textAlign: 'center' }}>
+          <Text style={{ fontSize: typeScale.caption, color: colors.pewter, textAlign: 'center' }}>
             Er is een onverwachte fout opgetreden. Herstart de huidige weergave.
           </Text>
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel="Herstart weergave"
             onPress={this.handleReset}
-            style={{ minHeight: 48, borderRadius: 20, backgroundColor: '#4A90D9', paddingHorizontal: 24, paddingVertical: 12, marginTop: 8 }}
+            style={{ minHeight: touch.minimum, borderRadius: 20, backgroundColor: colors.brand, paddingHorizontal: 24, justifyContent: 'center', alignItems: 'center', marginTop: 8 }}
           >
-            <Text style={{ color: 'white', fontSize: 20, fontWeight: '900' }}>
+            <Text style={{ color: colors.paper, fontSize: 20, fontWeight: '900' }}>
               Herstart weergave
             </Text>
           </TouchableOpacity>

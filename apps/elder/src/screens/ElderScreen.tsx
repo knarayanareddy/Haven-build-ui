@@ -8,6 +8,7 @@ import { useHavenActions } from '../hooks/useHavenActions';
 import { useElderData } from '../hooks/useElderData';
 import { useAuth } from '../auth/AuthProvider';
 import { initializeAndroidDozeGuard } from '../services/dozeGuard';
+import { typeScale } from '@haven/ui/src/tokens';
 
 interface Props {
   screenId: string;
@@ -78,7 +79,7 @@ export function ElderScreen({ screenId, onNavigate, onBack }: Props) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1A2B4C' }}>
         <ActivityIndicator size="large" color="#4A90D9" />
-        <Text style={{ color: '#FFFFFF', marginTop: 12, fontSize: 18 }}>Laden...</Text>
+        <Text style={{ color: '#FFFFFF', marginTop: 12, fontSize: typeScale.caption }}>Laden...</Text>
       </View>
     );
   }
@@ -106,19 +107,22 @@ export function ElderScreen({ screenId, onNavigate, onBack }: Props) {
 
   return (
     <View style={{ flex: 1 }}>
-      {liveData.error && (
-        <View style={{ backgroundColor: '#DC2626', padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text style={{ color: '#FFFFFF', fontSize: 14, flex: 1 }}>{liveData.error}</Text>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Opnieuw proberen"
-            onPress={liveData.retry}
-            style={{ marginLeft: 12, backgroundColor: '#FFFFFF', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 }}
-          >
-            <Text style={{ color: '#DC2626', fontWeight: '700', fontSize: 14 }}>Opnieuw</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      {liveData.error && (() => {
+        console.warn('[HAVEN Elder] Data load error:', liveData.error);
+        return (
+          <View style={{ backgroundColor: '#DC2626', padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={{ color: '#FFFFFF', fontSize: typeScale.caption, flex: 1 }}>Gegevens konden niet worden geladen. Controleer uw internetverbinding.</Text>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Opnieuw proberen"
+              onPress={liveData.retry}
+              style={{ marginLeft: 12, backgroundColor: '#FFFFFF', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 }}
+            >
+              <Text style={{ color: '#DC2626', fontWeight: '700', fontSize: typeScale.caption }}>Opnieuw</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      })()}
       <ScreenRenderer schema={schema} context={ctx} onBack={onBack} />
     </View>
   );

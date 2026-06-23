@@ -5,6 +5,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { Nunito_400Regular } from '@expo-google-fonts/nunito/400Regular';
+import { Nunito_600SemiBold } from '@expo-google-fonts/nunito/600SemiBold';
 import { Nunito_700Bold } from '@expo-google-fonts/nunito/700Bold';
 import { Nunito_900Black } from '@expo-google-fonts/nunito/900Black';
 import { I18nProvider } from '@haven/i18n';
@@ -23,6 +24,7 @@ SplashScreen.preventAutoHideAsync();
 export default function App() {
   const [fontsLoaded] = useFonts({
     Nunito: Nunito_400Regular,
+    'Nunito-SemiBold': Nunito_600SemiBold,
     'Nunito-Bold': Nunito_700Bold,
     'Nunito-Black': Nunito_900Black,
   });

@@ -2,10 +2,11 @@
 // Uses auth session for live Supabase fetch + CRUD, mock data as fallback
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, semanticColors } from '@haven/ui/src/tokens';
 import { StatusBadge, ProgressBar } from '@haven/ui/src/visionComponents';
 import { MEDICATIONS } from '@haven/ui/src/mockData';
 import { useAuth } from '../../auth/AuthProvider';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 interface MedicationsTabProps {
   locale: string;
@@ -120,42 +121,42 @@ export function MedicationsTab({ locale }: MedicationsTabProps) {
       {medsLoading && (
         <View style={{ paddingVertical: 32, alignItems: 'center' }}>
           <ActivityIndicator size="large" color={colors.brand} />
-          <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', marginTop: 8 }}>{nl ? 'Laden...' : 'Loading...'}</Text>
+          <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Bold', marginTop: 8 }}>{nl ? 'Laden...' : 'Loading...'}</Text>
         </View>
       )}
       {medsError && (
-        <View style={{ backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 16, padding: 12 }}>
-          <Text style={{ fontSize: 14, color: '#991B1B', fontWeight: '700' }}>{medsError}</Text>
+        <View style={{ backgroundColor: semanticColors.dangerBg, borderWidth: 1, borderColor: semanticColors.dangerBorder, borderRadius: 16, padding: 12 }}>
+          <Text style={{ fontSize: 14, color: semanticColors.dangerText, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>{medsError}</Text>
         </View>
       )}
       {/* Consent notice */}
-      <View style={{ backgroundColor: '#DBEAFE', borderWidth: 1, borderColor: '#93C5FD', borderRadius: 16, padding: 12 }}>
-        <Text style={{ fontSize: 12, color: '#1E40AF', fontWeight: '700' }}>
-          🔒 {nl ? 'Medicatieweergave verleend door toestemming van Margaret.' : 'Medication view granted by Margaret\'s consent.'}
+      <View style={{ backgroundColor: semanticColors.infoBg, borderWidth: 1, borderColor: '#93C5FD', borderRadius: 16, padding: 12 }}>
+        <Text style={{ fontSize: 12, color: semanticColors.infoText, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
+          {nl ? 'Medicatieweergave verleend door toestemming van Margaret.' : 'Medication view granted by Margaret\'s consent.'}
         </Text>
       </View>
 
       {/* Adherence banner */}
       <View style={{
         borderRadius: 16, padding: 12, borderWidth: 1,
-        backgroundColor: adherence >= 90 ? '#D1FAE5' : '#FEF3C7',
-        borderColor: adherence >= 90 ? '#6EE7B7' : '#FDE68A',
+        backgroundColor: adherence >= 90 ? semanticColors.successBg : semanticColors.warningBg,
+        borderColor: adherence >= 90 ? semanticColors.successBorder : semanticColors.warningBorder,
       }}>
-        <Text style={{ fontSize: 15, fontWeight: '900', color: adherence >= 90 ? '#065F46' : '#92400E' }}>
+        <Text style={{ fontSize: 15, fontWeight: '900', fontFamily: 'Nunito-Black', color: adherence >= 90 ? semanticColors.successText : semanticColors.warningText }}>
           {adherence}% {nl ? 'naleving vandaag' : 'adherence today'} — {medicsTaken}/{medicsTotal} {nl ? 'doses genomen' : 'doses taken'}
         </Text>
       </View>
 
       {/* Add medication button */}
       <TouchableOpacity onPress={() => setShowAddForm(!showAddForm)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#1E3A5F', borderRadius: 14, paddingVertical: 10 }}>
-        <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800' }}>+ {nl ? 'Medicijn toevoegen' : 'Add medication'}</Text>
+        <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800', fontFamily: 'Nunito-Bold' }}>+ {nl ? 'Medicijn toevoegen' : 'Add medication'}</Text>
       </TouchableOpacity>
 
       {/* Add form */}
       {showAddForm && (
         <View style={{ borderRadius: 16, padding: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: '#1E3A5F', gap: 10 }}>
           <View style={{ gap: 4 }}>
-            <Text style={{ fontSize: 12, fontWeight: '800', color: colors.ink }}>{nl ? 'Naam' : 'Name'} *</Text>
+            <Text style={{ fontSize: 12, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{nl ? 'Naam' : 'Name'} *</Text>
             <TextInput
               value={newName}
               onChangeText={setNewName}
@@ -166,7 +167,7 @@ export function MedicationsTab({ locale }: MedicationsTabProps) {
           </View>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1, gap: 4 }}>
-              <Text style={{ fontSize: 12, fontWeight: '800', color: colors.ink }}>{nl ? 'Dosis' : 'Dose'}</Text>
+              <Text style={{ fontSize: 12, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{nl ? 'Dosis' : 'Dose'}</Text>
               <TextInput
                 value={newDose}
                 onChangeText={setNewDose}
@@ -176,7 +177,7 @@ export function MedicationsTab({ locale }: MedicationsTabProps) {
               />
             </View>
             <View style={{ flex: 1, gap: 4 }}>
-              <Text style={{ fontSize: 12, fontWeight: '800', color: colors.ink }}>{nl ? 'Tijd' : 'Time'}</Text>
+              <Text style={{ fontSize: 12, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{nl ? 'Tijd' : 'Time'}</Text>
               <TextInput
                 value={newTime}
                 onChangeText={setNewTime}
@@ -188,10 +189,10 @@ export function MedicationsTab({ locale }: MedicationsTabProps) {
           </View>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <TouchableOpacity onPress={() => setShowAddForm(false)} style={{ flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center', backgroundColor: colors.mist }}>
-              <Text style={{ fontSize: 13, fontWeight: '800', color: colors.graphite }}>{nl ? 'Annuleren' : 'Cancel'}</Text>
+              <Text style={{ fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.graphite }}>{nl ? 'Annuleren' : 'Cancel'}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleAddMedication} disabled={submitting} style={{ flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center', backgroundColor: '#1E3A5F', opacity: submitting ? 0.6 : 1 }}>
-              <Text style={{ fontSize: 13, fontWeight: '800', color: '#fff' }}>{submitting ? '...' : (nl ? 'Toevoegen' : 'Add')}</Text>
+              <Text style={{ fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold', color: '#fff' }}>{submitting ? '...' : (nl ? 'Toevoegen' : 'Add')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -199,8 +200,8 @@ export function MedicationsTab({ locale }: MedicationsTabProps) {
 
       {/* Live data indicator */}
       {liveMeds && (
-        <View style={{ backgroundColor: '#D1FAE5', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', color: '#065F46' }}>● {nl ? 'Live data' : 'Live data'}</Text>
+        <View style={{ backgroundColor: semanticColors.successBg, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' }}>
+          <Text style={{ fontSize: 11, fontWeight: '700', fontFamily: 'Nunito-Bold', color: semanticColors.successText }}>● {nl ? 'Live data' : 'Live data'}</Text>
         </View>
       )}
 
@@ -215,10 +216,10 @@ export function MedicationsTab({ locale }: MedicationsTabProps) {
             <View style={{ width: 6, height: 40, borderRadius: 3, backgroundColor: med.color }} />
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 16, fontWeight: '900', color: colors.ink }}>{med.name} {med.dose}</Text>
-                <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600' }}>{med.stock} {nl ? 'over' : 'left'}</Text>
+                <Text style={{ fontSize: 16, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>{med.name} {med.dose}</Text>
+                <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{med.stock} {nl ? 'over' : 'left'}</Text>
               </View>
-              <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600' }}>
+              <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
                 {med.purpose} · {med.prescriber}
               </Text>
             </View>
@@ -230,16 +231,16 @@ export function MedicationsTab({ locale }: MedicationsTabProps) {
               <View key={i} style={{
                 flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
                 paddingVertical: 8, borderRadius: 12,
-                backgroundColor: med.taken[i] ? '#D1FAE5' : '#FEF3C7',
-                borderWidth: 1, borderColor: med.taken[i] ? '#6EE7B7' : '#FDE68A',
+                backgroundColor: med.taken[i] ? semanticColors.successBg : semanticColors.warningBg,
+                borderWidth: 1, borderColor: med.taken[i] ? semanticColors.successBorder : semanticColors.warningBorder,
               }}>
-                <Text style={{ fontSize: 12, fontWeight: '700', color: med.taken[i] ? '#065F46' : '#92400E' }}>
+                <Text style={{ fontSize: 12, fontWeight: '700', fontFamily: 'Nunito-Bold', color: med.taken[i] ? semanticColors.successText : semanticColors.warningText }}>
                   {med.taken[i] ? '✓' : '○'}
                 </Text>
-                <Text style={{ fontSize: 12, fontWeight: '700', color: med.taken[i] ? '#065F46' : '#92400E' }}>
+                <Text style={{ fontSize: 12, fontWeight: '700', fontFamily: 'Nunito-Bold', color: med.taken[i] ? semanticColors.successText : semanticColors.warningText }}>
                   {time}
                 </Text>
-                <Text style={{ fontSize: 10, fontWeight: '600', color: med.taken[i] ? '#065F46' : '#92400E' }}>
+                <Text style={{ fontSize: 10, fontWeight: '600', fontFamily: 'Nunito-SemiBold', color: med.taken[i] ? semanticColors.successText : semanticColors.warningText }}>
                   {med.taken[i] ? (nl ? 'genomen' : 'taken') : (nl ? 'verwacht' : 'due')}
                 </Text>
               </View>
@@ -248,7 +249,7 @@ export function MedicationsTab({ locale }: MedicationsTabProps) {
 
           {/* Low stock warning */}
           {med.stock < 15 && (
-            <Text style={{ fontSize: 12, color: '#92400E', fontWeight: '700' }}>
+            <Text style={{ fontSize: 12, color: semanticColors.warningText, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
               ⚠️ {nl ? 'Lage voorraad — bijvullen voor' : 'Low stock — refill by'} {med.nextRefill}
             </Text>
           )}

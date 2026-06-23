@@ -4,8 +4,10 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, typeScale, touch } from '@haven/ui/src/tokens';
+
 import { pillarGradients } from '@haven/ui/src/visionColors';
 // DEMO: mock voice memory — acceptable fixture (VAPI handles real conversations)
 import { VOICE_MEMORY } from '@haven/ui/src/mockData';
@@ -195,7 +197,7 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
       ? (['#9CA3AF', '#6B7280'] as const)
       : pillarGradients.stem;
 
-  const orbEmoji = effectiveSending ? '...' : effectiveListening ? '🔊' : '🎙️';
+  const orbIcon = effectiveSending ? 'dots-horizontal' : effectiveListening ? 'volume-high' : 'microphone';
   const orbLabel = effectiveSending
     ? (nl ? 'Verbinden...' : 'Connecting...')
     : effectiveListening
@@ -212,7 +214,7 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
       {vapiAvailable && (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981' }} />
-          <Text style={{ fontSize: 18, fontWeight: '700', color: '#10B981' }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', fontFamily: 'Nunito-Bold', color: '#10B981' }}>
             {nl ? 'Realtime spraak actief' : 'Real-time voice active'}
           </Text>
         </View>
@@ -233,17 +235,17 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
               end={{ x: 1, y: 1 }}
               style={{ width: 120, height: 120, borderRadius: 60, justifyContent: 'center', alignItems: 'center' }}
             >
-              <Text style={{ fontSize: 48 }}>{orbEmoji}</Text>
+              <MaterialCommunityIcons name={orbIcon as any} size={48} color={colors.ink} />
             </LinearGradient>
           </View>
         </TouchableOpacity>
-        <Text style={{ fontSize: 18, fontWeight: '800', color: effectiveListening ? colors.amber : effectiveSending ? colors.pewter : colors.ink, marginTop: 12, textAlign: 'center' }}>
+        <Text style={{ fontSize: 18, fontWeight: '800', fontFamily: 'Nunito-Bold', color: effectiveListening ? colors.amber : effectiveSending ? colors.pewter : colors.ink, marginTop: 12, textAlign: 'center' }}>
           {orbLabel}
         </Text>
         {/* Live transcript during VAPI call */}
         {vapiAvailable && effectiveListening && vapi.state.transcript && (
           <View style={{ marginTop: 8, paddingHorizontal: 20, paddingVertical: 8, borderRadius: 12, backgroundColor: colors.mist }}>
-            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.graphite, fontStyle: 'italic', textAlign: 'center' }}>
+            <Text style={{ fontSize: 18, fontWeight: '600', fontFamily: 'Nunito-SemiBold', color: colors.graphite, fontStyle: 'italic', textAlign: 'center' }}>
               "{vapi.state.transcript}"
             </Text>
           </View>
@@ -253,7 +255,7 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
       {/* Quick prompts (only shown when not in VAPI call) */}
       {!effectiveListening && (
         <>
-          <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>
+          <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
             {nl ? 'Of probeer:' : 'Or try:'}
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -266,7 +268,7 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
                 accessibilityLabel={nl ? p.text : p.textEn}
                 style={{ paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, opacity: effectiveSending ? 0.5 : 1, minHeight: touch.minimum }}
               >
-                <Text style={{ fontSize: 18, fontWeight: '700', color: colors.slate }}>
+                <Text style={{ fontSize: 18, fontWeight: '700', fontFamily: 'Nunito-Bold', color: colors.slate }}>
                   {nl ? p.text : p.textEn}
                 </Text>
               </TouchableOpacity>
@@ -283,24 +285,27 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
         style={{ backgroundColor: colors.rosePale, borderWidth: 1, borderColor: colors.rose, borderRadius: 16, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8, minHeight: touch.minimum }}
       >
         <Text style={{ fontSize: 20 }}>🆘</Text>
-        <Text style={{ color: colors.rose, fontSize: typeScale.caption, fontWeight: '900' }}>
+        <Text style={{ color: colors.rose, fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
+
           {nl ? 'Noodgeval' : 'Emergency'}
         </Text>
       </TouchableOpacity>
 
       {/* Conversation history */}
-      <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>
+      <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
         {nl ? 'Eerder gevraagd' : 'Previously asked'}
       </Text>
       {conversation.map((mem) => (
         <View key={mem.id} style={{ borderRadius: 18, padding: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
-            <Text style={{ fontSize: typeScale.caption }}>🗣️</Text>
-            <Text style={{ fontSize: 18, fontWeight: '800', color: colors.ink, flex: 1 }}>{mem.query}</Text>
+            <MaterialCommunityIcons name="account-voice" size={16} color={colors.slate} />
+            <Text style={{ fontSize: 18, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink, flex: 1 }}>{mem.query}</Text>
+
           </View>
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start', marginLeft: 24 }}>
             <Text style={{ fontSize: typeScale.caption }}>⌂</Text>
-            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.graphite, flex: 1 }}>{mem.response}</Text>
+            <Text style={{ fontSize: 18, fontWeight: '600', fontFamily: 'Nunito-SemiBold', color: colors.graphite, flex: 1 }}>{mem.response}</Text>
+
           </View>
           <Text style={{ fontSize: 18, color: colors.pewter, textAlign: 'right' }}>
             {mem.timestamp instanceof Date ? mem.timestamp.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : ''}

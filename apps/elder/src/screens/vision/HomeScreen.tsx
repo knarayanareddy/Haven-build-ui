@@ -40,7 +40,7 @@ export function renderVisionHome(ctx: ScreenContext): React.ReactNode {
     <View style={{ gap: 14 }}>
       {/* Greeting + Status */}
       <View style={{ borderRadius: 26, padding: 22, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist }}>
-        <Text accessibilityRole="header" style={{ fontSize: 34, fontWeight: '900', color: colors.ink, letterSpacing: -0.5 }}>
+        <Text accessibilityRole="header" style={{ fontSize: 34, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink, letterSpacing: -0.5 }}>
           {greeting(ctx.now, locale, profile.preferredName)}
         </Text>
         <View style={{ marginTop: 8 }}>
@@ -55,7 +55,7 @@ export function renderVisionHome(ctx: ScreenContext): React.ReactNode {
         end={{ x: 1, y: 1 }}
         style={{ borderRadius: 22, padding: 20 }}
       >
-        <Text style={{ fontSize: 20, fontWeight: '900', color: '#FFFFFF' }}>
+        <Text style={{ fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black', color: '#FFFFFF' }}>
           {locale === 'nl-NL' ? 'Hoe voelt u zich?' : 'How are you feeling?'}
         </Text>
         <View style={{ marginTop: 12 }}>

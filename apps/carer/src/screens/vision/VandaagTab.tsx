@@ -106,25 +106,25 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
       {loading && (
         <View style={{ paddingVertical: 32, alignItems: 'center' }}>
           <ActivityIndicator size="large" color={colors.brand} />
-          <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', marginTop: 8 }}>{nl ? 'Laden...' : 'Loading...'}</Text>
+          <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Bold', marginTop: 8 }}>{nl ? 'Laden...' : 'Loading...'}</Text>
         </View>
       )}
       {fetchError && (
-        <View style={{ backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 16, padding: 12 }}>
-          <Text style={{ fontSize: 14, color: '#991B1B', fontWeight: '700' }}>{fetchError}</Text>
+        <View style={{ backgroundColor: semanticColors.dangerBg, borderWidth: 1, borderColor: semanticColors.dangerBorder, borderRadius: 16, padding: 12 }}>
+          <Text style={{ fontSize: 14, color: semanticColors.dangerText, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>{fetchError}</Text>
         </View>
       )}
       {/* Online/offline banner */}
       {!isOnline && (
         <View style={{ backgroundColor: semanticColors.warningBg, borderWidth: 1, borderColor: semanticColors.warningBorder, borderRadius: 16, padding: 12 }}>
-          <Text style={{ fontSize: 13, color: semanticColors.warningText, fontWeight: '700' }}>
+          <Text style={{ fontSize: 13, color: semanticColors.warningText, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
             {nl ? 'Offline-first mode — notities worden lokaal opgeslagen en gesynchroniseerd zodra u weer online bent.' : 'Offline-first mode — notes are stored locally and synced when back online.'}
           </Text>
         </View>
       )}
       {offlineCount > 0 && isOnline && (
         <View style={{ backgroundColor: semanticColors.warningBg, borderWidth: 1, borderColor: semanticColors.warningBorder, borderRadius: 14, padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={{ fontSize: 12, color: semanticColors.warningText, fontWeight: '700' }}>{offlineCount} offline acties wachten op sync</Text>
+          <Text style={{ fontSize: 12, color: semanticColors.warningText, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>{offlineCount} offline acties wachten op sync</Text>
           <StatusBadge status="amber" label="Sync" />
         </View>
       )}
@@ -132,7 +132,7 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
       {/* Live data indicator */}
       {liveMeds && (
         <View style={{ backgroundColor: semanticColors.successBg, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', color: semanticColors.successText }}>● {nl ? 'Live data' : 'Live data'}</Text>
+          <Text style={{ fontSize: 11, fontWeight: '700', fontFamily: 'Nunito-Bold', color: semanticColors.successText }}>● {nl ? 'Live data' : 'Live data'}</Text>
         </View>
       )}
 
@@ -140,7 +140,7 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
       <View style={{ borderRadius: 20, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <MaterialCommunityIcons name="calendar-outline" size={16} color={colors.graphite} />
-          <Text style={{ fontSize: 15, fontWeight: '800', color: colors.graphite }}>{nl ? 'Huidig bezoek' : 'Current visit'} — {elderName}</Text>
+          <Text style={{ fontSize: 15, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.graphite }}>{nl ? 'Huidig bezoek' : 'Current visit'} — {elderName}</Text>
         </View>
         {checklist.map((item, idx) => (
           <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -148,11 +148,11 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
               width: 22, height: 22, borderRadius: 11, justifyContent: 'center', alignItems: 'center',
               backgroundColor: item.done ? colors.sage : item.icon === '!' ? colors.amber : semanticColors.infoBg,
             }}>
-              <Text style={{ color: item.done ? '#fff' : item.icon === '!' ? '#fff' : semanticColors.infoText, fontSize: 11, fontWeight: '900' }}>
+              <Text style={{ color: item.done ? '#fff' : item.icon === '!' ? '#fff' : semanticColors.infoText, fontSize: 11, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
                 {item.icon}
               </Text>
             </View>
-            <Text style={{ fontSize: 14, color: colors.ink, fontWeight: '600', minHeight: 20 }}>{item.label}</Text>
+            <Text style={{ fontSize: 14, color: colors.ink, fontWeight: '600', fontFamily: 'Nunito-SemiBold', minHeight: 20 }}>{item.label}</Text>
           </View>
         ))}
       </View>
@@ -161,7 +161,7 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
       <View style={{ borderRadius: 20, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 6 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <MaterialCommunityIcons name="clipboard-text-outline" size={16} color={colors.graphite} />
-          <Text style={{ fontSize: 15, fontWeight: '800', color: colors.graphite }}>{nl ? 'Zorgplan overzicht' : 'Care plan overview'}</Text>
+          <Text style={{ fontSize: 15, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.graphite }}>{nl ? 'Zorgplan overzicht' : 'Care plan overview'}</Text>
         </View>
         {(nl ? [
           '• Mobiliteit: gang-kleed opgelost',
@@ -174,7 +174,7 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
           '• Next review: within 30 days',
           '• Blood pressure monitoring: 2x per week',
         ]).map((line, i) => (
-          <Text key={i} style={{ fontSize: 13, color: colors.graphite, fontWeight: '600' }}>{line}</Text>
+          <Text key={i} style={{ fontSize: 13, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{line}</Text>
         ))}
       </View>
 
@@ -182,7 +182,7 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
       <View style={{ borderRadius: 20, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <MaterialCommunityIcons name="chart-bar" size={16} color={colors.graphite} />
-          <Text style={{ fontSize: 15, fontWeight: '800', color: colors.graphite }}>{nl ? 'Dagvoortgang' : 'Daily progress'}</Text>
+          <Text style={{ fontSize: 15, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.graphite }}>{nl ? 'Dagvoortgang' : 'Daily progress'}</Text>
         </View>
         <ProgressBar progress={totalTasks > 0 ? doneTasks / totalTasks : 0} color={colors.sage} showLabel />
         {liveTasks && (
@@ -190,7 +190,7 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
             {liveTasks.map((task) => (
               <View key={task.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={{ fontSize: 12, color: task.done ? colors.sage : colors.pewter }}>{task.done ? '✓' : '○'}</Text>
-                <Text style={{ fontSize: 12, color: colors.ink, fontWeight: '600', textDecorationLine: task.done ? 'line-through' : 'none' }}>{task.label}</Text>
+                <Text style={{ fontSize: 12, color: colors.ink, fontWeight: '600', fontFamily: 'Nunito-SemiBold', textDecorationLine: task.done ? 'line-through' : 'none' }}>{task.label}</Text>
               </View>
             ))}
           </View>
@@ -201,13 +201,13 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
       <View style={{ borderRadius: 20, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <MaterialCommunityIcons name="stethoscope" size={16} color={colors.graphite} />
-          <Text style={{ fontSize: 15, fontWeight: '800', color: colors.graphite }}>{nl ? 'Medicijnschema vandaag' : 'Medication schedule today'}</Text>
+          <Text style={{ fontSize: 15, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.graphite }}>{nl ? 'Medicijnschema vandaag' : 'Medication schedule today'}</Text>
         </View>
         {medications.map((med) => (
           <View key={med.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.mist, minHeight: 48 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: med.color }} />
-              <Text style={{ fontSize: 13, color: colors.ink, fontWeight: '600' }}>{med.name} {med.dose}</Text>
+              <Text style={{ fontSize: 13, color: colors.ink, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{med.name} {med.dose}</Text>
             </View>
             <View style={{ flexDirection: 'row', gap: 4 }}>
               {med.times.map((time, i) => (
@@ -216,7 +216,7 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
                   backgroundColor: med.taken[i] ? semanticColors.successBg : semanticColors.warningBg,
                   minHeight: 36,
                 }}>
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: med.taken[i] ? semanticColors.successText : semanticColors.warningText }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', fontFamily: 'Nunito-Bold', color: med.taken[i] ? semanticColors.successText : semanticColors.warningText }}>
                     {time} {med.taken[i] ? '✓' : '○'}
                   </Text>
                 </View>
@@ -231,7 +231,7 @@ export function VandaagTab({ elderName, isOnline, offlineCount, onCompleteVisit,
         onPress={onCompleteVisit}
         style={{ backgroundColor: semanticColors.danger, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
       >
-        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '900' }}>✓ {nl ? 'Bezoek afronden & opslaan' : 'Complete visit & save'}</Text>
+        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '900', fontFamily: 'Nunito-Black' }}>✓ {nl ? 'Bezoek afronden & opslaan' : 'Complete visit & save'}</Text>
       </TouchableOpacity>
     </ScrollView>
   );

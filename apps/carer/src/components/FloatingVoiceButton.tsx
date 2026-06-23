@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { useResponsiveLayout } from '../services/platform';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 export function FloatingVoiceButton() {
   const [isListening, setListening] = useState(false);

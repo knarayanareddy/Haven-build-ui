@@ -61,6 +61,7 @@ export const radius = {
 
 export const fontFamily = {
   regular: 'Nunito',
+  semiBold: 'Nunito-SemiBold',
   bold: 'Nunito-Bold',
   black: 'Nunito-Black',
 } as const;

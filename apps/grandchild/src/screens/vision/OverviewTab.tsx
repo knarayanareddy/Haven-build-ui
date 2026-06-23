@@ -17,9 +17,9 @@ interface OverviewTabProps {
 }
 
 const STATUS_CONFIG = {
-  green: { bg: '#D1FAE5', border: '#6EE7B7', text: '#065F46', dot: '#22C55E', label_nl: 'Alles goed', label_en: 'All well' },
-  amber: { bg: '#FEF3C7', border: '#FDE68A', text: '#92400E', dot: '#F59E0B', label_nl: 'Aandacht', label_en: 'Attention' },
-  red: { bg: '#FEE2E2', border: '#FECACA', text: '#991B1B', dot: '#EF4444', label_nl: 'Actie nodig', label_en: 'Action needed' },
+  green: { bg: semanticColors.successBg, border: semanticColors.successBorder, text: semanticColors.successText, dot: '#22C55E', label_nl: 'Alles goed', label_en: 'All well' },
+  amber: { bg: semanticColors.warningBg, border: semanticColors.warningBorder, text: semanticColors.warningText, dot: '#F59E0B', label_nl: 'Aandacht', label_en: 'Attention' },
+  red: { bg: semanticColors.dangerBg, border: semanticColors.dangerBorder, text: semanticColors.dangerText, dot: '#EF4444', label_nl: 'Actie nodig', label_en: 'Action needed' },
 };
 
 type LiveMedStatus = { taken: number; total: number; adherence: number };
@@ -150,12 +150,12 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
       {isLoading && (
         <View style={{ paddingVertical: 32, alignItems: 'center' }}>
           <ActivityIndicator size="large" color={colors.brand} />
-          <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', marginTop: 8 }}>{nl ? 'Laden...' : 'Loading...'}</Text>
+          <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Bold', marginTop: 8 }}>{nl ? 'Laden...' : 'Loading...'}</Text>
         </View>
       )}
       {fetchError && (
-        <View style={{ backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 16, padding: 12 }}>
-          <Text style={{ fontSize: 14, color: '#991B1B', fontWeight: '700' }}>{fetchError}</Text>
+        <View style={{ backgroundColor: semanticColors.dangerBg, borderWidth: 1, borderColor: semanticColors.dangerBorder, borderRadius: 16, padding: 12 }}>
+          <Text style={{ fontSize: 14, color: semanticColors.dangerText, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>{fetchError}</Text>
         </View>
       )}
       {/* Daily status pill */}
@@ -164,11 +164,11 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
           <View style={{ flex: 1, gap: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: sc.dot }} />
-              <Text style={{ fontSize: 15, fontWeight: '900', color: sc.text }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', fontFamily: 'Nunito-Black', color: sc.text }}>
                 {nl ? 'Dagstatus' : 'Daily Status'}: {nl ? sc.label_nl : sc.label_en}
               </Text>
             </View>
-            <Text style={{ fontSize: 14, color: sc.text, fontWeight: '600' }}>{DAILY_STATUS.summary}</Text>
+            <Text style={{ fontSize: 14, color: sc.text, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{DAILY_STATUS.summary}</Text>
             <Text style={{ fontSize: 12, color: sc.text, opacity: 0.8 }}>{nl ? 'Waarom' : 'Why'}: {DAILY_STATUS.why}</Text>
             <Text style={{ fontSize: 12, color: sc.text, opacity: 0.8 }}>{nl ? 'Wat nu' : 'What next'}: {DAILY_STATUS.whatNext}</Text>
           </View>
@@ -182,10 +182,10 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
           <View key={stat.label} style={{ width: '47%', borderRadius: 16, padding: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <MaterialCommunityIcons name={stat.icon as any} size={18} color={stat.color} />
-              <Text style={{ fontSize: 22, fontWeight: '900', color: stat.color }}>{stat.value}</Text>
+              <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: 'Nunito-Black', color: stat.color }}>{stat.value}</Text>
             </View>
-            <Text style={{ fontSize: 12, fontWeight: '800', color: colors.ink }}>{stat.label}</Text>
-            <Text style={{ fontSize: 11, color: colors.pewter, fontWeight: '600' }}>{stat.sub}</Text>
+            <Text style={{ fontSize: 12, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{stat.label}</Text>
+            <Text style={{ fontSize: 11, color: colors.pewter, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{stat.sub}</Text>
           </View>
         ))}
       </View>
@@ -194,21 +194,21 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
       <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <MaterialCommunityIcons name="access-point" size={16} color={colors.ink} />
-          <Text style={{ fontSize: 15, fontWeight: '900', color: colors.ink }}>{nl ? 'Vertrouwenssignaal' : 'Trust Signal'}</Text>
+          <Text style={{ fontSize: 15, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>{nl ? 'Vertrouwenssignaal' : 'Trust Signal'}</Text>
         </View>
         {[
           { label: nl ? 'Apparaat laatst gezien' : 'Device last seen', value: `${Math.floor((Date.now() - DEVICE_HEALTH.lastSeen.getTime()) / 60000)} min ${nl ? 'geleden' : 'ago'}`, color: '#059669' },
-          { label: nl ? 'Batterij' : 'Battery', value: `${DEVICE_HEALTH.batteryLevel}%`, color: DEVICE_HEALTH.batteryLevel > 30 ? '#059669' : '#DC2626' },
+          { label: nl ? 'Batterij' : 'Battery', value: `${DEVICE_HEALTH.batteryLevel}%`, color: DEVICE_HEALTH.batteryLevel > 30 ? '#059669' : semanticColors.danger },
           { label: nl ? 'Netwerk' : 'Network', value: DEVICE_HEALTH.networkStatus, color: '#059669' },
           { label: nl ? 'App versie' : 'App version', value: DEVICE_HEALTH.appVersion, color: colors.ink },
         ].map((row) => (
           <View key={row.label} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600' }}>{row.label}</Text>
-            <Text style={{ fontSize: 13, fontWeight: '700', color: row.color }}>{row.value}</Text>
+            <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{row.label}</Text>
+            <Text style={{ fontSize: 13, fontWeight: '700', fontFamily: 'Nunito-Bold', color: row.color }}>{row.value}</Text>
           </View>
         ))}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600' }}>{nl ? 'Machtigingen' : 'Permissions'}</Text>
+          <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{nl ? 'Machtigingen' : 'Permissions'}</Text>
           <View style={{ flexDirection: 'row', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {DEVICE_HEALTH.permissionsGranted.map((p) => (
               <StatusBadge key={p} status="green" label={p} />
@@ -219,7 +219,7 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
 
       {/* Send to elder actions */}
       <View style={{ gap: 8 }}>
-        <Text style={{ fontSize: 15, fontWeight: '900', color: colors.ink }}>
+        <Text style={{ fontSize: 15, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
           {nl ? `Stuur naar ${elderName}` : `Send to ${elderName}`}
         </Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -236,7 +236,7 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
               }}
             >
               {actionSending === act.action ? <Text style={{ fontSize: 16 }}>...</Text> : actionSent === act.action ? <MaterialCommunityIcons name="check" size={16} color={semanticColors.successText} /> : <MaterialCommunityIcons name={act.icon as any} size={16} color={colors.ink} />}
-              <Text style={{ fontSize: 12, fontWeight: '700', color: actionSent === act.action ? semanticColors.successText : colors.ink }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', fontFamily: 'Nunito-Bold', color: actionSent === act.action ? semanticColors.successText : colors.ink }}>
                 {actionSending === act.action ? (nl ? 'Verzenden...' : 'Sending...') : actionSent === act.action ? (nl ? 'Verzonden!' : 'Sent!') : act.label}
               </Text>
             </TouchableOpacity>
@@ -244,7 +244,7 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
         </View>
         {actionError && (
           <View style={{ backgroundColor: semanticColors.dangerBg, borderRadius: 12, padding: 10, borderWidth: 1, borderColor: semanticColors.dangerBorder }}>
-            <Text style={{ fontSize: 12, color: semanticColors.dangerText, fontWeight: '700' }}>
+            <Text style={{ fontSize: 12, color: semanticColors.dangerText, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
               {nl ? 'Fout' : 'Error'}: {actionError}
             </Text>
           </View>
@@ -255,7 +255,7 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
       <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <MaterialCommunityIcons name="chart-bar" size={16} color={colors.ink} />
-          <Text style={{ fontSize: 15, fontWeight: '900', color: colors.ink }}>{nl ? 'Weekoverzicht' : 'Weekly Digest'} — {WEEKLY_DIGEST.period}</Text>
+          <Text style={{ fontSize: 15, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>{nl ? 'Weekoverzicht' : 'Weekly Digest'} — {WEEKLY_DIGEST.period}</Text>
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {[
@@ -266,14 +266,14 @@ export function OverviewTab({ locale, elderName, familyName, onSendAction }: Ove
           ].map((item) => (
             <View key={item.label} style={{ width: '47%', backgroundColor: colors.mist, borderRadius: 14, padding: 10 }}>
               <MaterialCommunityIcons name={item.icon as any} size={16} color={item.color} />
-              <Text style={{ fontSize: 22, fontWeight: '900', color: item.color, marginTop: 4 }}>{item.value}</Text>
-              <Text style={{ fontSize: 11, color: colors.pewter, fontWeight: '600' }}>{item.label}</Text>
+              <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: 'Nunito-Black', color: item.color, marginTop: 4 }}>{item.value}</Text>
+              <Text style={{ fontSize: 11, color: colors.pewter, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{item.label}</Text>
             </View>
           ))}
         </View>
         {WEEKLY_DIGEST.highlightMoment && (
           <View style={{ backgroundColor: semanticColors.warningBg, borderRadius: 12, padding: 10 }}>
-            <Text style={{ fontSize: 12, color: semanticColors.warningText, fontWeight: '700' }}>{nl ? 'Hoogtepunt' : 'Highlight'}: {WEEKLY_DIGEST.highlightMoment}</Text>
+            <Text style={{ fontSize: 12, color: semanticColors.warningText, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>{nl ? 'Hoogtepunt' : 'Highlight'}: {WEEKLY_DIGEST.highlightMoment}</Text>
           </View>
         )}
       </View>

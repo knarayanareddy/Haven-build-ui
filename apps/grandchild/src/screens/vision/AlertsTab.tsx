@@ -2,6 +2,7 @@
 // Fetches live scam_events + safeguarding alerts from Supabase when authenticated
 import React, { useEffect, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { colors } from '@haven/ui/src/tokens';
 import { StatusBadge } from '@haven/ui/src/visionComponents';
 // DEMO: mock scam events — fallback when not authenticated
@@ -62,21 +63,21 @@ export function AlertsTab({ locale, session }: AlertsTabProps) {
       >
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-            <Text style={{ fontSize: 16 }}>{isRed ? '🚨' : isResolved ? '✅' : '⚠️'}</Text>
-            <Text style={{ fontSize: 15, fontWeight: '900', color: colors.ink, flex: 1 }}>{event.title}</Text>
+            <MaterialCommunityIcons name={isRed ? 'alert-circle' : isResolved ? 'check-circle' : 'alert-outline'} size={16} color={isRed ? colors.rose : isResolved ? colors.sage : colors.amber} />
+            <Text style={{ fontSize: 15, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink, flex: 1 }}>{event.title}</Text>
           </View>
           <StatusBadge
             status={isResolved ? 'green' : isRed ? 'red' : 'amber'}
             label={isResolved ? (nl ? 'opgelost' : 'resolved') : event.riskLevel}
           />
         </View>
-        <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600', marginLeft: 24 }}>{event.description}</Text>
-        <Text style={{ fontSize: 11, color: colors.pewter, fontWeight: '600', marginLeft: 24 }}>
+        <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-SemiBold', marginLeft: 24 }}>{event.description}</Text>
+        <Text style={{ fontSize: 11, color: colors.pewter, fontWeight: '600', fontFamily: 'Nunito-SemiBold', marginLeft: 24 }}>
           {nl ? 'Score' : 'Score'}: {event.riskScore}/100 · {event.type}
         </Text>
         {!isResolved && (
           <TouchableOpacity style={{ marginLeft: 24, marginTop: 4, backgroundColor: '#D1FAE5', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5, alignSelf: 'flex-start' }}>
-            <Text style={{ fontSize: 11, fontWeight: '800', color: '#065F46' }}>{nl ? 'Markeer als opgelost' : 'Mark as resolved'}</Text>
+            <Text style={{ fontSize: 11, fontWeight: '800', fontFamily: 'Nunito-Bold', color: '#065F46' }}>{nl ? 'Markeer als opgelost' : 'Mark as resolved'}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -87,8 +88,8 @@ export function AlertsTab({ locale, session }: AlertsTabProps) {
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 16, gap: 12 }}>
       {/* Info banner */}
       <View style={{ backgroundColor: '#EDE9FE', borderWidth: 1, borderColor: '#C4B5FD', borderRadius: 16, padding: 12, gap: 4 }}>
-        <Text style={{ fontSize: 13, fontWeight: '800', color: '#5B21B6' }}>🛡️ SCHILD — {nl ? 'Fraude- & Oplichtingsbescherming' : 'Fraud & Scam Protection'}</Text>
-        <Text style={{ fontSize: 12, color: '#6D28D9', fontWeight: '600' }}>
+        <Text style={{ fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold', color: '#5B21B6' }}>SCHILD — {nl ? 'Fraude- & Oplichtingsbescherming' : 'Fraud & Scam Protection'}</Text>
+        <Text style={{ fontSize: 12, color: '#6D28D9', fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
           {nl
             ? 'HAVEN monitort oproepen, berichten, transacties en browseractiviteit.'
             : 'HAVEN monitors calls, messages, transactions and browser activity.'}
@@ -98,7 +99,7 @@ export function AlertsTab({ locale, session }: AlertsTabProps) {
       {/* Live data indicator */}
       {liveAlerts && (
         <View style={{ backgroundColor: '#D1FAE5', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', color: '#065F46' }}>● {nl ? 'Live data' : 'Live data'}</Text>
+          <Text style={{ fontSize: 11, fontWeight: '700', fontFamily: 'Nunito-Bold', color: '#065F46' }}>● {nl ? 'Live data' : 'Live data'}</Text>
         </View>
       )}
 

@@ -2,13 +2,14 @@
 // Fetches live visit logs from Supabase, falls back to mock data when offline/unauthenticated
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, semanticColors } from '@haven/ui/src/tokens';
 import { StatusBadge } from '@haven/ui/src/visionComponents';
 import { useAuth } from '../../auth/AuthProvider';
 import { useCarerClient } from '../../hooks/useCarerClient';
 import { enqueueOffline } from '../../services/offlineQueue';
 // DEMO: mock care visits — fallback when not authenticated
 import { CARE_VISITS } from '@haven/ui/src/mockData';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 interface VisitLog {
   id: string;
@@ -93,15 +94,15 @@ export function VisitsTab({ locale }: { locale: string }) {
     return (
       <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 16, gap: 12 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={{ fontSize: 16, fontWeight: '900', color: colors.ink }}>📅 {nl ? 'Bezoekgeschiedenis' : 'Visit history'}</Text>
-          <TouchableOpacity onPress={() => setShowAddForm(!showAddForm)} style={{ backgroundColor: '#DC2626', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 }}>
-            <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>+ {nl ? 'Nieuw bezoek' : 'New visit'}</Text>
+          <Text style={{ fontSize: 16, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>📅 {nl ? 'Bezoekgeschiedenis' : 'Visit history'}</Text>
+          <TouchableOpacity onPress={() => setShowAddForm(!showAddForm)} style={{ backgroundColor: semanticColors.danger, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 }}>
+            <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800', fontFamily: 'Nunito-Bold' }}>+ {nl ? 'Nieuw bezoek' : 'New visit'}</Text>
           </TouchableOpacity>
         </View>
 
         {showAddForm && (
-          <View style={{ borderRadius: 16, padding: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: '#DC2626', gap: 8 }}>
-            <Text style={{ fontSize: 13, fontWeight: '800', color: colors.ink }}>{nl ? 'Notitie (optioneel)' : 'Note (optional)'}</Text>
+          <View style={{ borderRadius: 16, padding: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: semanticColors.danger, gap: 8 }}>
+            <Text style={{ fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{nl ? 'Notitie (optioneel)' : 'Note (optional)'}</Text>
             <TextInput
               value={newNote}
               onChangeText={setNewNote}
@@ -110,8 +111,8 @@ export function VisitsTab({ locale }: { locale: string }) {
               multiline
               style={{ borderRadius: 12, padding: 10, backgroundColor: colors.mist, fontSize: 13, color: colors.ink, minHeight: 48, textAlignVertical: 'top' }}
             />
-            <TouchableOpacity onPress={handleAddVisit} disabled={submitting} style={{ backgroundColor: '#DC2626', borderRadius: 12, paddingVertical: 10, alignItems: 'center', opacity: submitting ? 0.6 : 1 }}>
-              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}>{submitting ? '...' : (nl ? 'Bezoek registreren' : 'Register visit')}</Text>
+            <TouchableOpacity onPress={handleAddVisit} disabled={submitting} style={{ backgroundColor: semanticColors.danger, borderRadius: 12, paddingVertical: 10, alignItems: 'center', opacity: submitting ? 0.6 : 1 }}>
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold' }}>{submitting ? '...' : (nl ? 'Bezoek registreren' : 'Register visit')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -120,10 +121,10 @@ export function VisitsTab({ locale }: { locale: string }) {
           <View key={visit.id} style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View>
-                <Text style={{ fontSize: 14, fontWeight: '800', color: colors.ink }}>
+                <Text style={{ fontSize: 14, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>
                   {new Date(visit.visit_date).toLocaleDateString(nl ? 'nl-NL' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
                 </Text>
-                <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600' }}>
+                <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
                   {visit.check_in_time ? new Date(visit.check_in_time).toLocaleTimeString(nl ? 'nl-NL' : 'en-GB', { hour: '2-digit', minute: '2-digit' }) : '—'}
                   {visit.check_out_time ? ` → ${new Date(visit.check_out_time).toLocaleTimeString(nl ? 'nl-NL' : 'en-GB', { hour: '2-digit', minute: '2-digit' })}` : ''}
                 </Text>
@@ -132,11 +133,11 @@ export function VisitsTab({ locale }: { locale: string }) {
             </View>
             {visit.notes_nl && (
               <View style={{ backgroundColor: colors.mist, borderRadius: 12, padding: 10 }}>
-                <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600' }}>{visit.notes_nl}</Text>
+                <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{visit.notes_nl}</Text>
               </View>
             )}
             {visit.mood_observed !== null && (
-              <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600' }}>
+              <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
                 {nl ? 'Stemming' : 'Mood'}: {visit.mood_observed}/5
               </Text>
             )}
@@ -150,15 +151,15 @@ export function VisitsTab({ locale }: { locale: string }) {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 16, gap: 12 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text style={{ fontSize: 16, fontWeight: '900', color: colors.ink }}>📅 {nl ? 'Bezoekgeschiedenis' : 'Visit history'}</Text>
-        <TouchableOpacity onPress={() => setShowAddForm(!showAddForm)} style={{ backgroundColor: '#DC2626', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 }}>
-          <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>+ {nl ? 'Nieuw bezoek' : 'New visit'}</Text>
+        <Text style={{ fontSize: 16, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>📅 {nl ? 'Bezoekgeschiedenis' : 'Visit history'}</Text>
+        <TouchableOpacity onPress={() => setShowAddForm(!showAddForm)} style={{ backgroundColor: semanticColors.danger, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 }}>
+          <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800', fontFamily: 'Nunito-Bold' }}>+ {nl ? 'Nieuw bezoek' : 'New visit'}</Text>
         </TouchableOpacity>
       </View>
 
       {showAddForm && (
-        <View style={{ borderRadius: 16, padding: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: '#DC2626', gap: 8 }}>
-          <Text style={{ fontSize: 13, fontWeight: '800', color: colors.ink }}>{nl ? 'Notitie (optioneel)' : 'Note (optional)'}</Text>
+        <View style={{ borderRadius: 16, padding: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: semanticColors.danger, gap: 8 }}>
+          <Text style={{ fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{nl ? 'Notitie (optioneel)' : 'Note (optional)'}</Text>
           <TextInput
             value={newNote}
             onChangeText={setNewNote}
@@ -167,8 +168,8 @@ export function VisitsTab({ locale }: { locale: string }) {
             multiline
             style={{ borderRadius: 12, padding: 10, backgroundColor: colors.mist, fontSize: 13, color: colors.ink, minHeight: 48, textAlignVertical: 'top' }}
           />
-          <TouchableOpacity onPress={handleAddVisit} disabled={submitting} style={{ backgroundColor: '#DC2626', borderRadius: 12, paddingVertical: 10, alignItems: 'center', opacity: submitting ? 0.6 : 1 }}>
-            <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}>{submitting ? '...' : (nl ? 'Bezoek registreren' : 'Register visit')}</Text>
+          <TouchableOpacity onPress={handleAddVisit} disabled={submitting} style={{ backgroundColor: semanticColors.danger, borderRadius: 12, paddingVertical: 10, alignItems: 'center', opacity: submitting ? 0.6 : 1 }}>
+            <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold' }}>{submitting ? '...' : (nl ? 'Bezoek registreren' : 'Register visit')}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -178,15 +179,15 @@ export function VisitsTab({ locale }: { locale: string }) {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Text style={{ fontSize: 28 }}>{visit.carerAvatar}</Text>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 15, fontWeight: '900', color: colors.ink }}>{visit.carer}</Text>
-              <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '700' }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>{visit.carer}</Text>
+              <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
                 {visit.date instanceof Date ? visit.date.toLocaleDateString('nl-NL') : String(visit.date)} · {visit.duration}
               </Text>
             </View>
             <StatusBadge status="green" label={visit.status} />
           </View>
           <View style={{ backgroundColor: colors.mist, borderRadius: 14, padding: 10 }}>
-            <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600' }}>{visit.notes}</Text>
+            <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{visit.notes}</Text>
           </View>
         </View>
       ))}

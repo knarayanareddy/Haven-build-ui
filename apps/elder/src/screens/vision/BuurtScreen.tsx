@@ -1,7 +1,9 @@
 // ─── Vision BuurtScreen ───
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { colors, typeScale, touch } from '@haven/ui/src/tokens';
+
 import { SubTabBar, ProgressBar } from '@haven/ui/src/visionComponents';
 // DEMO: mock neighbourhood data — acceptable fixture (requires real user base)
 import { BUURT_MATCHES, COMMUNITY_EVENTS } from '@haven/ui/src/mockData';
@@ -24,10 +26,11 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
     return (
       <View style={{ gap: 14 }}>
         <View style={{ borderRadius: 22, padding: 24, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 12 }}>
-          <Text style={{ fontSize: 22, fontWeight: '900', color: colors.ink }}>
+          <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
             {locale === 'nl-NL' ? 'Buurtverbinder' : 'Neighbourhood Connector'}
           </Text>
-          <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700' }}>
+          <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
+
             {locale === 'nl-NL' ? 'Ontmoet buren in uw buurt die dezelfde interesses hebben. Uw privacy is altijd beschermd.' : 'Meet neighbours nearby who share your interests. Your privacy is always protected.'}
           </Text>
           <TouchableOpacity
@@ -36,13 +39,14 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
             onPress={() => ctx.onPrimaryAction('OPT_IN_BUURT')}
             style={{ backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center', marginTop: 8, minHeight: touch.minimum }}
           >
-            <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900' }}>
+            <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
+
               {locale === 'nl-NL' ? 'Activeer buurtverbinder' : 'Activate neighbourhood'}
             </Text>
           </TouchableOpacity>
         </View>
         <View style={{ borderRadius: 16, padding: 12, backgroundColor: colors.sagePale }}>
-          <Text style={{ fontSize: 18, color: colors.sage, fontWeight: '700' }}>
+          <Text style={{ fontSize: 18, color: colors.sage, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
             {locale === 'nl-NL' ? 'Uw exacte adres wordt nooit gedeeld — alleen uw PC4 postcode.' : 'Your exact address is never shared — only your PC4 postal code.'}
           </Text>
         </View>
@@ -54,8 +58,8 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
     <View style={{ gap: 14 }}>
       {/* Privacy banner */}
       <View style={{ borderRadius: 14, padding: 10, backgroundColor: colors.sagePale, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <Text style={{ fontSize: 18 }}>🔒</Text>
-        <Text style={{ fontSize: 18, color: colors.sage, fontWeight: '700' }}>
+        <MaterialCommunityIcons name="lock-outline" size={18} color={colors.sage} />
+        <Text style={{ fontSize: 18, color: colors.sage, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
           {locale === 'nl-NL' ? 'Locatie vervaagd — alleen PC4' : 'Location fuzzed — PC4 only'}
         </Text>
       </View>
@@ -72,21 +76,21 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.slatePale, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 22 }}>👤</Text>
+                    <MaterialCommunityIcons name="account-outline" size={22} color={colors.slate} />
                   </View>
                   <View>
-                    <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{match.alias}</Text>
-                    <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{match.distance} · {match.lastActive}</Text>
+                    <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>{match.alias}</Text>
+                    <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>{match.distance} · {match.lastActive}</Text>
                   </View>
                 </View>
                 <View style={{ backgroundColor: colors.sagePale, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
-                  <Text style={{ fontSize: 18, fontWeight: '900', color: colors.sage }}>{match.matchScore}%</Text>
+                  <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.sage }}>{match.matchScore}%</Text>
                 </View>
               </View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                 {match.interests.map((i) => (
                   <View key={i} style={{ backgroundColor: colors.mist, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}>
-                    <Text style={{ fontSize: 18, fontWeight: '700', color: colors.ink }}>{i}</Text>
+                    <Text style={{ fontSize: 18, fontWeight: '700', fontFamily: 'Nunito-Bold', color: colors.ink }}>{i}</Text>
                   </View>
                 ))}
               </View>
@@ -97,7 +101,7 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
                   onPress={() => ctx.onPrimaryAction(`BUURT_CONNECT:${match.id}`)}
                   style={{ backgroundColor: colors.sage, borderRadius: 14, paddingVertical: 10, alignItems: 'center', minHeight: touch.minimum }}
                 >
-                  <Text style={{ color: '#fff', fontWeight: '900' }}>
+                  <Text style={{ color: '#fff', fontWeight: '900', fontFamily: 'Nunito-Black' }}>
                     {locale === 'nl-NL' ? 'Maak contact' : 'Connect'}
                   </Text>
                 </TouchableOpacity>
@@ -114,12 +118,12 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={{ fontSize: 24 }}>{event.emoji}</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{event.title}</Text>
-                  <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{event.date} · {event.location}</Text>
+                  <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>{event.title}</Text>
+                  <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>{event.date} · {event.location}</Text>
                 </View>
               </View>
-              <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '600' }}>{event.description}</Text>
-              <Text style={{ fontSize: 18, color: colors.sage, fontWeight: '800' }}>{event.attending} {locale === 'nl-NL' ? 'deelnemers' : 'attending'}</Text>
+              <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{event.description}</Text>
+              <Text style={{ fontSize: 18, color: colors.sage, fontWeight: '800', fontFamily: 'Nunito-Bold' }}>{event.attending} {locale === 'nl-NL' ? 'deelnemers' : 'attending'}</Text>
             </View>
           ))}
         </View>
@@ -127,7 +131,8 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
 
       {activeTab === 'interests' && (
         <View style={{ gap: 10 }}>
-          <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700' }}>
+          <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
+
             {locale === 'nl-NL' ? 'Selecteer uw interesses om betere matches te krijgen:' : 'Select your interests for better matches:'}
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -139,7 +144,7 @@ function VisionBuurtInner({ ctx }: { ctx: ScreenContext }) {
                 onPress={() => ctx.onPrimaryAction(`BUURT_INTEREST:${interest}`)}
                 style={{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, minHeight: touch.minimum }}
               >
-                <Text style={{ fontSize: 18, fontWeight: '700', color: colors.ink }}>{interest}</Text>
+                <Text style={{ fontSize: 18, fontWeight: '700', fontFamily: 'Nunito-Bold', color: colors.ink }}>{interest}</Text>
               </TouchableOpacity>
             ))}
           </View>

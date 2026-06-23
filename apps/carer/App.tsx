@@ -4,6 +4,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { Nunito_400Regular } from '@expo-google-fonts/nunito/400Regular';
+import { Nunito_600SemiBold } from '@expo-google-fonts/nunito/600SemiBold';
 import { Nunito_700Bold } from '@expo-google-fonts/nunito/700Bold';
 import { Nunito_900Black } from '@expo-google-fonts/nunito/900Black';
 import { I18nProvider } from '@haven/i18n';
@@ -62,9 +63,9 @@ function AppContent() {
         onPress={() => setScreen({ name: 'Main' })}
         style={{ paddingHorizontal: 8, paddingVertical: 4 }}
       >
-        <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '900' }}>←</Text>
+        <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '900', fontFamily: 'Nunito-Black' }}>←</Text>
       </TouchableOpacity>
-      <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 20, marginLeft: 8 }}>{title}</Text>
+      <Text style={{ color: '#FFFFFF', fontWeight: '900', fontFamily: 'Nunito-Black', fontSize: 20, marginLeft: 8 }}>{title}</Text>
     </View>
   );
 
@@ -92,6 +93,7 @@ function AppContent() {
 export default function App() {
   const [fontsLoaded] = useFonts({
     Nunito: Nunito_400Regular,
+    'Nunito-SemiBold': Nunito_600SemiBold,
     'Nunito-Bold': Nunito_700Bold,
     'Nunito-Black': Nunito_900Black,
   });

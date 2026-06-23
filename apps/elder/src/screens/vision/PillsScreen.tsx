@@ -4,7 +4,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { Alert, Modal, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { colors, typeScale, touch } from '@haven/ui/src/tokens';
+
 import { ProgressBar } from '@haven/ui/src/visionComponents';
 import { MEDICATIONS } from '@haven/ui/src/mockData';
 import { useAuth } from '../../auth/AuthProvider';
@@ -195,10 +197,11 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
       {/* Progress */}
       <View style={{ borderRadius: 22, padding: 20, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 10 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>
+          <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
             {locale === 'nl-NL' ? 'Voortgang vandaag' : 'Today\'s progress'}
           </Text>
-          <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.sage }}>{taken}/{total}</Text>
+          <Text style={{ fontSize: typeScale.caption, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.sage }}>{taken}/{total}</Text>
+
         </View>
         <ProgressBar progress={progress} color={colors.sage} height={10} />
       </View>
@@ -216,18 +219,18 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: isTaken ? colors.sage : colors.amber }} />
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>{med.name}</Text>
-                <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{med.dose} — {locale === 'nl-NL' ? med.descriptionNl : med.descriptionEn}</Text>
+                <Text style={{ fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>{med.name}</Text>
+                <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>{med.dose} — {locale === 'nl-NL' ? med.descriptionNl : med.descriptionEn}</Text>
               </View>
-              <Text style={{ fontSize: 18, fontWeight: '900', color: isTaken ? colors.sage : colors.slate }}>
+              <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black', color: isTaken ? colors.sage : colors.slate }}>
                 {isTaken ? '✓' : med.time}
               </Text>
             </View>
 
             {isLowStock && !isTaken && (
               <View style={{ backgroundColor: colors.amberPale, borderRadius: 10, padding: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ fontSize: 18 }}>⚠️</Text>
-                <Text style={{ fontSize: 18, fontWeight: '800', color: colors.amber }}>
+                <MaterialCommunityIcons name="alert-outline" size={18} color={colors.amber} />
+                <Text style={{ fontSize: 18, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.amber }}>
                   {locale === 'nl-NL' ? `Nog ${med.stock} over — bestel bij` : `${med.stock} left — reorder soon`}
                 </Text>
               </View>
@@ -241,7 +244,8 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
                   onPress={() => setConfirmMed(med.id)}
                   style={{ flex: 1, backgroundColor: colors.sage, borderRadius: 14, paddingVertical: 12, alignItems: 'center', minHeight: touch.minimum }}
                 >
-                  <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900' }}>
+                  <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
+
                     {locale === 'nl-NL' ? 'Ingenomen ✓' : 'Taken ✓'}
                   </Text>
                 </TouchableOpacity>
@@ -251,7 +255,8 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
                   onPress={() => ctx.onPrimaryAction(`SNOOZE:${med.id}`)}
                   style={{ flex: 1, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 14, paddingVertical: 12, alignItems: 'center', minHeight: touch.minimum }}
                 >
-                  <Text style={{ color: colors.slate, fontSize: typeScale.caption, fontWeight: '900' }}>
+                  <Text style={{ color: colors.slate, fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
+
                     {locale === 'nl-NL' ? 'Later' : 'Later'}
                   </Text>
                 </TouchableOpacity>
@@ -269,7 +274,8 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
         style={{ borderRadius: 18, padding: 16, backgroundColor: colors.sagePale, borderWidth: 1, borderColor: colors.sage, flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: touch.minimum }}
       >
         <Text style={{ fontSize: 22 }}>➕</Text>
-        <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.sage }}>
+        <Text style={{ fontSize: typeScale.caption, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.sage }}>
+
           {locale === 'nl-NL' ? 'Nieuw medicijn toevoegen' : 'Add new medication'}
         </Text>
       </TouchableOpacity>
@@ -282,7 +288,8 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
         style={{ borderRadius: 18, padding: 16, backgroundColor: colors.slatePale, borderWidth: 1, borderColor: colors.mist, flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: touch.minimum }}
       >
         <Text style={{ fontSize: 22 }}>📷</Text>
-        <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.slate }}>
+        <Text style={{ fontSize: typeScale.caption, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.slate }}>
+
           {locale === 'nl-NL' ? 'Scan nieuw medicijn' : 'Scan new medication'}
         </Text>
       </TouchableOpacity>
@@ -291,11 +298,11 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
       <Modal visible={showAddForm} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 24 }}>
           <View style={{ borderRadius: 22, padding: 24, backgroundColor: colors.paper, gap: 14 }}>
-            <Text style={{ fontSize: 22, fontWeight: '900', color: colors.ink }}>
+            <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
               {locale === 'nl-NL' ? 'Nieuw medicijn' : 'New medication'}
             </Text>
             <View style={{ gap: 4 }}>
-              <Text style={{ fontSize: 18, fontWeight: '800', color: colors.graphite }}>
+              <Text style={{ fontSize: 18, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.graphite }}>
                 {locale === 'nl-NL' ? 'Naam *' : 'Name *'}
               </Text>
               <TextInput
@@ -307,7 +314,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
               />
             </View>
             <View style={{ gap: 4 }}>
-              <Text style={{ fontSize: 18, fontWeight: '800', color: colors.graphite }}>
+              <Text style={{ fontSize: 18, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.graphite }}>
                 {locale === 'nl-NL' ? 'Dosering' : 'Dosage'}
               </Text>
               <TextInput
@@ -319,7 +326,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
               />
             </View>
             <View style={{ gap: 4 }}>
-              <Text style={{ fontSize: 18, fontWeight: '800', color: colors.graphite }}>
+              <Text style={{ fontSize: 18, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.graphite }}>
                 {locale === 'nl-NL' ? 'Tijd' : 'Time'}
               </Text>
               <TextInput
@@ -337,7 +344,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
               disabled={submitting}
               style={{ backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center', opacity: submitting ? 0.6 : 1, minHeight: touch.minimum }}
             >
-              <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900' }}>
+              <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
                 {submitting ? (locale === 'nl-NL' ? 'Bezig...' : 'Saving...') : (locale === 'nl-NL' ? 'Toevoegen' : 'Add')}
               </Text>
             </TouchableOpacity>
@@ -347,7 +354,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
               onPress={() => { setShowAddForm(false); setNewName(''); setNewDose(''); setNewTime('08:00'); }}
               style={{ backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
             >
-              <Text style={{ color: colors.slate, fontSize: 18, fontWeight: '900' }}>
+              <Text style={{ color: colors.slate, fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
                 {locale === 'nl-NL' ? 'Annuleer' : 'Cancel'}
               </Text>
             </TouchableOpacity>
@@ -358,7 +365,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
       {/* Undo toast */}
       {undoMed && (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: 18, padding: 16, backgroundColor: colors.ink, gap: 12 }}>
-          <Text style={{ fontSize: 18, color: '#fff', fontWeight: '700', flex: 1 }}>
+          <Text style={{ fontSize: 18, color: '#fff', fontWeight: '700', fontFamily: 'Nunito-Bold', flex: 1 }}>
             {locale === 'nl-NL' ? `${undoMed.name} als ingenomen gemarkeerd` : `${undoMed.name} marked as taken`}
           </Text>
           <TouchableOpacity
@@ -373,7 +380,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
             }}
             style={{ backgroundColor: colors.amber, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, minHeight: touch.minimum }}
           >
-            <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900' }}>
+            <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
               {locale === 'nl-NL' ? 'Ongedaan maken' : 'Undo'}
             </Text>
           </TouchableOpacity>
@@ -384,10 +391,10 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
       <Modal visible={!!confirmMed} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 24 }}>
           <View style={{ borderRadius: 22, padding: 24, backgroundColor: colors.paper, gap: 14 }}>
-            <Text style={{ fontSize: 22, fontWeight: '900', color: colors.ink }}>
+            <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
               {locale === 'nl-NL' ? 'Bevestig medicatie' : 'Confirm medication'}
             </Text>
-            <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700' }}>
+            <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
               {locale === 'nl-NL'
                 ? `Heeft u ${confirmingMed?.name} ${confirmingMed?.dose} zojuist ingenomen?`
                 : `Have you just taken ${confirmingMed?.name} ${confirmingMed?.dose}?`}
@@ -399,7 +406,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
               disabled={!!confirming}
               style={{ backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center', opacity: confirming ? 0.6 : 1, minHeight: touch.minimum }}
             >
-              <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900' }}>
+              <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
                 {locale === 'nl-NL' ? 'Ja, ingenomen ✓' : 'Yes, taken ✓'}
               </Text>
             </TouchableOpacity>
@@ -409,7 +416,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
               onPress={() => setConfirmMed(null)}
               style={{ backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
             >
-              <Text style={{ color: colors.slate, fontSize: 18, fontWeight: '900' }}>
+              <Text style={{ color: colors.slate, fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
                 {locale === 'nl-NL' ? 'Annuleer' : 'Cancel'}
               </Text>
             </TouchableOpacity>

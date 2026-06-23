@@ -5,7 +5,8 @@
 
 import React, { useRef, useState } from 'react';
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { colors, semanticColors } from '@haven/ui/src/tokens';
 // DEMO: mock familiar voice status — acceptable fixture (recording UI is standalone)
 import { FAMILIAR_VOICE_STATUS } from '@haven/ui/src/mockData';
 
@@ -212,9 +213,9 @@ export function VoiceTab({ locale }: VoiceTabProps) {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 16, gap: 14 }}>
       {/* Info banner */}
-      <View style={{ backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FDE68A', borderRadius: 20, padding: 16, gap: 6 }}>
-        <Text style={{ fontSize: 15, fontWeight: '900', color: '#78350F' }}>🎙️ {nl ? 'Vertrouwde Stem' : 'Familiar Voice'}</Text>
-        <Text style={{ fontSize: 13, color: '#92400E', fontWeight: '600' }}>
+      <View style={{ backgroundColor: semanticColors.warningBg, borderWidth: 1, borderColor: semanticColors.warningBorder, borderRadius: 20, padding: 16, gap: 6 }}>
+        <Text style={{ fontSize: 15, fontWeight: '900', fontFamily: 'Nunito-Black', color: '#78350F' }}>{nl ? 'Vertrouwde Stem' : 'Familiar Voice'}</Text>
+        <Text style={{ fontSize: 13, color: semanticColors.warningText, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
           {nl
             ? 'Neem uw stem op zodat HAVEN met Margaret kan spreken met uw stem. Dit is optioneel en afgeschermd door toestemming van de oudere. Uw opname is versleuteld en wordt alleen gebruikt voor spraaksynthese.'
             : 'Record your voice so HAVEN can speak to Margaret using your voice. This is optional and gated by elder consent. Your recording is encrypted and used only for TTS synthesis.'}
@@ -224,7 +225,7 @@ export function VoiceTab({ locale }: VoiceTabProps) {
       {/* VAPI integration status */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 }}>
         <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: profileId ? '#10B981' : '#F59E0B' }} />
-        <Text style={{ fontSize: 12, fontWeight: '700', color: profileId ? '#10B981' : '#F59E0B' }}>
+        <Text style={{ fontSize: 12, fontWeight: '700', fontFamily: 'Nunito-Bold', color: profileId ? '#10B981' : '#F59E0B' }}>
           {profileId
             ? (nl ? 'Stemprofiel actief — VAPI voice AI' : 'Voice profile active — VAPI voice AI')
             : (nl ? 'Geen stemprofiel — neem uw stem op' : 'No voice profile — record your voice')}
@@ -233,18 +234,18 @@ export function VoiceTab({ locale }: VoiceTabProps) {
 
       {/* Privacy disclosure */}
       <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
-        <Text style={{ fontSize: 15, fontWeight: '900', color: colors.ink }}>{nl ? 'Privacyverklaring' : 'Privacy disclosure'}</Text>
+        <Text style={{ fontSize: 15, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>{nl ? 'Privacyverklaring' : 'Privacy disclosure'}</Text>
         {privacyItems.map((item, i) => (
           <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
             <Text style={{ color: '#3B82F6', fontSize: 12, marginTop: 2 }}>ℹ</Text>
-            <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600', flex: 1 }}>{item}</Text>
+            <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-SemiBold', flex: 1 }}>{item}</Text>
           </View>
         ))}
       </View>
 
       {/* Sample sentences */}
       <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
-        <Text style={{ fontSize: 15, fontWeight: '900', color: colors.ink }}>
+        <Text style={{ fontSize: 15, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
           {nl ? 'Voorbeeldzinnen om op te nemen' : 'Sample sentences to record'}
         </Text>
         {FAMILIAR_VOICE_STATUS.sampleSentences.map((sentence, i) => (
@@ -252,7 +253,7 @@ export function VoiceTab({ locale }: VoiceTabProps) {
             backgroundColor: colors.mist, borderRadius: 14, padding: 12,
             borderWidth: 1, borderColor: colors.mist,
           }}>
-            <Text style={{ fontSize: 14, color: colors.ink, fontStyle: 'italic', fontWeight: '600' }}>"{sentence}"</Text>
+            <Text style={{ fontSize: 14, color: colors.ink, fontStyle: 'italic', fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>"{sentence}"</Text>
           </View>
         ))}
       </View>
@@ -271,8 +272,8 @@ export function VoiceTab({ locale }: VoiceTabProps) {
                 shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4,
               }}
             >
-              <Text style={{ fontSize: 32 }}>{uploading ? '⏳' : recording ? '⏹' : '🎤'}</Text>
-              <Text style={{ fontSize: 11, fontWeight: '800', color: recording || uploading ? '#fff' : colors.graphite, marginTop: 2 }}>
+              <MaterialCommunityIcons name={uploading ? 'progress-upload' : recording ? 'stop-circle' : 'microphone'} size={32} color={recording || uploading ? '#fff' : colors.ink} />
+              <Text style={{ fontSize: 11, fontWeight: '800', fontFamily: 'Nunito-Bold', color: recording || uploading ? '#fff' : colors.graphite, marginTop: 2 }}>
                 {uploading
                   ? (nl ? 'Uploaden...' : 'Uploading...')
                   : recording
@@ -281,18 +282,18 @@ export function VoiceTab({ locale }: VoiceTabProps) {
               </Text>
             </TouchableOpacity>
             {recording && (
-              <Text style={{ fontSize: 13, color: '#EF4444', fontWeight: '700' }}>
+              <Text style={{ fontSize: 13, color: '#EF4444', fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
                 {nl ? 'Lees de voorbeeldzinnen hierboven voor...' : 'Read the sample sentences above...'}
               </Text>
             )}
           </>
         ) : (
           <View style={{ alignItems: 'center', gap: 8 }}>
-            <Text style={{ fontSize: 40 }}>✅</Text>
-            <Text style={{ fontSize: 16, fontWeight: '900', color: '#065F46' }}>
+            <MaterialCommunityIcons name="check-circle" size={40} color={semanticColors.successText} />
+            <Text style={{ fontSize: 16, fontWeight: '900', fontFamily: 'Nunito-Black', color: semanticColors.successText }}>
               {nl ? 'Stemprofiel aangemaakt!' : 'Voice profile created!'}
             </Text>
-            <Text style={{ fontSize: 13, color: colors.pewter, fontWeight: '600', textAlign: 'center' }}>
+            <Text style={{ fontSize: 13, color: colors.pewter, fontWeight: '600', fontFamily: 'Nunito-SemiBold', textAlign: 'center' }}>
               {nl ? 'Wacht op toestemming van Margaret om te activeren' : 'Awaiting Margaret\'s consent to activate'}
             </Text>
 
@@ -302,9 +303,9 @@ export function VoiceTab({ locale }: VoiceTabProps) {
               disabled={playingTest}
               style={{ paddingHorizontal: 20, paddingVertical: 10, borderRadius: 14, backgroundColor: '#3B82F6', marginTop: 4 }}
             >
-              <Text style={{ fontSize: 14, fontWeight: '800', color: '#fff' }}>
+              <Text style={{ fontSize: 14, fontWeight: '800', fontFamily: 'Nunito-Bold', color: '#fff' }}>
                 {playingTest
-                  ? (nl ? '🔊 Afspelen...' : '🔊 Playing...')
+                  ? (nl ? 'Afspelen...' : 'Playing...')
                   : (nl ? '▶ Testfragment beluisteren' : '▶ Listen to test clip')}
               </Text>
             </TouchableOpacity>
@@ -314,7 +315,7 @@ export function VoiceTab({ locale }: VoiceTabProps) {
               onPress={handleRecordAgain}
               style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: colors.mist }}
             >
-              <Text style={{ fontSize: 13, fontWeight: '700', color: colors.ink }}>
+              <Text style={{ fontSize: 13, fontWeight: '700', fontFamily: 'Nunito-Bold', color: colors.ink }}>
                 {nl ? 'Opnieuw opnemen' : 'Record again'}
               </Text>
             </TouchableOpacity>
@@ -322,9 +323,9 @@ export function VoiceTab({ locale }: VoiceTabProps) {
             {/* Delete profile */}
             <TouchableOpacity
               onPress={handleRevokeProfile}
-              style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: '#FEE2E2', marginTop: 4 }}
+              style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: semanticColors.dangerBg, marginTop: 4 }}
             >
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#DC2626' }}>
+              <Text style={{ fontSize: 13, fontWeight: '700', fontFamily: 'Nunito-Bold', color: semanticColors.danger }}>
                 {nl ? 'Stemprofiel verwijderen' : 'Delete voice profile'}
               </Text>
             </TouchableOpacity>

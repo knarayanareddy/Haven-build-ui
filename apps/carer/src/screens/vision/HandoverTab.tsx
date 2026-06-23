@@ -2,7 +2,7 @@
 // Wired to Supabase: calls fn-carer-handover-note, offline queue fallback
 import React, { useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, semanticColors } from '@haven/ui/src/tokens';
 import { useAuth } from '../../auth/AuthProvider';
 import { useCarerClient } from '../../hooks/useCarerClient';
 import { enqueueOffline } from '../../services/offlineQueue';
@@ -26,7 +26,7 @@ function getFields(nl: boolean) {
 function getRecipients(nl: boolean) {
   return [
     { id: 'family', label: nl ? '👨‍👩‍👧 Familie' : '👨‍👩‍👧 Family' },
-    { id: 'colleague', label: nl ? '👩‍⚕️ Collega' : '👩‍⚕️ Colleague' },
+    { id: 'colleague', label: nl ? 'Collega' : 'Colleague' },
     { id: 'care-team', label: nl ? '🏥 Zorgteam' : '🏥 Care team' },
   ];
 }
@@ -108,16 +108,16 @@ export function HandoverTab({ elderName, isOnline, locale }: HandoverTabProps) {
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 16, gap: 12 }}>
       {/* BSN warning banner */}
       <View style={{ backgroundColor: '#FFF1F2', borderWidth: 1, borderColor: '#FECDD3', borderRadius: 16, padding: 12, gap: 4 }}>
-        <Text style={{ fontSize: 13, fontWeight: '800', color: '#9F1239' }}>📝 {nl ? 'Handover-notitie (WACHT)' : 'Handover note (WACHT)'}</Text>
-        <Text style={{ fontSize: 12, color: '#BE123C', fontWeight: '600' }}>
+        <Text style={{ fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold', color: '#9F1239' }}>📝 {nl ? 'Handover-notitie (WACHT)' : 'Handover note (WACHT)'}</Text>
+        <Text style={{ fontSize: 12, color: '#BE123C', fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
           {nl ? 'Schrijf een korte, niet-klinische overdracht voor familie en collega\'s. BSN en gevoelige gegevens worden automatisch geweigerd.' : 'Write a brief, non-clinical handover for family and colleagues. BSN and sensitive data are automatically rejected.'}
         </Text>
       </View>
 
       {/* Success banner */}
       {saved && (
-        <View style={{ backgroundColor: '#D1FAE5', borderWidth: 1, borderColor: '#6EE7B7', borderRadius: 14, padding: 12 }}>
-          <Text style={{ fontSize: 14, fontWeight: '800', color: '#065F46' }}>
+        <View style={{ backgroundColor: semanticColors.successBg, borderWidth: 1, borderColor: semanticColors.successBorder, borderRadius: 14, padding: 12 }}>
+          <Text style={{ fontSize: 14, fontWeight: '800', fontFamily: 'Nunito-Bold', color: semanticColors.successText }}>
             ✓ {isOnline
               ? (nl ? 'Handover opgeslagen en verzonden!' : 'Handover saved and sent!')
               : (nl ? 'Lokaal opgeslagen — synchroniseert zodra online.' : 'Saved locally — will sync when online.')}
@@ -128,7 +128,7 @@ export function HandoverTab({ elderName, isOnline, locale }: HandoverTabProps) {
       {/* Form fields */}
       {FIELDS.map(({ field, label, placeholder }) => (
         <View key={field} style={{ gap: 4 }}>
-          <Text style={{ fontSize: 13, fontWeight: '800', color: colors.ink }}>{label}</Text>
+          <Text style={{ fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{label}</Text>
           <TextInput
             value={form[field]}
             onChangeText={(v: string) => updateField(field, v)}
@@ -147,7 +147,7 @@ export function HandoverTab({ elderName, isOnline, locale }: HandoverTabProps) {
 
       {/* Recipients */}
       <View style={{ gap: 6 }}>
-        <Text style={{ fontSize: 13, fontWeight: '800', color: colors.ink }}>{nl ? 'Ontvangers' : 'Recipients'}</Text>
+        <Text style={{ fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{nl ? 'Ontvangers' : 'Recipients'}</Text>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {RECIPIENTS.map((r) => (
             <TouchableOpacity
@@ -155,10 +155,10 @@ export function HandoverTab({ elderName, isOnline, locale }: HandoverTabProps) {
               onPress={() => toggleRecipient(r.id)}
               style={{
                 flex: 1, paddingVertical: 10, borderRadius: 14, alignItems: 'center',
-                backgroundColor: recipients.includes(r.id) ? '#DC2626' : colors.mist,
+                backgroundColor: recipients.includes(r.id) ? semanticColors.danger : colors.mist,
               }}
             >
-              <Text style={{ fontSize: 12, fontWeight: '800', color: recipients.includes(r.id) ? '#fff' : colors.graphite }}>
+              <Text style={{ fontSize: 12, fontWeight: '800', fontFamily: 'Nunito-Bold', color: recipients.includes(r.id) ? '#fff' : colors.graphite }}>
                 {r.label}
               </Text>
             </TouchableOpacity>
@@ -172,14 +172,14 @@ export function HandoverTab({ elderName, isOnline, locale }: HandoverTabProps) {
           onPress={handleCancel}
           style={{ flex: 1, paddingVertical: 12, borderRadius: 14, alignItems: 'center', backgroundColor: colors.mist }}
         >
-          <Text style={{ fontSize: 14, fontWeight: '800', color: colors.graphite }}>{nl ? 'Annuleren' : 'Cancel'}</Text>
+          <Text style={{ fontSize: 14, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.graphite }}>{nl ? 'Annuleren' : 'Cancel'}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={handleSave}
           disabled={submitting}
-          style={{ flex: 1, paddingVertical: 12, borderRadius: 14, alignItems: 'center', backgroundColor: '#DC2626', opacity: submitting ? 0.6 : 1 }}
+          style={{ flex: 1, paddingVertical: 12, borderRadius: 14, alignItems: 'center', backgroundColor: semanticColors.danger, opacity: submitting ? 0.6 : 1 }}
         >
-          <Text style={{ fontSize: 14, fontWeight: '800', color: '#fff' }}>
+          <Text style={{ fontSize: 14, fontWeight: '800', fontFamily: 'Nunito-Bold', color: '#fff' }}>
             {submitting ? (nl ? 'Bezig...' : 'Sending...') : isOnline ? (nl ? '📤 Verzenden' : '📤 Send') : (nl ? '💾 Lokaal opslaan' : '💾 Save locally')}
           </Text>
         </TouchableOpacity>

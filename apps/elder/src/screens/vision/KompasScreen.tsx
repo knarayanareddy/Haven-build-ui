@@ -45,12 +45,14 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
             <View style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 3, borderColor: colors.sage, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center' }}>
               <MaterialCommunityIcons name="home-outline" size={36} color={colors.sage} />
             </View>
-            <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.sage, marginTop: 8 }}>
+            <Text style={{ fontSize: typeScale.caption, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.sage, marginTop: 8 }}>
+
               {profile.safeZoneLabel ?? 'Thuis'} · {SAFE_ZONE.radius}m
             </Text>
           </View>
 
-          <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700' }}>
+          <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
+
             {locale === 'nl-NL' ? 'Uw exacte locatie wordt alleen gedeeld met uw veilige contactpersonen.' : 'Your exact location is shared only with your safety contacts.'}
           </Text>
         </View>
@@ -60,7 +62,7 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
         <View style={{ gap: 14 }}>
           {/* Emergency profile card */}
           <View style={{ borderRadius: 22, padding: 20, backgroundColor: colors.rosePale, borderWidth: 1, borderColor: colors.rose, gap: 12 }}>
-            <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>
+            <Text style={{ fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
               {locale === 'nl-NL' ? 'Noodprofiel' : 'Emergency Profile'}
             </Text>
             <View style={{ gap: 8 }}>
@@ -72,8 +74,9 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
                 { label: locale === 'nl-NL' ? 'Contact' : 'Emergency contact', value: primary?.name ?? 'Sarah van den Berg' },
               ].map((item) => (
                 <View key={item.label} style={{ flexDirection: 'row', gap: 8 }}>
-                  <Text style={{ fontSize: typeScale.caption, fontWeight: '900', color: colors.ink, width: 100 }}>{item.label}:</Text>
-                  <Text style={{ fontSize: typeScale.caption, fontWeight: '600', color: colors.graphite, flex: 1 }}>{item.value}</Text>
+                  <Text style={{ fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink, width: 100 }}>{item.label}:</Text>
+                  <Text style={{ fontSize: typeScale.caption, fontWeight: '600', fontFamily: 'Nunito-Black', color: colors.graphite, flex: 1 }}>{item.value}</Text>
+
                 </View>
               ))}
             </View>
@@ -86,7 +89,7 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
             onPress={() => ctx.onPrimaryAction('EMERGENCY')}
             style={{ backgroundColor: colors.rose, borderRadius: 16, paddingVertical: 18, alignItems: 'center', minHeight: touch.minimum }}
           >
-            <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>
+            <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
               {locale === 'nl-NL' ? 'Bel 112' : 'Call 112'}
             </Text>
           </TouchableOpacity>
@@ -96,7 +99,8 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
             onPress={() => ctx.onPrimaryAction('CALL_FAMILY')}
             style={{ backgroundColor: colors.slate, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
           >
-            <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900' }}>
+            <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
+
               {primary ? `${locale === 'nl-NL' ? 'Bel' : 'Call'} ${primary.name}` : (locale === 'nl-NL' ? 'Bel familie' : 'Call family')}
             </Text>
           </TouchableOpacity>
@@ -106,22 +110,25 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
       {activeTab === 'night' && (
         <View style={{ gap: 14 }}>
           <View style={{ borderRadius: 22, padding: 20, backgroundColor: '#1e1b4b', gap: 14 }}>
-            <Text style={{ fontSize: 22, fontWeight: '900', color: '#fff' }}>
+            <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: 'Nunito-Black', color: '#fff' }}>
               {locale === 'nl-NL' ? 'Nachtmodus' : 'Night Mode'}
             </Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: typeScale.caption, fontWeight: '700', color: 'rgba(255,255,255,0.7)' }}>
+              <Text style={{ fontSize: typeScale.caption, fontWeight: '700', fontFamily: 'Nunito-Bold', color: 'rgba(255,255,255,0.7)' }}>
+
                 {locale === 'nl-NL' ? 'Stilte van' : 'Quiet from'}
               </Text>
-              <Text style={{ fontSize: 18, fontWeight: '900', color: '#fff' }}>{SAFE_ZONE.nightMode.quietFrom}</Text>
+              <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black', color: '#fff' }}>{SAFE_ZONE.nightMode.quietFrom}</Text>
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: typeScale.caption, fontWeight: '700', color: 'rgba(255,255,255,0.7)' }}>
+              <Text style={{ fontSize: typeScale.caption, fontWeight: '700', fontFamily: 'Nunito-Bold', color: 'rgba(255,255,255,0.7)' }}>
+
                 {locale === 'nl-NL' ? 'Stilte tot' : 'Quiet until'}
               </Text>
-              <Text style={{ fontSize: 18, fontWeight: '900', color: '#fff' }}>{SAFE_ZONE.nightMode.quietUntil}</Text>
+              <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black', color: '#fff' }}>{SAFE_ZONE.nightMode.quietUntil}</Text>
             </View>
-            <Text style={{ fontSize: typeScale.caption, color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>
+            <Text style={{ fontSize: typeScale.caption, color: 'rgba(255,255,255,0.5)', fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
+
               {locale === 'nl-NL' ? 'Tijdens stille uren worden alleen noodmeldingen doorgelaten.' : 'During quiet hours, only emergency notifications are allowed.'}
             </Text>
           </View>
@@ -131,7 +138,8 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
             onPress={() => ctx.onPrimaryAction('TOGGLE_NIGHT')}
             style={{ backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
           >
-            <Text style={{ color: colors.slate, fontSize: typeScale.caption, fontWeight: '900' }}>
+            <Text style={{ color: colors.slate, fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
+
               {SAFE_ZONE.nightMode.enabled
                 ? (locale === 'nl-NL' ? 'Nachtmodus uitschakelen' : 'Disable night mode')
                 : (locale === 'nl-NL' ? 'Nachtmodus inschakelen' : 'Enable night mode')}
@@ -139,7 +147,7 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
           </TouchableOpacity>
 
           {/* Wellness check */}
-          <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>
+          <Text style={{ fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
             {locale === 'nl-NL' ? 'Welzijnscheck' : 'Wellness Check'}
           </Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -156,7 +164,8 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
                 style={{ flex: 1, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
               >
                 <MaterialCommunityIcons name={btn.iconName} size={28} color={colors.pewter} />
-                <Text style={{ fontSize: typeScale.caption, fontWeight: '700', color: colors.pewter, marginTop: 4 }}>{btn.label}</Text>
+                <Text style={{ fontSize: typeScale.caption, fontWeight: '700', fontFamily: 'Nunito-Bold', color: colors.pewter, marginTop: 4 }}>{btn.label}</Text>
+
               </TouchableOpacity>
             ))}
           </View>

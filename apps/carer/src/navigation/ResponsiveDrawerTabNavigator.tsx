@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, BackHandler, View, TouchableOpacity, Text } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+
 import { useResponsiveLayout } from '../services/platform';
 import { useAccessibilityInfo } from '../services/accessibility';
 import { useTranslation, LanguageToggle } from '@haven/i18n';
@@ -17,11 +19,11 @@ type TabId = 'today' | 'handover' | 'mar' | 'safeguarding' | 'visits';
 
 function getTabs(nl: boolean): Array<{ id: TabId; label: string; icon: string }> {
   return [
-    { id: 'today', label: nl ? 'Vandaag' : 'Today', icon: '📋' },
-    { id: 'handover', label: 'Handover', icon: '📝' },
-    { id: 'mar', label: 'MAR-light', icon: '💊' },
-    { id: 'safeguarding', label: nl ? 'Veiligheid' : 'Safety', icon: '⚠️' },
-    { id: 'visits', label: nl ? 'Bezoeken' : 'Visits', icon: '📅' },
+    { id: 'today', label: nl ? 'Vandaag' : 'Today', icon: 'clipboard-text-outline' },
+    { id: 'handover', label: 'Handover', icon: 'file-document-edit-outline' },
+    { id: 'mar', label: 'MAR-light', icon: 'pill' },
+    { id: 'safeguarding', label: nl ? 'Veiligheid' : 'Safety', icon: 'shield-alert-outline' },
+    { id: 'visits', label: nl ? 'Bezoeken' : 'Visits', icon: 'calendar' },
   ];
 }
 
@@ -108,8 +110,8 @@ export function ResponsiveDrawerTabNavigator({ navigation }: any) {
         <View style={{ backgroundColor: '#DC2626', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <View>
-              <Text style={{ color: '#fff', fontSize: 18 * textMultiplier, fontWeight: '900' }}>⌂ HAVEN WACHT</Text>
-              <Text style={{ color: '#FECACA', fontSize: 12 * textMultiplier, fontWeight: '600', marginTop: 2 }}>
+              <Text style={{ color: '#fff', fontSize: 18 * textMultiplier, fontWeight: '900', fontFamily: 'Nunito-Black' }}>HAVEN WACHT</Text>
+              <Text style={{ color: '#FECACA', fontSize: 12 * textMultiplier, fontWeight: '600', fontFamily: 'Nunito-SemiBold', marginTop: 2 }}>
                 {nl ? 'Professioneel zorgportaal' : 'Professional care portal'} — {elderName}
               </Text>
             </View>
@@ -121,7 +123,7 @@ export function ResponsiveDrawerTabNavigator({ navigation }: any) {
                 backgroundColor: isOnline ? 'rgba(74,222,128,0.2)' : 'rgba(251,191,36,0.2)',
               }}>
                 <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isOnline ? '#4ADE80' : '#FBBF24' }} />
-                <Text style={{ color: isOnline ? '#BBF7D0' : '#FDE68A', fontSize: 12 * textMultiplier, fontWeight: '700' }}>
+                <Text style={{ color: isOnline ? '#BBF7D0' : '#FDE68A', fontSize: 12 * textMultiplier, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
                   {isOnline ? 'Online' : 'Offline'}
                 </Text>
               </View>
@@ -134,8 +136,8 @@ export function ResponsiveDrawerTabNavigator({ navigation }: any) {
       {isIpad && (
         <View accessibilityRole="navigation" style={{ width: 240, backgroundColor: '#DC2626', paddingTop: 40, paddingHorizontal: 16, justifyContent: 'space-between' }}>
           <View style={{ gap: 20 }}>
-            <Text style={{ color: '#fff', fontSize: 20 * textMultiplier, fontWeight: '900' }}>⌂ HAVEN WACHT</Text>
-            <Text style={{ color: '#FECACA', fontSize: 12 * textMultiplier, fontWeight: '600' }}>{elderName}</Text>
+            <Text style={{ color: '#fff', fontSize: 20 * textMultiplier, fontWeight: '900', fontFamily: 'Nunito-Black' }}>HAVEN WACHT</Text>
+            <Text style={{ color: '#FECACA', fontSize: 12 * textMultiplier, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{elderName}</Text>
             <View style={{ gap: 8 }}>
               {TABS.map((tab) => (
                 <TouchableOpacity
@@ -147,9 +149,12 @@ export function ResponsiveDrawerTabNavigator({ navigation }: any) {
                     backgroundColor: activeTab === tab.id ? 'rgba(0,0,0,0.2)' : 'transparent',
                   }}
                 >
-                  <Text style={{ color: activeTab === tab.id ? '#fff' : '#FECACA', fontSize: 15 * textMultiplier, fontWeight: '700' }}>
-                    {tab.icon} {tab.label}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <MaterialCommunityIcons name={tab.icon as any} size={18} color={activeTab === tab.id ? '#fff' : '#FECACA'} />
+                    <Text style={{ color: activeTab === tab.id ? '#fff' : '#FECACA', fontSize: 15 * textMultiplier, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
+                      {tab.label}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
@@ -161,7 +166,7 @@ export function ResponsiveDrawerTabNavigator({ navigation }: any) {
               backgroundColor: isOnline ? 'rgba(74,222,128,0.15)' : 'rgba(251,191,36,0.15)',
             }}>
               <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isOnline ? '#4ADE80' : '#FBBF24' }} />
-              <Text style={{ color: '#FECACA', fontSize: 12 * textMultiplier, fontWeight: '600' }}>
+              <Text style={{ color: '#FECACA', fontSize: 12 * textMultiplier, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
                 {isOnline ? 'Online — EMR Connected' : 'Offline mode'}
               </Text>
             </View>
@@ -188,9 +193,9 @@ export function ResponsiveDrawerTabNavigator({ navigation }: any) {
                 borderTopColor: activeTab === tab.id ? '#DC2626' : 'transparent',
               }}
             >
-              <Text style={{ fontSize: 18 }}>{tab.icon}</Text>
+              <MaterialCommunityIcons name={tab.icon as any} size={22} color={activeTab === tab.id ? '#DC2626' : '#6B7280'} />
               <Text style={{
-                fontSize: 10 * textMultiplier, fontWeight: '700',
+                fontSize: 10 * textMultiplier, fontWeight: '700', fontFamily: 'Nunito-Bold',
                 color: activeTab === tab.id ? '#DC2626' : '#6B7280',
                 marginTop: 2,
               }}>{tab.label}</Text>

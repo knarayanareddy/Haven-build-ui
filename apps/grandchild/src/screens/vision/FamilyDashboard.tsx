@@ -122,11 +122,11 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
       <View style={{ backgroundColor: colors.paper, borderBottomWidth: 1, borderColor: colors.mist, paddingHorizontal: 16, paddingVertical: 12 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>
+            <Text style={{ fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
               {nl ? `Goedemorgen, ${familyName}` : `Good morning, ${familyName}`}
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-              <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '600' }}>
+              <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
                 {nl ? `${elderName}'s familiedashboard` : `${elderName}'s family dashboard`}
               </Text>
               <LanguageToggle />
@@ -141,7 +141,7 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
           }}>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: statusDot }} />
             <Text style={{
-              fontSize: 13, fontWeight: '800',
+              fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold',
               color: DAILY_STATUS.status === 'green' ? semanticColors.successText : DAILY_STATUS.status === 'amber' ? semanticColors.warningText : semanticColors.dangerText,
             }}>
               {DAILY_STATUS.status === 'green' ? (nl ? 'Alles goed' : 'All well') : DAILY_STATUS.status === 'amber' ? (nl ? 'Aandacht' : 'Attention') : (nl ? 'Actie nodig' : 'Action needed')}
@@ -172,7 +172,7 @@ export function FamilyDashboard({ locale = 'nl-NL' }: FamilyDashboardProps) {
           >
             <MaterialCommunityIcons name={tab.icon as any} size={20} color={activeTab === tab.id ? '#3B82F6' : '#6B7280'} />
             <Text style={{
-              fontSize: 14, fontWeight: '700',
+              fontSize: 14, fontWeight: '700', fontFamily: 'Nunito-Bold',
               color: activeTab === tab.id ? '#3B82F6' : '#6B7280',
               marginTop: 2,
             }}>{tab.label}</Text>

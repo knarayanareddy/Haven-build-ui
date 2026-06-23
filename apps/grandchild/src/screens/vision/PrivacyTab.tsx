@@ -135,21 +135,21 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
       {loading && (
         <View style={{ paddingVertical: 32, alignItems: 'center' }}>
           <ActivityIndicator size="large" color={colors.brand} />
-          <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', marginTop: 8 }}>{nl ? 'Laden...' : 'Loading...'}</Text>
+          <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Bold', marginTop: 8 }}>{nl ? 'Laden...' : 'Loading...'}</Text>
         </View>
       )}
       {fetchError && (
         <View style={{ backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 16, padding: 12 }}>
-          <Text style={{ fontSize: 14, color: '#991B1B', fontWeight: '700' }}>{fetchError}</Text>
+          <Text style={{ fontSize: 14, color: '#991B1B', fontWeight: '700', fontFamily: 'Nunito-Bold' }}>{fetchError}</Text>
         </View>
       )}
       {/* Consent notice */}
       <View style={{ backgroundColor: semanticColors.infoBg, borderWidth: 1, borderColor: '#93C5FD', borderRadius: 16, padding: 12, gap: 4 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <MaterialCommunityIcons name="lock-outline" size={14} color={semanticColors.infoText} />
-          <Text style={{ fontSize: 13, fontWeight: '800', color: semanticColors.infoText }}>{nl ? 'Toestemming-beperkte toegang' : 'Consent-scoped access'}</Text>
+          <Text style={{ fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold', color: semanticColors.infoText }}>{nl ? 'Toestemming-beperkte toegang' : 'Consent-scoped access'}</Text>
         </View>
-        <Text style={{ fontSize: 12, color: '#1D4ED8', fontWeight: '600' }}>
+        <Text style={{ fontSize: 12, color: '#1D4ED8', fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
           {nl
             ? `U ziet alleen wat ${elderName} heeft verleend. Zij kan deze op elk moment wijzigen.`
             : `You only see what ${elderName} has granted. She can change these at any time.`}
@@ -159,7 +159,7 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
       {/* Live data indicator */}
       {session && (
         <View style={{ backgroundColor: semanticColors.successBg, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', color: semanticColors.successText }}>● {nl ? 'Live — wijzigingen worden opgeslagen' : 'Live — changes are saved'}</Text>
+          <Text style={{ fontSize: 11, fontWeight: '700', fontFamily: 'Nunito-Bold', color: semanticColors.successText }}>● {nl ? 'Live — wijzigingen worden opgeslagen' : 'Live — changes are saved'}</Text>
         </View>
       )}
 
@@ -174,8 +174,8 @@ export function PrivacyTab({ locale, elderName }: PrivacyTabProps) {
           }}>
             <MaterialCommunityIcons name={item.icon as any} size={28} color={colors.ink} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>{item.label}</Text>
-              <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600' }}>{item.description}</Text>
+              <Text style={{ fontSize: 15, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{item.label}</Text>
+              <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{item.description}</Text>
             </View>
             {item.alwaysHidden ? (
               <StatusBadge status="red" label={nl ? 'verborgen' : 'hidden'} />

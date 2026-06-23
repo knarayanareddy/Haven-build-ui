@@ -43,8 +43,9 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
         end={{ x: 1, y: 1 }}
         style={{ borderRadius: 22, padding: 22, alignItems: 'center' }}
       >
-        <Text style={{ fontSize: 48, fontWeight: '900', color: '#FFFFFF' }}>{totalScore}</Text>
-        <Text style={{ fontSize: typeScale.caption, fontWeight: '700', color: 'rgba(255,255,255,0.85)' }}>
+        <Text style={{ fontSize: 48, fontWeight: '900', fontFamily: 'Nunito-Black', color: '#FFFFFF' }}>{totalScore}</Text>
+        <Text style={{ fontSize: typeScale.caption, fontWeight: '700', fontFamily: 'Nunito-Black', color: 'rgba(255,255,255,0.85)' }}>
+
           {locale === 'nl-NL' ? 'Schildscore' : 'Shield Score'} / 100
         </Text>
       </LinearGradient>
@@ -57,7 +58,8 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
           onPress={() => ctx.onPrimaryAction('IS_THIS_REAL')}
           style={{ flex: 1, backgroundColor: colors.slate, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
         >
-          <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900' }}>
+          <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
+
             {locale === 'nl-NL' ? 'Is dit echt?' : 'Is this real?'}
           </Text>
         </TouchableOpacity>
@@ -67,7 +69,8 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
           onPress={() => { setShowCoaching(true); setCoachingIdx(0); }}
           style={{ flex: 1, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
         >
-          <Text style={{ color: colors.slate, fontSize: typeScale.caption, fontWeight: '900' }}>
+          <Text style={{ color: colors.slate, fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
+
             {locale === 'nl-NL' ? 'Coaching tips' : 'Coaching tips'}
           </Text>
         </TouchableOpacity>
@@ -76,7 +79,7 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
       {/* Active alerts */}
       {activeEvents.length > 0 && (
         <>
-          <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>
+          <Text style={{ fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
             {locale === 'nl-NL' ? 'Actieve meldingen' : 'Active alerts'} ({activeEvents.length})
           </Text>
           {activeEvents.map((event) => (
@@ -86,20 +89,21 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
               gap: 8,
             }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{event.title}</Text>
+                <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>{event.title}</Text>
                 <StatusBadge
                   status={event.riskLevel === 'red' ? 'red' : 'amber'}
                   label={`${event.riskScore}%`}
                 />
               </View>
-              <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700' }}>{event.description}</Text>
+              <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>{event.description}</Text>
+
               <TouchableOpacity
                 accessibilityRole="button"
                 accessibilityLabel={locale === 'nl-NL' ? 'Markeer als veilig' : 'Mark as safe'}
                 onPress={() => ctx.onPrimaryAction(`RESOLVE_SCAM:${event.id}`)}
                 style={{ backgroundColor: colors.sage, borderRadius: 12, paddingVertical: 10, alignItems: 'center', marginTop: 4, minHeight: touch.minimum }}
               >
-                <Text style={{ color: '#fff', fontWeight: '900' }}>
+                <Text style={{ color: '#fff', fontWeight: '900', fontFamily: 'Nunito-Black' }}>
                   {locale === 'nl-NL' ? 'Markeer als veilig' : 'Mark as safe'}
                 </Text>
               </TouchableOpacity>
@@ -111,7 +115,7 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
       {/* Resolved */}
       {resolvedEvents.length > 0 && (
         <>
-          <Text style={{ fontSize: 18, fontWeight: '900', color: colors.pewter }}>
+          <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.pewter }}>
             {locale === 'nl-NL' ? 'Opgelost' : 'Resolved'} ({resolvedEvents.length})
           </Text>
           {resolvedEvents.map((event) => (
@@ -119,8 +123,9 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
               borderRadius: 18, padding: 14, backgroundColor: colors.paper,
               borderWidth: 1, borderColor: colors.mist, opacity: 0.6,
             }}>
-              <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.ink }}>{event.title}</Text>
-              <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700' }}>{event.description}</Text>
+              <Text style={{ fontSize: typeScale.caption, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{event.title}</Text>
+              <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>{event.description}</Text>
+
             </View>
           ))}
         </>
@@ -130,10 +135,11 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
       <Modal visible={showCoaching} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}>
           <View style={{ borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: colors.paper, padding: 24, gap: 16 }}>
-            <Text style={{ fontSize: 22, fontWeight: '900', color: colors.ink }}>
+            <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
               {locale === 'nl-NL' ? COACHING_TIPS[coachingIdx].title : COACHING_TIPS[coachingIdx].titleEn}
             </Text>
-            <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700', lineHeight: 24 }}>
+            <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700', fontFamily: 'Nunito-Bold', lineHeight: 24 }}>
+
               {locale === 'nl-NL' ? COACHING_TIPS[coachingIdx].tip : COACHING_TIPS[coachingIdx].tipEn}
             </Text>
             <Text style={{ fontSize: typeScale.caption, color: colors.pewter, textAlign: 'center' }}>
@@ -147,7 +153,7 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
                   onPress={() => setCoachingIdx((i) => i - 1)}
                   style={{ flex: 1, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
                 >
-                  <Text style={{ color: colors.slate, fontWeight: '900' }}>{locale === 'nl-NL' ? 'Vorige' : 'Previous'}</Text>
+                  <Text style={{ color: colors.slate, fontWeight: '900', fontFamily: 'Nunito-Black' }}>{locale === 'nl-NL' ? 'Vorige' : 'Previous'}</Text>
                 </TouchableOpacity>
               )}
               {coachingIdx < COACHING_TIPS.length - 1 ? (
@@ -157,7 +163,7 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
                   onPress={() => setCoachingIdx((i) => i + 1)}
                   style={{ flex: 1, backgroundColor: colors.slate, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
                 >
-                  <Text style={{ color: '#fff', fontWeight: '900' }}>{locale === 'nl-NL' ? 'Volgende' : 'Next'}</Text>
+                  <Text style={{ color: '#fff', fontWeight: '900', fontFamily: 'Nunito-Black' }}>{locale === 'nl-NL' ? 'Volgende' : 'Next'}</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
@@ -166,7 +172,7 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
                   onPress={() => setShowCoaching(false)}
                   style={{ flex: 1, backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
                 >
-                  <Text style={{ color: '#fff', fontWeight: '900' }}>{locale === 'nl-NL' ? 'Sluiten' : 'Close'}</Text>
+                  <Text style={{ color: '#fff', fontWeight: '900', fontFamily: 'Nunito-Black' }}>{locale === 'nl-NL' ? 'Sluiten' : 'Close'}</Text>
                 </TouchableOpacity>
               )}
             </View>

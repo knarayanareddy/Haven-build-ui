@@ -1,7 +1,8 @@
 // ─── Vision Carer: Veiligheid (Safeguarding) Tab ───
 import React, { useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { colors, semanticColors } from '@haven/ui/src/tokens';
 import { StatusBadge } from '@haven/ui/src/visionComponents';
 import { useAuth } from '../../auth/AuthProvider';
 import { useCarerClient } from '../../hooks/useCarerClient';
@@ -56,9 +57,9 @@ export function SafeguardingTab({ locale }: { locale: string }) {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 16, gap: 12 }}>
       {/* Info banner */}
-      <View style={{ backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FDE68A', borderRadius: 16, padding: 12, gap: 4 }}>
-        <Text style={{ fontSize: 13, fontWeight: '800', color: '#92400E' }}>⚠️ {nl ? 'Meldcode Huiselijk Geweld en Kindermishandeling' : 'Domestic Violence & Child Abuse Reporting Code'}</Text>
-        <Text style={{ fontSize: 12, color: '#A16207', fontWeight: '600' }}>
+      <View style={{ backgroundColor: semanticColors.warningBg, borderWidth: 1, borderColor: semanticColors.warningBorder, borderRadius: 16, padding: 12, gap: 4 }}>
+        <Text style={{ fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold', color: semanticColors.warningText }}>⚠️ {nl ? 'Meldcode Huiselijk Geweld en Kindermishandeling' : 'Domestic Violence & Child Abuse Reporting Code'}</Text>
+        <Text style={{ fontSize: 12, color: '#A16207', fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
           {nl ? 'Stap-voor-stap begeleiding bij meldingen. Incidentrapporten via fn-incident-report.' : 'Step-by-step guidance for reporting. Incident reports via fn-incident-report.'}
         </Text>
       </View>
@@ -69,15 +70,15 @@ export function SafeguardingTab({ locale }: { locale: string }) {
           key={item.id}
           style={{
             borderRadius: 18, padding: 16, backgroundColor: colors.paper,
-            borderWidth: 1, borderColor: item.status === 'resolved' ? '#BBF7D0' : '#FDE68A',
+            borderWidth: 1, borderColor: item.status === 'resolved' ? '#BBF7D0' : semanticColors.warningBorder,
             gap: 8,
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-            <Text style={{ fontSize: 18 }}>{item.status === 'resolved' ? '✅' : '⚠️'}</Text>
+            <MaterialCommunityIcons name={item.status === 'resolved' ? 'check-circle' : 'alert-outline'} size={18} color={item.status === 'resolved' ? colors.sage : colors.amber} />
             <View style={{ flex: 1, gap: 4 }}>
-              <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>{item.title}</Text>
-              <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600' }}>{item.description}</Text>
+              <Text style={{ fontSize: 15, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{item.title}</Text>
+              <Text style={{ fontSize: 13, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{item.description}</Text>
               <StatusBadge
                 status={item.status === 'resolved' ? 'green' : 'amber'}
                 label={item.status}
@@ -85,8 +86,8 @@ export function SafeguardingTab({ locale }: { locale: string }) {
             </View>
           </View>
           {item.resolution && (
-            <View style={{ backgroundColor: '#D1FAE5', borderRadius: 12, padding: 10 }}>
-              <Text style={{ fontSize: 12, color: '#065F46', fontWeight: '700' }}>✓ {item.resolution}</Text>
+            <View style={{ backgroundColor: semanticColors.successBg, borderRadius: 12, padding: 10 }}>
+              <Text style={{ fontSize: 12, color: semanticColors.successText, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>✓ {item.resolution}</Text>
             </View>
           )}
         </View>
@@ -94,20 +95,20 @@ export function SafeguardingTab({ locale }: { locale: string }) {
 
       {/* Meldcode steps */}
       <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 10 }}>
-        <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>{nl ? 'Meldcode stappen' : 'Reporting code steps'}</Text>
+        <Text style={{ fontSize: 15, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{nl ? 'Meldcode stappen' : 'Reporting code steps'}</Text>
         {MELDCODE_STEPS.map((step) => (
           <View key={step.step} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
             <View style={{
               width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center',
               backgroundColor: step.done ? colors.sage : colors.mist,
             }}>
-              <Text style={{ fontSize: 12, fontWeight: '900', color: step.done ? '#fff' : colors.graphite }}>
+              <Text style={{ fontSize: 12, fontWeight: '900', fontFamily: 'Nunito-Black', color: step.done ? '#fff' : colors.graphite }}>
                 {step.done ? '✓' : step.step}
               </Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontWeight: '800', color: colors.ink }}>{step.title}</Text>
-              <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600' }}>{step.desc}</Text>
+              <Text style={{ fontSize: 13, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{step.title}</Text>
+              <Text style={{ fontSize: 12, color: colors.pewter, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{step.desc}</Text>
             </View>
           </View>
         ))}
@@ -115,19 +116,19 @@ export function SafeguardingTab({ locale }: { locale: string }) {
 
       {/* New report form */}
       {showForm && (
-        <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: '#FDE68A', gap: 10 }}>
-          <Text style={{ fontSize: 14, fontWeight: '800', color: colors.ink }}>{nl ? 'Ernst' : 'Severity'}</Text>
+        <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: semanticColors.warningBorder, gap: 10 }}>
+          <Text style={{ fontSize: 14, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{nl ? 'Ernst' : 'Severity'}</Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {(['low', 'medium', 'high', 'critical'] as const).map((s) => (
               <TouchableOpacity key={s} onPress={() => setSeverity(s)} style={{
                 flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: 'center',
-                backgroundColor: severity === s ? (s === 'critical' ? '#DC2626' : s === 'high' ? '#F59E0B' : s === 'medium' ? '#3B82F6' : '#22C55E') : colors.mist,
+                backgroundColor: severity === s ? (s === 'critical' ? semanticColors.danger : s === 'high' ? '#F59E0B' : s === 'medium' ? '#3B82F6' : '#22C55E') : colors.mist,
               }}>
-                <Text style={{ fontSize: 11, fontWeight: '800', color: severity === s ? '#fff' : colors.graphite }}>{s}</Text>
+                <Text style={{ fontSize: 11, fontWeight: '800', fontFamily: 'Nunito-Bold', color: severity === s ? '#fff' : colors.graphite }}>{s}</Text>
               </TouchableOpacity>
             ))}
           </View>
-          <Text style={{ fontSize: 14, fontWeight: '800', color: colors.ink }}>{nl ? 'Beschrijving' : 'Description'}</Text>
+          <Text style={{ fontSize: 14, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink }}>{nl ? 'Beschrijving' : 'Description'}</Text>
           <TextInput
             value={summary}
             onChangeText={setSummary}
@@ -138,10 +139,10 @@ export function SafeguardingTab({ locale }: { locale: string }) {
           />
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <TouchableOpacity onPress={() => setShowForm(false)} style={{ flex: 1, paddingVertical: 12, borderRadius: 14, alignItems: 'center', backgroundColor: colors.mist }}>
-              <Text style={{ fontSize: 14, fontWeight: '800', color: colors.graphite }}>{nl ? 'Annuleren' : 'Cancel'}</Text>
+              <Text style={{ fontSize: 14, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.graphite }}>{nl ? 'Annuleren' : 'Cancel'}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleSubmitReport} disabled={submitting} style={{ flex: 1, paddingVertical: 12, borderRadius: 14, alignItems: 'center', backgroundColor: '#DC2626', opacity: submitting ? 0.6 : 1 }}>
-              <Text style={{ fontSize: 14, fontWeight: '800', color: '#fff' }}>{submitting ? '...' : (nl ? 'Indienen' : 'Submit')}</Text>
+            <TouchableOpacity onPress={handleSubmitReport} disabled={submitting} style={{ flex: 1, paddingVertical: 12, borderRadius: 14, alignItems: 'center', backgroundColor: semanticColors.danger, opacity: submitting ? 0.6 : 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: '800', fontFamily: 'Nunito-Bold', color: '#fff' }}>{submitting ? '...' : (nl ? 'Indienen' : 'Submit')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -152,7 +153,7 @@ export function SafeguardingTab({ locale }: { locale: string }) {
         onPress={() => setShowForm(true)}
         style={{ backgroundColor: colors.amber, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
       >
-        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '900' }}>+ {nl ? 'Nieuwe veiligheidsmelding aanmaken' : 'Create new safeguarding report'}</Text>
+        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '900', fontFamily: 'Nunito-Black' }}>+ {nl ? 'Nieuwe veiligheidsmelding aanmaken' : 'Create new safeguarding report'}</Text>
       </TouchableOpacity>
     </ScrollView>
   );

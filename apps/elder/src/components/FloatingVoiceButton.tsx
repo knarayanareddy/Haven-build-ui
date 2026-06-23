@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Animated, Easing, Platform, Text, TouchableOpacity, View } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { colors } from '@haven/ui/src/tokens';
 import type { Locale } from '@haven/contracts/src/haven';
@@ -285,7 +286,7 @@ function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVo
         <TouchableOpacity accessibilityRole="button" accessibilityLabel={label} accessibilityHint={switchHint} onPress={handlePress} activeOpacity={0.85}
           disabled={isProcessing}
           style={{ minWidth: 72, minHeight: 72, borderRadius: 36, backgroundColor: isListening ? colors.sage : colors.paper, borderWidth: 2.5, borderColor: isListening ? colors.sage : colors.mist, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, opacity: isProcessing ? 0.7 : 1 }}>
-          <Text style={{ fontSize: 30 }}>{isProcessing ? '…' : isListening ? '■' : '🎤'}</Text>
+          <MaterialCommunityIcons name={isProcessing ? 'dots-horizontal' : isListening ? 'stop' : 'microphone'} size={30} color="#fff" />
         </TouchableOpacity>
       </Animated.View>
     </View>

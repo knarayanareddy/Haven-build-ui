@@ -1,7 +1,9 @@
 // ─── Vision SettingsScreen ───
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { colors, typeScale, touch } from '@haven/ui/src/tokens';
+
 import { ConsentToggle } from '@haven/ui/src/visionComponents';
 // DEMO: mock consent/device — consent toggles should read/write live consent_records
 import { CONSENT_SETTINGS, FAMILIAR_VOICE_STATUS, DEVICE_HEALTH } from '@haven/ui/src/mockData';
@@ -23,7 +25,7 @@ function VisionSettingsInner({ ctx }: { ctx: ScreenContext }) {
   return (
     <View style={{ gap: 18 }}>
       {/* Display settings */}
-      <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>
+      <Text style={{ fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
         {locale === 'nl-NL' ? 'Weergave' : 'Display'}
       </Text>
       <View style={{ borderRadius: 22, padding: 18, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist }}>
@@ -48,7 +50,7 @@ function VisionSettingsInner({ ctx }: { ctx: ScreenContext }) {
       </View>
 
       {/* Privacy & Consent */}
-      <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>
+      <Text style={{ fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
         {locale === 'nl-NL' ? 'Privacy & Toestemming' : 'Privacy & Consent'}
       </Text>
       <View style={{ borderRadius: 22, padding: 18, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist }}>
@@ -91,18 +93,20 @@ function VisionSettingsInner({ ctx }: { ctx: ScreenContext }) {
       </View>
 
       {/* Familiar voice */}
-      <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>
+      <Text style={{ fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
         {locale === 'nl-NL' ? 'Vertrouwde stem' : 'Familiar voice'}
       </Text>
       <View style={{ borderRadius: 22, padding: 18, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 10 }}>
-        <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700' }}>
+        <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
+
           {locale === 'nl-NL'
             ? 'Laat HAVEN klinken als een vertrouwd familielid. Neem 5 zinnen op.'
             : 'Make HAVEN sound like a trusted family member. Record 5 sentences.'}
         </Text>
         {FAMILIAR_VOICE_STATUS.recorded ? (
           <View style={{ backgroundColor: colors.sagePale, borderRadius: 14, padding: 10 }}>
-            <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.sage }}>
+            <Text style={{ fontSize: typeScale.caption, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.sage }}>
+
               {locale === 'nl-NL' ? '✓ Stemmodel getraind' : '✓ Voice model trained'}
             </Text>
           </View>
@@ -113,48 +117,54 @@ function VisionSettingsInner({ ctx }: { ctx: ScreenContext }) {
             onPress={() => ctx.onPrimaryAction('SETUP_FAMILIAR_VOICE')}
             style={{ backgroundColor: colors.slate, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
           >
-            <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900' }}>
+            <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
               🎙️ {locale === 'nl-NL' ? 'Start opname' : 'Start recording'}
+
             </Text>
           </TouchableOpacity>
         )}
       </View>
 
       {/* Device health */}
-      <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>
+      <Text style={{ fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
         {locale === 'nl-NL' ? 'Apparaatstatus' : 'Device status'}
       </Text>
       <View style={{ borderRadius: 22, padding: 18, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
         {[
-          { label: locale === 'nl-NL' ? 'Batterij' : 'Battery', value: `${DEVICE_HEALTH.batteryLevel}%`, emoji: '🔋' },
-          { label: locale === 'nl-NL' ? 'Netwerk' : 'Network', value: DEVICE_HEALTH.networkStatus, emoji: '📶' },
-          { label: locale === 'nl-NL' ? 'Versie' : 'Version', value: DEVICE_HEALTH.appVersion, emoji: '📱' },
-          { label: locale === 'nl-NL' ? 'Laatst gezien' : 'Last seen', value: DEVICE_HEALTH.lastSeen instanceof Date ? DEVICE_HEALTH.lastSeen.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : 'now', emoji: '⏱️' },
+          { label: locale === 'nl-NL' ? 'Batterij' : 'Battery', value: `${DEVICE_HEALTH.batteryLevel}%`, icon: 'battery' },
+          { label: locale === 'nl-NL' ? 'Netwerk' : 'Network', value: DEVICE_HEALTH.networkStatus, icon: 'wifi' },
+          { label: locale === 'nl-NL' ? 'Versie' : 'Version', value: DEVICE_HEALTH.appVersion, icon: 'cellphone' },
+          { label: locale === 'nl-NL' ? 'Laatst gezien' : 'Last seen', value: DEVICE_HEALTH.lastSeen instanceof Date ? DEVICE_HEALTH.lastSeen.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : 'now', icon: 'clock-outline' },
         ].map((item) => (
           <View key={item.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 }}>
-            <Text style={{ fontSize: 18 }}>{item.emoji}</Text>
-            <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.ink, flex: 1 }}>{item.label}</Text>
-            <Text style={{ fontSize: typeScale.caption, fontWeight: '700', color: colors.graphite }}>{item.value}</Text>
+            <MaterialCommunityIcons name={item.icon as any} size={18} color={colors.slate} />
+            <Text style={{ fontSize: typeScale.caption, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.ink, flex: 1 }}>{item.label}</Text>
+            <Text style={{ fontSize: typeScale.caption, fontWeight: '700', fontFamily: 'Nunito-Bold', color: colors.graphite }}>{item.value}</Text>
+
           </View>
         ))}
       </View>
 
       {/* Data rights */}
       <View style={{ borderRadius: 18, padding: 14, backgroundColor: colors.slatePale, gap: 6 }}>
-        <Text style={{ fontSize: typeScale.caption, fontWeight: '900', color: colors.slate }}>
+        <Text style={{ fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.slate }}>
+
           {locale === 'nl-NL' ? 'Uw gegevensrechten (AVG)' : 'Your data rights (GDPR)'}
         </Text>
-        <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '600' }}>
+        <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
+
           {locale === 'nl-NL'
             ? 'U kunt op elk moment uw gegevens exporteren, corrigeren of laten verwijderen.'
             : 'You can export, correct, or delete your data at any time.'}
         </Text>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel={locale === 'nl-NL' ? 'Exporteer' : 'Export'} onPress={() => ctx.onPrimaryAction('DATA_EXPORT')} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: colors.paper, minHeight: touch.minimum }}>
-            <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.slate }}>{locale === 'nl-NL' ? 'Exporteer' : 'Export'}</Text>
+            <Text style={{ fontSize: typeScale.caption, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.slate }}>{locale === 'nl-NL' ? 'Exporteer' : 'Export'}</Text>
+
           </TouchableOpacity>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel={locale === 'nl-NL' ? 'Verwijder alles' : 'Delete all'} onPress={() => ctx.onPrimaryAction('DATA_DELETE')} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: colors.rosePale, minHeight: touch.minimum }}>
-            <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.rose }}>{locale === 'nl-NL' ? 'Verwijder alles' : 'Delete all'}</Text>
+            <Text style={{ fontSize: typeScale.caption, fontWeight: '800', fontFamily: 'Nunito-Bold', color: colors.rose }}>{locale === 'nl-NL' ? 'Verwijder alles' : 'Delete all'}</Text>
+
           </TouchableOpacity>
         </View>
       </View>
@@ -166,7 +176,8 @@ function VisionSettingsInner({ ctx }: { ctx: ScreenContext }) {
         onPress={() => ctx.onPrimaryAction('SIGN_OUT')}
         style={{ borderRadius: 16, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.mist, minHeight: touch.minimum }}
       >
-        <Text style={{ color: colors.rose, fontSize: typeScale.caption, fontWeight: '900' }}>
+        <Text style={{ color: colors.rose, fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black' }}>
+
           {locale === 'nl-NL' ? 'Uitloggen' : 'Sign out'}
         </Text>
       </TouchableOpacity>

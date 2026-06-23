@@ -8,11 +8,11 @@ import { productionScreens } from '@haven/schema/src/screenSchema';
 import type { ScreenContext } from '../../renderer/ScreenRenderer';
 
 const secondaryIcons: Record<string, string> = {
-  BUURT: '🏘️',
-  KOMPAS: '🧭',
-  STEM: '🎙️',
-  WACHT: '🏥',
-  SETTINGS: '⚙️',
+  BUURT: 'home-group',
+  KOMPAS: 'compass-outline',
+  STEM: 'microphone-outline',
+  WACHT: 'hospital-box-outline',
+  SETTINGS: 'cog-outline',
 };
 
 export function renderVisionMore(ctx: ScreenContext): React.ReactNode {
@@ -23,7 +23,8 @@ export function renderVisionMore(ctx: ScreenContext): React.ReactNode {
 
   return (
     <View style={{ gap: 14 }}>
-      <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700' }}>
+      <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
+
         {locale === 'nl-NL' ? 'Aanvullende functies van HAVEN' : 'Additional HAVEN features'}
       </Text>
       <View style={{ gap: 10 }}>
@@ -34,7 +35,7 @@ export function renderVisionMore(ctx: ScreenContext): React.ReactNode {
             <GradientCard
               key={screen.screenId}
               gradient={gradient}
-              icon={secondaryIcons[screen.screenId] ?? '📌'}
+              icon={secondaryIcons[screen.screenId] ?? 'pin'}
               title={locale === 'nl-NL' ? screen.titleNl : screen.titleEn}
               subtitle={locale === 'nl-NL' ? screen.helpTextNl : screen.helpTextEn}
               onPress={() => ctx.onPrimaryAction(`NAV_${screen.screenId}`)}

@@ -18,18 +18,19 @@ export function renderVisionWacht(ctx: ScreenContext): React.ReactNode {
       {/* Next visit */}
       <View style={{ borderRadius: 22, padding: 20, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.sage, gap: 8 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>
+          <Text style={{ fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
             {locale === 'nl-NL' ? 'Volgend bezoek' : 'Next visit'}
           </Text>
           <StatusBadge status="green" label={locale === 'nl-NL' ? 'Bevestigd' : 'Confirmed'} />
         </View>
-        <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700' }}>
+        <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700', fontFamily: 'Nunito-Bold' }}>
+
           {locale === 'nl-NL' ? 'Morgen 09:00 — Verpleegkundige Eva Jansen' : 'Tomorrow 09:00 — Nurse Eva Jansen'}
         </Text>
       </View>
 
       {/* Visit history */}
-      <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>
+      <Text style={{ fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
         {locale === 'nl-NL' ? 'Bezoekgeschiedenis' : 'Visit history'}
       </Text>
       {visits.map((visit) => (
@@ -42,24 +43,28 @@ export function renderVisionWacht(ctx: ScreenContext): React.ReactNode {
               <Text style={{ fontSize: 20 }}>{visit.carerAvatar}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: typeScale.caption, fontWeight: '900', color: colors.ink }}>{visit.carer}</Text>
-              <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700' }}>
+              <Text style={{ fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>{visit.carer}</Text>
+              <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700', fontFamily: 'Nunito-Black' }}>
+
                 {visit.date instanceof Date ? visit.date.toLocaleDateString(locale) : visit.date} · {visit.duration}
               </Text>
             </View>
           </View>
 
-          <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '600' }}>{visit.notes}</Text>
+          <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>{visit.notes}</Text>
+
 
           {/* Handover details */}
           {visit.handover && visit.handover.appetite ? (
             <View style={{ borderRadius: 14, padding: 12, backgroundColor: colors.mist, gap: 4 }}>
-              <Text style={{ fontSize: typeScale.caption, fontWeight: '900', color: colors.ink }}>
+              <Text style={{ fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.ink }}>
+
                 {locale === 'nl-NL' ? 'Overdracht' : 'Handover'}
               </Text>
               {Object.entries(visit.handover).filter(([, v]) => v).map(([key, val]) => (
-                <Text key={key} style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '600' }}>
-                  <Text style={{ fontWeight: '800' }}>{key}: </Text>{val}
+                <Text key={key} style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
+                  <Text style={{ fontWeight: '800', fontFamily: 'Nunito-SemiBold' }}>{key}: </Text>{val}
+
                 </Text>
               ))}
             </View>
@@ -68,9 +73,11 @@ export function renderVisionWacht(ctx: ScreenContext): React.ReactNode {
           {/* MAR entries */}
           {visit.marEntries.length > 0 && (
             <View style={{ borderRadius: 14, padding: 12, backgroundColor: colors.sagePale, gap: 4 }}>
-              <Text style={{ fontSize: typeScale.caption, fontWeight: '900', color: colors.sage }}>MAR</Text>
+              <Text style={{ fontSize: typeScale.caption, fontWeight: '900', fontFamily: 'Nunito-Black', color: colors.sage }}>MAR</Text>
+
               {visit.marEntries.map((entry, idx) => (
-                <Text key={idx} style={{ fontSize: typeScale.caption, color: colors.ink, fontWeight: '600' }}>
+                <Text key={idx} style={{ fontSize: typeScale.caption, color: colors.ink, fontWeight: '600', fontFamily: 'Nunito-SemiBold' }}>
+
                   {entry.time} — {entry.medication} ({entry.status})
                 </Text>
               ))}

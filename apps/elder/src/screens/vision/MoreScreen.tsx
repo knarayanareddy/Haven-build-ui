@@ -1,7 +1,7 @@
 // ─── Vision MoreScreen ───
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, typeScale } from '@haven/ui/src/tokens';
 import { GradientCard } from '@haven/ui/src/visionComponents';
 import { pillarGradients } from '@haven/ui/src/visionColors';
 import { productionScreens } from '@haven/schema/src/screenSchema';
@@ -23,7 +23,7 @@ export function renderVisionMore(ctx: ScreenContext): React.ReactNode {
 
   return (
     <View style={{ gap: 14 }}>
-      <Text style={{ fontSize: 16, color: colors.pewter, fontWeight: '700' }}>
+      <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700' }}>
         {locale === 'nl-NL' ? 'Aanvullende functies van HAVEN' : 'Additional HAVEN features'}
       </Text>
       <View style={{ gap: 10 }}>

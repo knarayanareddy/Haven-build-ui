@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, typeScale, touch } from '@haven/ui/src/tokens';
 import { ProgressBar } from '@haven/ui/src/visionComponents';
 // DEMO: mock vitals — acceptable fixture (requires wearable integration for live data)
 import { VITALS } from '@haven/ui/src/mockData';
@@ -18,7 +18,7 @@ export function renderVisionToday(ctx: ScreenContext): React.ReactNode {
   return (
     <View style={{ gap: 14 }}>
       {/* Date header */}
-      <Text style={{ fontSize: 16, fontWeight: '700', color: colors.pewter, textTransform: 'capitalize' }}>{dateStr}</Text>
+      <Text style={{ fontSize: typeScale.caption, fontWeight: '700', color: colors.pewter, textTransform: 'capitalize' }}>{dateStr}</Text>
 
       {/* Progress card */}
       <View style={{ borderRadius: 22, padding: 20, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 10 }}>
@@ -26,7 +26,7 @@ export function renderVisionToday(ctx: ScreenContext): React.ReactNode {
           <Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>
             {locale === 'nl-NL' ? 'Voortgang' : 'Progress'}
           </Text>
-          <Text style={{ fontSize: 16, fontWeight: '800', color: colors.sage }}>
+          <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.sage }}>
             {done}/{tasks.length}
           </Text>
         </View>
@@ -51,6 +51,7 @@ export function renderVisionToday(ctx: ScreenContext): React.ReactNode {
                 borderBottomWidth: 1,
                 borderBottomColor: colors.mist,
                 opacity: task.done ? 0.5 : 1,
+                minHeight: touch.minimum,
               }}
             >
               <View style={{
@@ -65,10 +66,10 @@ export function renderVisionToday(ctx: ScreenContext): React.ReactNode {
                   fontSize: 18, fontWeight: '800', color: colors.ink,
                   textDecorationLine: task.done ? 'line-through' : 'none',
                 }}>{titleRendered}</Text>
-                <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700' }}>{task.subtitle}</Text>
+                <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700' }}>{task.subtitle}</Text>
               </View>
               {!task.done && (
-                <Text style={{ fontSize: 13, fontWeight: '800', color: colors.sage }}>
+                <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.sage }}>
                   {locale === 'nl-NL' ? 'Tik gereed' : 'Tap done'}
                 </Text>
               )}
@@ -91,8 +92,8 @@ export function renderVisionToday(ctx: ScreenContext): React.ReactNode {
           }}>
             <Text style={{ fontSize: 20 }}>{vital.emoji}</Text>
             <Text style={{ fontSize: 22, fontWeight: '900', color: colors.ink }}>{vital.value}</Text>
-            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.pewter }}>{vital.label}</Text>
-            <Text style={{ fontSize: 12, fontWeight: '700', color: vital.status === 'low' ? colors.amber : colors.sage }}>
+            <Text style={{ fontSize: typeScale.caption, fontWeight: '700', color: colors.pewter }}>{vital.label}</Text>
+            <Text style={{ fontSize: typeScale.caption, fontWeight: '700', color: vital.status === 'low' ? colors.amber : colors.sage }}>
               {vital.trend === 'up' ? '↑' : vital.trend === 'down' ? '↓' : '→'} {vital.unit}
             </Text>
           </View>
@@ -100,7 +101,7 @@ export function renderVisionToday(ctx: ScreenContext): React.ReactNode {
       </View>
 
       {/* Medication count */}
-      <Text style={{ fontSize: 16, color: colors.graphite, fontWeight: '700' }}>
+      <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700' }}>
         {medications.length} {locale === 'nl-NL' ? 'medicijnen vandaag' : 'medications today'}
       </Text>
     </View>

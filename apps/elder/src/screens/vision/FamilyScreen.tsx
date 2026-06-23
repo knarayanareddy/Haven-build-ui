@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, typeScale, touch } from '@haven/ui/src/tokens';
 import { SubTabBar } from '@haven/ui/src/visionComponents';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { havenIcons } from '@haven/ui/src/icons';
@@ -36,15 +36,19 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
       {/* Quick actions */}
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={locale === 'nl-NL' ? 'Stuur hartje' : 'Send heart'}
           onPress={() => ctx.onPrimaryAction('SEND_HEART')}
-          style={{ flex: 1, backgroundColor: colors.rosePale, borderRadius: 16, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 }}
+          style={{ flex: 1, backgroundColor: colors.rosePale, borderRadius: 16, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6, minHeight: touch.minimum }}
         >
           <MaterialCommunityIcons name="heart" size={18} color={colors.rose} />
           <Text style={{ color: colors.rose, fontWeight: '900' }}>{locale === 'nl-NL' ? 'Stuur hartje' : 'Send heart'}</Text>
         </TouchableOpacity>
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={locale === 'nl-NL' ? 'Ik ben oké' : "I'm okay"}
           onPress={() => ctx.onPrimaryAction('SEND_OK')}
-          style={{ flex: 1, backgroundColor: colors.sagePale, borderRadius: 16, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 }}
+          style={{ flex: 1, backgroundColor: colors.sagePale, borderRadius: 16, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6, minHeight: touch.minimum }}
         >
           <MaterialCommunityIcons name="thumb-up-outline" size={18} color={colors.sage} />
           <Text style={{ color: colors.sage, fontWeight: '900' }}>{locale === 'nl-NL' ? 'Ik ben oké' : "I'm okay"}</Text>
@@ -73,9 +77,9 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
                   backgroundColor: isElder ? colors.slate : isSystem ? colors.slatePale : colors.paper,
                   borderWidth: isElder || isSystem ? 0 : 1, borderColor: colors.mist,
                 }}>
-                  {!isElder && <Text style={{ fontSize: 13, fontWeight: '800', color: isSystem ? colors.pewter : colors.ink, marginBottom: 4 }}>{msg.from}</Text>}
-                  <Text style={{ fontSize: 16, fontWeight: '600', color: isElder ? '#fff' : colors.ink }}>{msg.content}</Text>
-                  <Text style={{ fontSize: 11, color: isElder ? 'rgba(255,255,255,0.6)' : colors.pewter, marginTop: 4 }}>
+                  {!isElder && <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: isSystem ? colors.pewter : colors.ink, marginBottom: 4 }}>{msg.from}</Text>}
+                  <Text style={{ fontSize: typeScale.caption, fontWeight: '600', color: isElder ? '#fff' : colors.ink }}>{msg.content}</Text>
+                  <Text style={{ fontSize: typeScale.caption, color: isElder ? 'rgba(255,255,255,0.6)' : colors.pewter, marginTop: 4 }}>
                     {msg.timestamp instanceof Date ? msg.timestamp.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : ''}
                   </Text>
                 </View>
@@ -93,13 +97,15 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
               multiline
               style={{
                 flex: 1, borderRadius: 18, padding: 14, backgroundColor: colors.paper,
-                borderWidth: 1, borderColor: colors.mist, fontSize: 16, color: colors.ink,
+                borderWidth: 1, borderColor: colors.mist, fontSize: typeScale.caption, color: colors.ink,
                 minHeight: 48, maxHeight: 100,
               }}
             />
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={locale === 'nl-NL' ? 'Verstuur bericht' : 'Send message'}
               onPress={() => { if (newMessage.trim()) { ctx.onPrimaryAction('SEND_MESSAGE'); setNewMessage(''); } }}
-              style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: colors.slate, justifyContent: 'center', alignItems: 'center' }}
+              style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: colors.slate, justifyContent: 'center', alignItems: 'center', minHeight: touch.minimum }}
             >
               <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>↑</Text>
             </TouchableOpacity>
@@ -119,15 +125,17 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
           {family.map((f) => (
             <TouchableOpacity
               key={f.id}
+              accessibilityRole="button"
+              accessibilityLabel={`${locale === 'nl-NL' ? 'Bel' : 'Call'} ${f.name}`}
               onPress={() => ctx.onPrimaryAction(`CALL_FAMILY:${f.id}`)}
-              style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: touch.minimum }}
             >
               <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: colors.sagePale, justifyContent: 'center', alignItems: 'center' }}>
                 <MaterialCommunityIcons name={f.relation === 'kind' ? 'account' : f.relation === 'kleinkind' ? 'account' : 'account-outline'} size={24} color={colors.sage} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{f.name}</Text>
-                <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? 'Bellen' : 'Call'}</Text>
+                <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700' }}>{locale === 'nl-NL' ? 'Bellen' : 'Call'}</Text>
               </View>
               <MaterialCommunityIcons name="phone-outline" size={24} color={colors.slate} />
             </TouchableOpacity>
@@ -138,11 +146,13 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
       {activeTab === 'stories' && (
         <View style={{ gap: 14 }}>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={locale === 'nl-NL' ? 'Nieuw verhaal opnemen' : 'Record new story'}
             onPress={() => ctx.onPrimaryAction('RECORD_STORY')}
-            style={{ borderRadius: 18, padding: 16, backgroundColor: colors.amberPale, borderWidth: 1, borderColor: colors.amber, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+            style={{ borderRadius: 18, padding: 16, backgroundColor: colors.amberPale, borderWidth: 1, borderColor: colors.amber, flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: touch.minimum }}
           >
             <MaterialCommunityIcons name="microphone-outline" size={22} color={colors.ink} />
-            <Text style={{ fontSize: 16, fontWeight: '900', color: colors.ink }}>
+            <Text style={{ fontSize: typeScale.caption, fontWeight: '900', color: colors.ink }}>
               {locale === 'nl-NL' ? 'Nieuw verhaal opnemen' : 'Record new story'}
             </Text>
           </TouchableOpacity>
@@ -152,8 +162,8 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
                 <Text style={{ fontSize: 24 }}>{story.emoji}</Text>
                 <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{story.title}</Text>
               </View>
-              <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '700' }}>{story.date}</Text>
-              <Text style={{ fontSize: 15, color: colors.graphite, fontWeight: '600' }} numberOfLines={3}>{story.content}</Text>
+              <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700' }}>{story.date}</Text>
+              <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '600' }} numberOfLines={3}>{story.content}</Text>
             </View>
           ))}
         </View>

@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { Modal, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, typeScale, touch } from '@haven/ui/src/tokens';
 import { pillarGradients } from '@haven/ui/src/visionColors';
 import { StatusBadge, SubTabBar } from '@haven/ui/src/visionComponents';
 import { SCAM_EVENTS } from '@haven/ui/src/mockData';
@@ -44,7 +44,7 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
         style={{ borderRadius: 22, padding: 22, alignItems: 'center' }}
       >
         <Text style={{ fontSize: 48, fontWeight: '900', color: '#FFFFFF' }}>{totalScore}</Text>
-        <Text style={{ fontSize: 16, fontWeight: '700', color: 'rgba(255,255,255,0.85)' }}>
+        <Text style={{ fontSize: typeScale.caption, fontWeight: '700', color: 'rgba(255,255,255,0.85)' }}>
           {locale === 'nl-NL' ? 'Schildscore' : 'Shield Score'} / 100
         </Text>
       </LinearGradient>
@@ -53,19 +53,21 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <TouchableOpacity
           accessibilityRole="button"
+          accessibilityLabel={locale === 'nl-NL' ? 'Is dit echt?' : 'Is this real?'}
           onPress={() => ctx.onPrimaryAction('IS_THIS_REAL')}
-          style={{ flex: 1, backgroundColor: colors.slate, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+          style={{ flex: 1, backgroundColor: colors.slate, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
         >
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '900' }}>
+          <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900' }}>
             {locale === 'nl-NL' ? 'Is dit echt?' : 'Is this real?'}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           accessibilityRole="button"
+          accessibilityLabel={locale === 'nl-NL' ? 'Coaching tips' : 'Coaching tips'}
           onPress={() => { setShowCoaching(true); setCoachingIdx(0); }}
-          style={{ flex: 1, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+          style={{ flex: 1, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
         >
-          <Text style={{ color: colors.slate, fontSize: 16, fontWeight: '900' }}>
+          <Text style={{ color: colors.slate, fontSize: typeScale.caption, fontWeight: '900' }}>
             {locale === 'nl-NL' ? 'Coaching tips' : 'Coaching tips'}
           </Text>
         </TouchableOpacity>
@@ -90,10 +92,12 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
                   label={`${event.riskScore}%`}
                 />
               </View>
-              <Text style={{ fontSize: 14, color: colors.graphite, fontWeight: '700' }}>{event.description}</Text>
+              <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700' }}>{event.description}</Text>
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={locale === 'nl-NL' ? 'Markeer als veilig' : 'Mark as safe'}
                 onPress={() => ctx.onPrimaryAction(`RESOLVE_SCAM:${event.id}`)}
-                style={{ backgroundColor: colors.sage, borderRadius: 12, paddingVertical: 10, alignItems: 'center', marginTop: 4 }}
+                style={{ backgroundColor: colors.sage, borderRadius: 12, paddingVertical: 10, alignItems: 'center', marginTop: 4, minHeight: touch.minimum }}
               >
                 <Text style={{ color: '#fff', fontWeight: '900' }}>
                   {locale === 'nl-NL' ? 'Markeer als veilig' : 'Mark as safe'}
@@ -115,8 +119,8 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
               borderRadius: 18, padding: 14, backgroundColor: colors.paper,
               borderWidth: 1, borderColor: colors.mist, opacity: 0.6,
             }}>
-              <Text style={{ fontSize: 16, fontWeight: '800', color: colors.ink }}>{event.title}</Text>
-              <Text style={{ fontSize: 13, color: colors.pewter, fontWeight: '700' }}>{event.description}</Text>
+              <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.ink }}>{event.title}</Text>
+              <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700' }}>{event.description}</Text>
             </View>
           ))}
         </>
@@ -129,32 +133,38 @@ function VisionShieldInner({ ctx }: { ctx: ScreenContext }) {
             <Text style={{ fontSize: 22, fontWeight: '900', color: colors.ink }}>
               {locale === 'nl-NL' ? COACHING_TIPS[coachingIdx].title : COACHING_TIPS[coachingIdx].titleEn}
             </Text>
-            <Text style={{ fontSize: 16, color: colors.graphite, fontWeight: '700', lineHeight: 24 }}>
+            <Text style={{ fontSize: typeScale.caption, color: colors.graphite, fontWeight: '700', lineHeight: 24 }}>
               {locale === 'nl-NL' ? COACHING_TIPS[coachingIdx].tip : COACHING_TIPS[coachingIdx].tipEn}
             </Text>
-            <Text style={{ fontSize: 13, color: colors.pewter, textAlign: 'center' }}>
+            <Text style={{ fontSize: typeScale.caption, color: colors.pewter, textAlign: 'center' }}>
               {coachingIdx + 1} / {COACHING_TIPS.length}
             </Text>
             <View style={{ flexDirection: 'row', gap: 10 }}>
               {coachingIdx > 0 && (
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={locale === 'nl-NL' ? 'Vorige' : 'Previous'}
                   onPress={() => setCoachingIdx((i) => i - 1)}
-                  style={{ flex: 1, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+                  style={{ flex: 1, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
                 >
                   <Text style={{ color: colors.slate, fontWeight: '900' }}>{locale === 'nl-NL' ? 'Vorige' : 'Previous'}</Text>
                 </TouchableOpacity>
               )}
               {coachingIdx < COACHING_TIPS.length - 1 ? (
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={locale === 'nl-NL' ? 'Volgende' : 'Next'}
                   onPress={() => setCoachingIdx((i) => i + 1)}
-                  style={{ flex: 1, backgroundColor: colors.slate, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+                  style={{ flex: 1, backgroundColor: colors.slate, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
                 >
                   <Text style={{ color: '#fff', fontWeight: '900' }}>{locale === 'nl-NL' ? 'Volgende' : 'Next'}</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={locale === 'nl-NL' ? 'Sluiten' : 'Close'}
                   onPress={() => setShowCoaching(false)}
-                  style={{ flex: 1, backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+                  style={{ flex: 1, backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
                 >
                   <Text style={{ color: '#fff', fontWeight: '900' }}>{locale === 'nl-NL' ? 'Sluiten' : 'Close'}</Text>
                 </TouchableOpacity>

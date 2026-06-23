@@ -1,7 +1,7 @@
 // ─── Vision KompasScreen ───
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, typeScale, touch } from '@haven/ui/src/tokens';
 import { SubTabBar, StatusBadge } from '@haven/ui/src/visionComponents';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { havenIcons } from '@haven/ui/src/icons';
@@ -45,12 +45,12 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
             <View style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 3, borderColor: colors.sage, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center' }}>
               <MaterialCommunityIcons name="home-outline" size={36} color={colors.sage} />
             </View>
-            <Text style={{ fontSize: 14, fontWeight: '800', color: colors.sage, marginTop: 8 }}>
+            <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.sage, marginTop: 8 }}>
               {profile.safeZoneLabel ?? 'Thuis'} · {SAFE_ZONE.radius}m
             </Text>
           </View>
 
-          <Text style={{ fontSize: 13, color: colors.pewter, fontWeight: '700' }}>
+          <Text style={{ fontSize: typeScale.caption, color: colors.pewter, fontWeight: '700' }}>
             {locale === 'nl-NL' ? 'Uw exacte locatie wordt alleen gedeeld met uw veilige contactpersonen.' : 'Your exact location is shared only with your safety contacts.'}
           </Text>
         </View>
@@ -72,8 +72,8 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
                 { label: locale === 'nl-NL' ? 'Contact' : 'Emergency contact', value: primary?.name ?? 'Sarah van den Berg' },
               ].map((item) => (
                 <View key={item.label} style={{ flexDirection: 'row', gap: 8 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '900', color: colors.ink, width: 100 }}>{item.label}:</Text>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.graphite, flex: 1 }}>{item.value}</Text>
+                  <Text style={{ fontSize: typeScale.caption, fontWeight: '900', color: colors.ink, width: 100 }}>{item.label}:</Text>
+                  <Text style={{ fontSize: typeScale.caption, fontWeight: '600', color: colors.graphite, flex: 1 }}>{item.value}</Text>
                 </View>
               ))}
             </View>
@@ -81,18 +81,22 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
 
           {/* Emergency buttons */}
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={locale === 'nl-NL' ? 'Bel 112' : 'Call 112'}
             onPress={() => ctx.onPrimaryAction('EMERGENCY')}
-            style={{ backgroundColor: colors.rose, borderRadius: 16, paddingVertical: 18, alignItems: 'center' }}
+            style={{ backgroundColor: colors.rose, borderRadius: 16, paddingVertical: 18, alignItems: 'center', minHeight: touch.minimum }}
           >
             <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>
               {locale === 'nl-NL' ? 'Bel 112' : 'Call 112'}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={primary ? `${locale === 'nl-NL' ? 'Bel' : 'Call'} ${primary.name}` : (locale === 'nl-NL' ? 'Bel familie' : 'Call family')}
             onPress={() => ctx.onPrimaryAction('CALL_FAMILY')}
-            style={{ backgroundColor: colors.slate, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+            style={{ backgroundColor: colors.slate, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
           >
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '900' }}>
+            <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900' }}>
               {primary ? `${locale === 'nl-NL' ? 'Bel' : 'Call'} ${primary.name}` : (locale === 'nl-NL' ? 'Bel familie' : 'Call family')}
             </Text>
           </TouchableOpacity>
@@ -106,26 +110,28 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
               {locale === 'nl-NL' ? 'Nachtmodus' : 'Night Mode'}
             </Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: 'rgba(255,255,255,0.7)' }}>
+              <Text style={{ fontSize: typeScale.caption, fontWeight: '700', color: 'rgba(255,255,255,0.7)' }}>
                 {locale === 'nl-NL' ? 'Stilte van' : 'Quiet from'}
               </Text>
               <Text style={{ fontSize: 18, fontWeight: '900', color: '#fff' }}>{SAFE_ZONE.nightMode.quietFrom}</Text>
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: 'rgba(255,255,255,0.7)' }}>
+              <Text style={{ fontSize: typeScale.caption, fontWeight: '700', color: 'rgba(255,255,255,0.7)' }}>
                 {locale === 'nl-NL' ? 'Stilte tot' : 'Quiet until'}
               </Text>
               <Text style={{ fontSize: 18, fontWeight: '900', color: '#fff' }}>{SAFE_ZONE.nightMode.quietUntil}</Text>
             </View>
-            <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>
+            <Text style={{ fontSize: typeScale.caption, color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>
               {locale === 'nl-NL' ? 'Tijdens stille uren worden alleen noodmeldingen doorgelaten.' : 'During quiet hours, only emergency notifications are allowed.'}
             </Text>
           </View>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={SAFE_ZONE.nightMode.enabled ? (locale === 'nl-NL' ? 'Nachtmodus uitschakelen' : 'Disable night mode') : (locale === 'nl-NL' ? 'Nachtmodus inschakelen' : 'Enable night mode')}
             onPress={() => ctx.onPrimaryAction('TOGGLE_NIGHT')}
-            style={{ backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+            style={{ backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
           >
-            <Text style={{ color: colors.slate, fontSize: 16, fontWeight: '900' }}>
+            <Text style={{ color: colors.slate, fontSize: typeScale.caption, fontWeight: '900' }}>
               {SAFE_ZONE.nightMode.enabled
                 ? (locale === 'nl-NL' ? 'Nachtmodus uitschakelen' : 'Disable night mode')
                 : (locale === 'nl-NL' ? 'Nachtmodus inschakelen' : 'Enable night mode')}
@@ -144,11 +150,13 @@ function VisionKompasInner({ ctx }: { ctx: ScreenContext }) {
             ].map((btn) => (
               <TouchableOpacity
                 key={btn.action}
+                accessibilityRole="button"
+                accessibilityLabel={btn.label}
                 onPress={() => ctx.onPrimaryAction(btn.action)}
-                style={{ flex: 1, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+                style={{ flex: 1, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
               >
                 <MaterialCommunityIcons name={btn.iconName} size={28} color={colors.pewter} />
-                <Text style={{ fontSize: 13, fontWeight: '700', color: colors.pewter, marginTop: 4 }}>{btn.label}</Text>
+                <Text style={{ fontSize: typeScale.caption, fontWeight: '700', color: colors.pewter, marginTop: 4 }}>{btn.label}</Text>
               </TouchableOpacity>
             ))}
           </View>

@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Alert, Modal, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, typeScale, touch } from '@haven/ui/src/tokens';
 import { ProgressBar } from '@haven/ui/src/visionComponents';
 import { MEDICATIONS } from '@haven/ui/src/mockData';
 import { useAuth } from '../../auth/AuthProvider';
@@ -198,7 +198,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
           <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>
             {locale === 'nl-NL' ? 'Voortgang vandaag' : 'Today\'s progress'}
           </Text>
-          <Text style={{ fontSize: 16, fontWeight: '800', color: colors.sage }}>{taken}/{total}</Text>
+          <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.sage }}>{taken}/{total}</Text>
         </View>
         <ProgressBar progress={progress} color={colors.sage} height={10} />
       </View>
@@ -239,18 +239,19 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
                   accessibilityRole="button"
                   accessibilityLabel={`${locale === 'nl-NL' ? 'Neem' : 'Take'} ${med.name}`}
                   onPress={() => setConfirmMed(med.id)}
-                  style={{ flex: 1, backgroundColor: colors.sage, borderRadius: 14, paddingVertical: 12, alignItems: 'center' }}
+                  style={{ flex: 1, backgroundColor: colors.sage, borderRadius: 14, paddingVertical: 12, alignItems: 'center', minHeight: touch.minimum }}
                 >
-                  <Text style={{ color: '#fff', fontSize: 16, fontWeight: '900' }}>
+                  <Text style={{ color: '#fff', fontSize: typeScale.caption, fontWeight: '900' }}>
                     {locale === 'nl-NL' ? 'Ingenomen ✓' : 'Taken ✓'}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   accessibilityRole="button"
+                  accessibilityLabel={locale === 'nl-NL' ? `${med.name} later nemen` : `Take ${med.name} later`}
                   onPress={() => ctx.onPrimaryAction(`SNOOZE:${med.id}`)}
-                  style={{ flex: 1, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 14, paddingVertical: 12, alignItems: 'center' }}
+                  style={{ flex: 1, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 14, paddingVertical: 12, alignItems: 'center', minHeight: touch.minimum }}
                 >
-                  <Text style={{ color: colors.slate, fontSize: 16, fontWeight: '900' }}>
+                  <Text style={{ color: colors.slate, fontSize: typeScale.caption, fontWeight: '900' }}>
                     {locale === 'nl-NL' ? 'Later' : 'Later'}
                   </Text>
                 </TouchableOpacity>
@@ -265,10 +266,10 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
         accessibilityRole="button"
         accessibilityLabel={locale === 'nl-NL' ? 'Nieuw medicijn toevoegen' : 'Add new medication'}
         onPress={() => setShowAddForm(true)}
-        style={{ borderRadius: 18, padding: 16, backgroundColor: colors.sagePale, borderWidth: 1, borderColor: colors.sage, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+        style={{ borderRadius: 18, padding: 16, backgroundColor: colors.sagePale, borderWidth: 1, borderColor: colors.sage, flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: touch.minimum }}
       >
         <Text style={{ fontSize: 22 }}>➕</Text>
-        <Text style={{ fontSize: 16, fontWeight: '800', color: colors.sage }}>
+        <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.sage }}>
           {locale === 'nl-NL' ? 'Nieuw medicijn toevoegen' : 'Add new medication'}
         </Text>
       </TouchableOpacity>
@@ -276,11 +277,12 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
       {/* OCR scan placeholder */}
       <TouchableOpacity
         accessibilityRole="button"
+        accessibilityLabel={locale === 'nl-NL' ? 'Scan nieuw medicijn' : 'Scan new medication'}
         onPress={() => ctx.onPrimaryAction('SCAN_MED')}
-        style={{ borderRadius: 18, padding: 16, backgroundColor: colors.slatePale, borderWidth: 1, borderColor: colors.mist, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+        style={{ borderRadius: 18, padding: 16, backgroundColor: colors.slatePale, borderWidth: 1, borderColor: colors.mist, flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: touch.minimum }}
       >
         <Text style={{ fontSize: 22 }}>📷</Text>
-        <Text style={{ fontSize: 16, fontWeight: '800', color: colors.slate }}>
+        <Text style={{ fontSize: typeScale.caption, fontWeight: '800', color: colors.slate }}>
           {locale === 'nl-NL' ? 'Scan nieuw medicijn' : 'Scan new medication'}
         </Text>
       </TouchableOpacity>
@@ -329,17 +331,21 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
               />
             </View>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={locale === 'nl-NL' ? 'Toevoegen' : 'Add'}
               onPress={handleAddMedication}
               disabled={submitting}
-              style={{ backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center', opacity: submitting ? 0.6 : 1 }}
+              style={{ backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center', opacity: submitting ? 0.6 : 1, minHeight: touch.minimum }}
             >
               <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900' }}>
                 {submitting ? (locale === 'nl-NL' ? 'Bezig...' : 'Saving...') : (locale === 'nl-NL' ? 'Toevoegen' : 'Add')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={locale === 'nl-NL' ? 'Annuleer' : 'Cancel'}
               onPress={() => { setShowAddForm(false); setNewName(''); setNewDose(''); setNewTime('08:00'); }}
-              style={{ backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+              style={{ backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
             >
               <Text style={{ color: colors.slate, fontSize: 18, fontWeight: '900' }}>
                 {locale === 'nl-NL' ? 'Annuleer' : 'Cancel'}
@@ -365,7 +371,7 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
               }
               setUndoMed(null);
             }}
-            style={{ backgroundColor: colors.amber, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 }}
+            style={{ backgroundColor: colors.amber, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, minHeight: touch.minimum }}
           >
             <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900' }}>
               {locale === 'nl-NL' ? 'Ongedaan maken' : 'Undo'}
@@ -387,17 +393,21 @@ function VisionPillsInner({ ctx }: { ctx: ScreenContext }) {
                 : `Have you just taken ${confirmingMed?.name} ${confirmingMed?.dose}?`}
             </Text>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={locale === 'nl-NL' ? 'Ja, ingenomen' : 'Yes, taken'}
               onPress={() => { confirmMedication(confirmMed!); setConfirmMed(null); }}
               disabled={!!confirming}
-              style={{ backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center', opacity: confirming ? 0.6 : 1 }}
+              style={{ backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center', opacity: confirming ? 0.6 : 1, minHeight: touch.minimum }}
             >
               <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900' }}>
                 {locale === 'nl-NL' ? 'Ja, ingenomen ✓' : 'Yes, taken ✓'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={locale === 'nl-NL' ? 'Annuleer' : 'Cancel'}
               onPress={() => setConfirmMed(null)}
-              style={{ backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+              style={{ backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: touch.minimum }}
             >
               <Text style={{ color: colors.slate, fontSize: 18, fontWeight: '900' }}>
                 {locale === 'nl-NL' ? 'Annuleer' : 'Cancel'}

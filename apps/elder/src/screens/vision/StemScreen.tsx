@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, typeScale, touch } from '@haven/ui/src/tokens';
 import { pillarGradients } from '@haven/ui/src/visionColors';
 // DEMO: mock voice memory — acceptable fixture (VAPI handles real conversations)
 import { VOICE_MEMORY } from '@haven/ui/src/mockData';
@@ -262,7 +262,9 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
                 key={i}
                 onPress={() => handlePrompt(p.text, p.textEn)}
                 disabled={effectiveSending || effectiveListening}
-                style={{ paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, opacity: effectiveSending ? 0.5 : 1 }}
+                accessibilityRole="button"
+                accessibilityLabel={nl ? p.text : p.textEn}
+                style={{ paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, opacity: effectiveSending ? 0.5 : 1, minHeight: touch.minimum }}
               >
                 <Text style={{ fontSize: 18, fontWeight: '700', color: colors.slate }}>
                   {nl ? p.text : p.textEn}
@@ -275,11 +277,13 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
 
       {/* Emergency voice */}
       <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={nl ? 'Noodgeval' : 'Emergency'}
         onPress={() => ctx.onPrimaryAction('EMERGENCY')}
-        style={{ backgroundColor: colors.rosePale, borderWidth: 1, borderColor: colors.rose, borderRadius: 16, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}
+        style={{ backgroundColor: colors.rosePale, borderWidth: 1, borderColor: colors.rose, borderRadius: 16, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8, minHeight: touch.minimum }}
       >
         <Text style={{ fontSize: 20 }}>🆘</Text>
-        <Text style={{ color: colors.rose, fontSize: 16, fontWeight: '900' }}>
+        <Text style={{ color: colors.rose, fontSize: typeScale.caption, fontWeight: '900' }}>
           {nl ? 'Noodgeval' : 'Emergency'}
         </Text>
       </TouchableOpacity>
@@ -291,11 +295,11 @@ function VisionStemInner({ ctx }: { ctx: ScreenContext }) {
       {conversation.map((mem) => (
         <View key={mem.id} style={{ borderRadius: 18, padding: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist, gap: 8 }}>
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
-            <Text style={{ fontSize: 16 }}>🗣️</Text>
+            <Text style={{ fontSize: typeScale.caption }}>🗣️</Text>
             <Text style={{ fontSize: 18, fontWeight: '800', color: colors.ink, flex: 1 }}>{mem.query}</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start', marginLeft: 24 }}>
-            <Text style={{ fontSize: 16 }}>⌂</Text>
+            <Text style={{ fontSize: typeScale.caption }}>⌂</Text>
             <Text style={{ fontSize: 18, fontWeight: '600', color: colors.graphite, flex: 1 }}>{mem.response}</Text>
           </View>
           <Text style={{ fontSize: 18, color: colors.pewter, textAlign: 'right' }}>

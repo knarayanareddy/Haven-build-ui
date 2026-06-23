@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, fontFamily} from '@haven/ui/src/tokens';
 import { useTranslation } from '@haven/i18n';
 import { useAuth } from '../auth/AuthProvider';
 import { useCarerClient } from '../hooks/useCarerClient';
@@ -84,7 +84,7 @@ export function HandoverForm({ route, navigation }: HandoverFormProps) {
 
   const renderScale = (label: string, value: number, onChange: (v: number) => void) => (
     <View style={{ gap: 8 }}>
-      <Text style={{ fontSize: 16, fontWeight: '900', color: colors.ink }}>{label}</Text>
+      <Text style={{ fontSize: 16, fontWeight: '900', fontFamily: fontFamily.black, color: colors.ink }}>{label}</Text>
       <View style={{ flexDirection: 'row', gap: 6 }}>
         {[1, 2, 3, 4, 5].map((n) => (
           <TouchableOpacity
@@ -99,7 +99,7 @@ export function HandoverForm({ route, navigation }: HandoverFormProps) {
               alignItems: 'center', justifyContent: 'center',
             }}
           >
-            <Text style={{ fontSize: 18, fontWeight: '900', color: value === n ? 'white' : colors.ink }}>{n}</Text>
+            <Text style={{ fontSize: 18, fontWeight: '900', fontFamily: fontFamily.black, color: value === n ? 'white' : colors.ink }}>{n}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -108,7 +108,7 @@ export function HandoverForm({ route, navigation }: HandoverFormProps) {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 20, gap: 18 }}>
-      <Text accessibilityRole="header" style={{ fontSize: 28, fontWeight: '900', color: colors.ink }}>
+      <Text accessibilityRole="header" style={{ fontSize: 28, fontWeight: '900', fontFamily: fontFamily.black, color: colors.ink }}>
         {t('carerHandoverTitle')} — {elder_name}
       </Text>
 
@@ -116,7 +116,7 @@ export function HandoverForm({ route, navigation }: HandoverFormProps) {
       {renderScale(t('handover.mood'), mood, setMood)}
 
       <View style={{ gap: 8 }}>
-        <Text style={{ fontSize: 16, fontWeight: '900', color: colors.ink }}>{t('handover.mobility')}</Text>
+        <Text style={{ fontSize: 16, fontWeight: '900', fontFamily: fontFamily.black, color: colors.ink }}>{t('handover.mobility')}</Text>
         <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
           {MOBILITY_OPTIONS.map((opt) => (
             <TouchableOpacity
@@ -130,14 +130,14 @@ export function HandoverForm({ route, navigation }: HandoverFormProps) {
                 borderWidth: 1, borderColor: colors.mist,
               }}
             >
-              <Text style={{ fontSize: 16, fontWeight: '700', color: mobility === opt.value ? 'white' : colors.ink }}>{opt.label}</Text>
+              <Text style={{ fontSize: 16, fontWeight: '700', fontFamily: fontFamily.bold, color: mobility === opt.value ? 'white' : colors.ink }}>{opt.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
       <View style={{ gap: 8 }}>
-        <Text style={{ fontSize: 16, fontWeight: '900', color: colors.ink }}>
+        <Text style={{ fontSize: 16, fontWeight: '900', fontFamily: fontFamily.black, color: colors.ink }}>
           {t('handover.administered_med')}
         </Text>
         {MEDICATION_OPTIONS.map((opt) => (
@@ -152,21 +152,21 @@ export function HandoverForm({ route, navigation }: HandoverFormProps) {
               borderWidth: 1, borderColor: administeredMed === opt.id ? colors.sage : colors.mist,
             }}
           >
-            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.ink }}>{opt.label}</Text>
+            <Text style={{ fontSize: 16, fontWeight: '700', fontFamily: fontFamily.bold, color: colors.ink }}>{opt.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       {interactionWarning && (
         <View style={{ borderRadius: 16, padding: 16, backgroundColor: interactionWarning.includes('CRITICAL') ? '#FAE8E8' : '#FDF3E0', borderWidth: 1, borderColor: interactionWarning.includes('CRITICAL') ? '#C94A4A' : '#A56A00' }}>
-          <Text style={{ fontSize: 16, fontWeight: '900', color: colors.ink }}>
+          <Text style={{ fontSize: 16, fontWeight: '900', fontFamily: fontFamily.black, color: colors.ink }}>
             ⚠️ {interactionWarning}
           </Text>
         </View>
       )}
 
       <View style={{ gap: 8 }}>
-        <Text style={{ fontSize: 16, fontWeight: '900', color: colors.ink }}>{t('handover.concerns')}</Text>
+        <Text style={{ fontSize: 16, fontWeight: '900', fontFamily: fontFamily.black, color: colors.ink }}>{t('handover.concerns')}</Text>
         <TextInput
           accessibilityLabel={t('handover.concerns')}
           placeholder={t('handover.concerns.placeholder')}
@@ -184,7 +184,7 @@ export function HandoverForm({ route, navigation }: HandoverFormProps) {
       </View>
 
       <View style={{ gap: 8 }}>
-        <Text style={{ fontSize: 16, fontWeight: '900', color: colors.ink }}>{t('handover.notes')}</Text>
+        <Text style={{ fontSize: 16, fontWeight: '900', fontFamily: fontFamily.black, color: colors.ink }}>{t('handover.notes')}</Text>
         <TextInput
           accessibilityLabel={t('handover.notes')}
           placeholder={t('handover.notes.placeholder')}
@@ -212,7 +212,7 @@ export function HandoverForm({ route, navigation }: HandoverFormProps) {
         }}
       >
         <Text style={{ fontSize: 20 }}>📷</Text>
-        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.ink }}>
+        <Text style={{ fontSize: 16, fontWeight: '700', fontFamily: fontFamily.bold, color: colors.ink }}>
           {photosCount > 0 ? t('handover.photo.added', { count: photosCount }) : t('handover.photo.add')}
         </Text>
       </TouchableOpacity>
@@ -229,7 +229,7 @@ export function HandoverForm({ route, navigation }: HandoverFormProps) {
             borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: 56,
           }}
         >
-          <Text style={{ color: 'white', fontSize: 18, fontWeight: '900' }}>
+          <Text style={{ color: 'white', fontSize: 18, fontWeight: '900', fontFamily: fontFamily.black }}>
             {isSubmitting ? t('handover.submitting') : t('handover.submit_online')}
           </Text>
         </TouchableOpacity>
@@ -242,7 +242,7 @@ export function HandoverForm({ route, navigation }: HandoverFormProps) {
             borderRadius: 16, paddingVertical: 14, alignItems: 'center', minHeight: 56,
           }}
         >
-          <Text style={{ color: colors.slate, fontSize: 18, fontWeight: '900' }}>{t('handover.submit_offline')}</Text>
+          <Text style={{ color: colors.slate, fontSize: 18, fontWeight: '900', fontFamily: fontFamily.black }}>{t('handover.submit_offline')}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

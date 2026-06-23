@@ -4,7 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { colors } from '@haven/ui/src/tokens';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { colors, fontFamily} from '@haven/ui/src/tokens';
 import { useAuth } from '../auth/AuthProvider';
 import { useCarerClient } from '../hooks/useCarerClient';
 import { enqueueOffline, getQueueSize } from '../services/offlineQueue';
@@ -116,12 +117,12 @@ export function VisitList({ navigation }: { navigation: { navigate: (screen: str
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.linen }} contentContainerStyle={{ padding: 20, gap: 14 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text accessibilityRole="header" style={{ fontSize: 30, fontWeight: '900', color: colors.ink }}>
+        <Text accessibilityRole="header" style={{ fontSize: 30, fontWeight: '900', fontFamily: fontFamily.black, color: colors.ink }}>
           Vandaag ({visits.length})
         </Text>
         {offlineCount > 0 && (
           <View style={{ backgroundColor: colors.amber, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6 }}>
-            <Text style={{ color: colors.amber, fontWeight: '900' }}>
+            <Text style={{ color: colors.amber, fontWeight: '900', fontFamily: fontFamily.black }}>
               {offlineCount} offline
             </Text>
           </View>
@@ -130,19 +131,19 @@ export function VisitList({ navigation }: { navigation: { navigate: (screen: str
 
       {!session && (
         <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist }}>
-          <Text style={{ color: colors.graphite, fontWeight: '800' }}>Log in om live bezoeken te laden.</Text>
+          <Text style={{ color: colors.graphite, fontWeight: '800', fontFamily: fontFamily.bold }}>Log in om live bezoeken te laden.</Text>
         </View>
       )}
 
       {session && elderIds.length === 0 && (
         <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.mist }}>
-          <Text style={{ color: colors.graphite, fontWeight: '800' }}>Configureer EXPO_PUBLIC_CARER_ELDER_IDS om toegewezen ouderen te laden.</Text>
+          <Text style={{ color: colors.graphite, fontWeight: '800', fontFamily: fontFamily.bold }}>Configureer EXPO_PUBLIC_CARER_ELDER_IDS om toegewezen ouderen te laden.</Text>
         </View>
       )}
 
       {loadError && (
         <View style={{ borderRadius: 18, padding: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.amber }}>
-          <Text style={{ color: colors.graphite, fontWeight: '800' }}>{loadError}</Text>
+          <Text style={{ color: colors.graphite, fontWeight: '800', fontFamily: fontFamily.bold }}>{loadError}</Text>
         </View>
       )}
 
@@ -157,24 +158,24 @@ export function VisitList({ navigation }: { navigation: { navigate: (screen: str
           }}
         >
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ fontSize: 22, fontWeight: '900', color: colors.ink }}>{visit.elder_name}</Text>
+            <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: fontFamily.black, color: colors.ink }}>{visit.elder_name}</Text>
             <View style={{
               paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10,
               backgroundColor: visit.visit_status === 'completed' ? colors.sagePale :
                 visit.visit_status === 'in_progress' ? colors.amberPale : colors.paper,
             }}>
-              <Text style={{ fontSize: 14, fontWeight: '900', color: colors.graphite }}>
+              <Text style={{ fontSize: 14, fontWeight: '900', fontFamily: fontFamily.black, color: colors.graphite }}>
                 {visit.visit_status === 'completed' ? 'Klaar' : visit.visit_status === 'in_progress' ? 'Bezig' : 'Te doen'}
               </Text>
             </View>
           </View>
 
           {visit.next_medication && (
-            <Text style={{ fontSize: 16, color: colors.graphite, fontWeight: '700' }}>💊 {visit.next_medication}</Text>
+            <Text style={{ fontSize: 16, color: colors.graphite, fontWeight: '700', fontFamily: fontFamily.bold }}><MaterialCommunityIcons name="pill" size={16} color={colors.graphite} /> {visit.next_medication}</Text>
           )}
           {visit.last_note_summary && (
-            <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '600' }} numberOfLines={2}>
-              📝 {visit.last_note_summary}
+            <Text style={{ fontSize: 14, color: colors.pewter, fontWeight: '600', fontFamily: fontFamily.semiBold }} numberOfLines={2}>
+              <MaterialCommunityIcons name="note-text-outline" size={14} color={colors.pewter} /> {visit.last_note_summary}
             </Text>
           )}
 
@@ -185,7 +186,7 @@ export function VisitList({ navigation }: { navigation: { navigate: (screen: str
                 onPress={() => startVisit(visit.elder_id)}
                 style={{ flex: 1, backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 12, alignItems: 'center' }}
               >
-                <Text style={{ color: 'white', fontSize: 16, fontWeight: '900' }}>Start bezoek</Text>
+                <Text style={{ color: 'white', fontSize: 16, fontWeight: '900', fontFamily: fontFamily.black }}>Start bezoek</Text>
               </TouchableOpacity>
             )}
             {visit.visit_status === 'in_progress' && (
@@ -195,14 +196,14 @@ export function VisitList({ navigation }: { navigation: { navigate: (screen: str
                   onPress={() => navigation.navigate('HandoverForm', { elder_id: visit.elder_id, elder_name: visit.elder_name })}
                   style={{ flex: 1, backgroundColor: colors.slate, borderRadius: 16, paddingVertical: 12, alignItems: 'center' }}
                 >
-                  <Text style={{ color: 'white', fontSize: 16, fontWeight: '900' }}>Notitie</Text>
+                  <Text style={{ color: 'white', fontSize: 16, fontWeight: '900', fontFamily: fontFamily.black }}>Notitie</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   accessibilityRole="button" accessibilityLabel={`Voltooi bezoek ${visit.elder_name}`}
                   onPress={() => completeVisit(visit.elder_id)}
                   style={{ flex: 1, backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 12, alignItems: 'center' }}
                 >
-                  <Text style={{ color: 'white', fontSize: 16, fontWeight: '900' }}>Voltooid</Text>
+                  <Text style={{ color: 'white', fontSize: 16, fontWeight: '900', fontFamily: fontFamily.black }}>Voltooid</Text>
                 </TouchableOpacity>
               </>
             )}

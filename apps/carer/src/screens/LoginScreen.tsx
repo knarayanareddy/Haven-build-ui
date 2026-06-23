@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
-    fontFamily: fontFamily.bold,
+    fontFamily: fontFamily.semiBold,
   },
   biometricButton: {
     backgroundColor: 'transparent',
@@ -216,6 +216,7 @@ const styles = StyleSheet.create({
     color: '#4A90D9',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   backLink: {
     marginTop: 16,
@@ -238,5 +239,6 @@ const styles = StyleSheet.create({
     color: '#4A90D9',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
 });

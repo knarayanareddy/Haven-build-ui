@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Text, TouchableOpacity, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, fontFamily} from '@haven/ui/src/tokens';
 import type { Locale } from '@haven/contracts/src/haven';
 import { useTranslation } from '@haven/i18n';
 
@@ -36,7 +36,7 @@ export function HelpOverlay({ screenTitle, helpText }: HelpOverlayProps) {
           zIndex: 100,
         }}
       >
-        <Text style={{ fontSize: 22, fontWeight: '900', color: colors.sage }}>?</Text>
+        <Text style={{ fontSize: 22, fontWeight: '900', fontFamily: fontFamily.black, color: colors.sage }}>?</Text>
       </TouchableOpacity>
 
       <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
@@ -49,14 +49,14 @@ export function HelpOverlay({ screenTitle, helpText }: HelpOverlayProps) {
           style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'center', alignItems: 'center', padding: 32 }}
         >
           <View style={{ backgroundColor: colors.paper, borderRadius: 28, padding: 32, maxWidth: 380, width: '100%', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 20, shadowOffset: { width: 0, height: 8 } }}>
-            <Text style={{ fontSize: 24, fontWeight: '900', color: colors.ink, marginBottom: 12 }}>
+            <Text style={{ fontSize: 24, fontWeight: '900', fontFamily: fontFamily.black, color: colors.ink, marginBottom: 12 }}>
               {screenTitle}
             </Text>
-            <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700', lineHeight: 28, marginBottom: 8 }}>
+            <Text style={{ fontSize: 18, color: colors.graphite, fontWeight: '700', fontFamily: fontFamily.bold, lineHeight: 28, marginBottom: 8 }}>
               {helpText}
             </Text>
             <View style={{ backgroundColor: colors.sagePale, borderRadius: 14, padding: 16, marginTop: 8 }}>
-              <Text style={{ fontSize: 15, color: colors.graphite, fontWeight: '700' }}>
+              <Text style={{ fontSize: 15, color: colors.graphite, fontWeight: '700', fontFamily: fontFamily.bold }}>
                 {t('helpOverlayEmergencyHint')}
               </Text>
             </View>
@@ -70,7 +70,7 @@ export function HelpOverlay({ screenTitle, helpText }: HelpOverlayProps) {
               }}
               style={{ marginTop: 20, backgroundColor: colors.sage, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
             >
-              <Text style={{ color: 'white', fontSize: 18, fontWeight: '900' }}>{t('helpOverlayClose')}</Text>
+              <Text style={{ color: 'white', fontSize: 18, fontWeight: '900', fontFamily: fontFamily.black }}>{t('helpOverlayClose')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

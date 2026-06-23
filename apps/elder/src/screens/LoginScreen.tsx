@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
-    fontFamily: fontFamily.bold,
+    fontFamily: fontFamily.semiBold,
   },
   backLink: {
     marginTop: 16,
@@ -237,5 +237,6 @@ const styles = StyleSheet.create({
     color: '#4A7B5A',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
 });

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Animated, Easing, Platform, Text, TouchableOpacity, View } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
-import { colors } from '@haven/ui/src/tokens';
+import { colors, fontFamily} from '@haven/ui/src/tokens';
 import type { Locale } from '@haven/contracts/src/haven';
 import { useAuth } from '../auth/AuthProvider';
 import { useHavenClient } from '../hooks/useHavenClient';
@@ -225,11 +225,11 @@ function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVo
       <View accessibilityRole="toolbar" style={{ height: 44, backgroundColor: '#2C3E6B', borderBottomWidth: 1, borderColor: '#1A2B4C', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Text style={{ fontSize: 18 }}>{macosVoiceState === 'listening' ? '🔴' : macosVoiceState === 'processing' ? '🟡' : '🎙️'}</Text>
-          <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>
+          <Text style={{ color: 'white', fontWeight: '700', fontFamily: fontFamily.bold, fontSize: 14 }}>
             {macosVoiceState === 'listening' ? 'HAVEN luistert...' : macosVoiceState === 'processing' ? 'Aan het verwerken...' : 'Cmd+Shift+V om te praten'}
           </Text>
         </View>
-        <Text style={{ color: '#8899BB', fontSize: 12, fontWeight: '600' }}>Esc: stopt · Cmd+1/2/3: navigatie</Text>
+        <Text style={{ color: '#8899BB', fontSize: 12, fontWeight: '600', fontFamily: fontFamily.semiBold }}>Esc: stopt · Cmd+1/2/3: navigatie</Text>
       </View>
     );
   }
@@ -247,21 +247,21 @@ function FloatingVoiceButtonComponent({ locale, screenId, voiceFallback, audioVo
     <View style={{ position: 'absolute', left: 18, bottom: 90, alignItems: 'center' }}>
       {showPrompts && (
         <View style={{ position: 'absolute', bottom: 80, backgroundColor: colors.paper, borderRadius: 18, padding: 14, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, borderWidth: 1, borderColor: colors.mist, width: 260, gap: 8 }}>
-          <Text style={{ fontSize: 18, fontWeight: '800', color: colors.ink }}>{nl ? 'Spraak niet beschikbaar' : 'Voice unavailable'}</Text>
-          <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '600' }}>{nl ? 'Probeer een van deze:' : 'Try one of these:'}</Text>
+          <Text style={{ fontSize: 18, fontWeight: '800', fontFamily: fontFamily.bold, color: colors.ink }}>{nl ? 'Spraak niet beschikbaar' : 'Voice unavailable'}</Text>
+          <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '600', fontFamily: fontFamily.semiBold }}>{nl ? 'Probeer een van deze:' : 'Try one of these:'}</Text>
           {textPrompts.map((prompt, i) => (
             <TouchableOpacity key={i} onPress={() => { setShowPrompts(false); Alert.alert('HAVEN', prompt); }} style={{ backgroundColor: colors.slatePale, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, minHeight: 44 }}>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: colors.slate }}>{prompt}</Text>
+              <Text style={{ fontSize: 18, fontWeight: '700', fontFamily: fontFamily.bold, color: colors.slate }}>{prompt}</Text>
             </TouchableOpacity>
           ))}
           <TouchableOpacity onPress={() => setShowPrompts(false)} style={{ alignSelf: 'flex-end', paddingVertical: 4 }}>
-            <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700' }}>{nl ? 'Sluiten' : 'Close'}</Text>
+            <Text style={{ fontSize: 18, color: colors.pewter, fontWeight: '700', fontFamily: fontFamily.bold }}>{nl ? 'Sluiten' : 'Close'}</Text>
           </TouchableOpacity>
         </View>
       )}
       {isListening && !showPrompts && (
         <View style={{ position: 'absolute', bottom: 80, backgroundColor: colors.sage, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 8, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
-          <Text style={{ color: 'white', fontSize: 18, fontWeight: '700' }}>{hint}</Text>
+          <Text style={{ color: 'white', fontSize: 18, fontWeight: '700', fontFamily: fontFamily.bold }}>{hint}</Text>
         </View>
       )}
       <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>

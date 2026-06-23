@@ -216,6 +216,7 @@ export function useHavenActions(screenId: string) {
       const sessionId = actionId.split(':')[1];
       if (client) {
         try {
+          // Invokes fn-video-call-end via HavenClient
           await client.videoCallEnd({ session_id: sessionId });
         } catch (_) {}
       }

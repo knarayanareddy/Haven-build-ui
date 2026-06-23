@@ -59,4 +59,5 @@ export class HavenClient {
   screenData(input: Record<string, unknown>) { return this.invoke('fn-screen-data', input); }
   registerPushToken(input: Record<string, unknown>) { return this.invoke('fn-push-token-register', input); }
   videoCallJoinToken(input: Record<string, unknown>) { return this.invoke('fn-video-call-join-token', input); }
+  videoCallEnd(input: Record<string, unknown>) { return this.invoke('fn-video-call-end', input); }
 }

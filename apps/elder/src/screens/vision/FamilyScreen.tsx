@@ -104,7 +104,7 @@ function VisionFamilyInner({ ctx }: { ctx: ScreenContext }) {
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel={locale === 'nl-NL' ? 'Verstuur bericht' : 'Send message'}
-              onPress={() => { if (newMessage.trim()) { ctx.onPrimaryAction('SEND_MESSAGE'); setNewMessage(''); } }}
+              onPress={() => { if (newMessage.trim()) { ctx.onPrimaryAction(`SEND_MESSAGE:${newMessage.trim()}`); setNewMessage(''); } }}
               style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: colors.slate, justifyContent: 'center', alignItems: 'center', minHeight: touch.minimum }}
             >
               <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900', fontFamily: 'Nunito-Black' }}>↑</Text>

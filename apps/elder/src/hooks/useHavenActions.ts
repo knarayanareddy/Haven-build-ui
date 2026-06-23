@@ -92,6 +92,30 @@ export function useHavenActions(screenId: string) {
       Alert.alert('HAVEN', kind === 'heart' ? t('actions.send_heart.alert') : t('actions.send_ok.alert'));
       return;
     }
+    if (actionId.startsWith('SEND_MESSAGE:')) {
+      const content = actionId.slice('SEND_MESSAGE:'.length);
+      try {
+        enqueueOfflineAction('SEND_MESSAGE', { message_type: 'tekst', content_nl: content });
+      } catch (_) {
+        // SQLite/crypto may not be available
+      }
+      if (client && elderId) {
+        try {
+          await client.sendFamilyMessage({
+            elder_id: elderId,
+            sender_id: elderId,
+            sender_role: 'elder',
+            message_type: 'tekst',
+            content_nl: content,
+            content_en: content,
+          });
+        } catch (_) {
+          // Queued offline, will sync later
+        }
+      }
+      Alert.alert('HAVEN', t('actions.send_message.alert'));
+      return;
+    }
     if (actionId === 'RECORD_STORY') {
       Alert.alert('HAVEN', t('actions.record_story.alert'));
       return;
@@ -114,6 +138,22 @@ export function useHavenActions(screenId: string) {
     }
     if (actionId === 'SCAN_DOC') {
       Alert.alert('HAVEN', t('actions.scan_doc.alert'));
+      return;
+    }
+    if (actionId === 'IS_THIS_REAL') {
+      Alert.alert('HAVEN', t('actions.is_this_real.alert'));
+      return;
+    }
+    if (actionId.startsWith('RESOLVE_SCAM:')) {
+      const eventId = actionId.split(':')[1];
+      enqueueOfflineAction('RESOLVE_SCAM', { event_id: eventId });
+      Alert.alert('HAVEN', t('actions.resolve_scam.alert'));
+      return;
+    }
+    if (actionId.startsWith('TOGGLE_TASK:')) {
+      const taskId = actionId.split(':')[1];
+      enqueueOfflineAction('TOGGLE_TASK', { task_id: taskId });
+      Alert.alert('HAVEN', t('actions.toggle_task.alert'));
       return;
     }
     if (actionId === 'TOGGLE_NIGHT') {
@@ -176,14 +216,8 @@ export function useHavenActions(screenId: string) {
       const sessionId = actionId.split(':')[1];
       if (client) {
         try {
-          await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/fn-video-call-end`, {
-            method: 'POST',
-            headers: {
-              authorization: `Bearer ${session?.access_token}`,
-              'content-type': 'application/json',
-            },
-            body: JSON.stringify({ session_id: sessionId }),
-          });
+          // Invokes fn-video-call-end via HavenClient
+          await client.videoCallEnd({ session_id: sessionId });
         } catch (_) {}
       }
       Alert.alert('HAVEN', t('actions.call_declined.alert', { sessionId }));

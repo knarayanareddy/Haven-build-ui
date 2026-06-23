@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, Text, TouchableOpacity, View, Alert } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -637,7 +637,7 @@ export function ScreenRenderer({ schema, context, onBack }: ScreenRendererProps)
 
   // FIX P1: CONTRAST RATIOS High Contrast Mode DB flag dynamically overwriting EMR tokens with true #000000 / #FFFFFF pairs
   const isHC = context?.profile?.highContrast === true;
-  colors = {
+  const computedColors = useMemo(() => ({
     ...baseColors,
     linen: isHC ? '#000000' : baseColors.linen,
     paper: isHC ? '#000000' : baseColors.paper,
@@ -655,7 +655,8 @@ export function ScreenRenderer({ schema, context, onBack }: ScreenRendererProps)
     slatePale: isHC ? '#000000' : baseColors.slatePale,
     terracotta: isHC ? '#FFFFFF' : baseColors.terracotta,
     terracottaPale: isHC ? '#000000' : baseColors.terracottaPale,
-  };
+  }), [isHC]);
+  colors = computedColors;
 
   const titleEn = schema.titleEn;
   const titleNl = schema.titleNl;

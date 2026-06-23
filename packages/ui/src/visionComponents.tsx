@@ -211,7 +211,7 @@ const MOODS: Array<{ value: string; icon: string; label: string; color: string }
 
 export function MoodPicker({ onSelect, selected }: MoodPickerProps) {
   return (
-    <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center' }}>
+    <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
       {MOODS.map((m) => (
         <TouchableOpacity
           key={m.value}

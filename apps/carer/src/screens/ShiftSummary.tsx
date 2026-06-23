@@ -162,7 +162,7 @@ export function ShiftSummary() {
                 {selectedEntry.last_note && (
                   <View style={{ marginTop: 8, padding: 14, backgroundColor: colors.linen, borderRadius: 14 }}>
                     <Text style={{ fontSize: 16 * textMultiplier, color: colors.pewter, fontWeight: '700', fontFamily: fontFamily.bold, marginBottom: 4 }}>{t('summary.last_note')}</Text>
-                    <Text style={{ fontSize: 16 * textMultiplier, color: colors.ink, fontWeight: '500' }}>{selectedEntry.last_note}</Text>
+                    <Text style={{ fontSize: 16 * textMultiplier, color: colors.ink, fontWeight: '400' }}>{selectedEntry.last_note}</Text>
                   </View>
                 )}
               </View>
